@@ -1,0 +1,715 @@
+<!-- ========================================================================================================== -->
+<!-- MAIN CHEMISTRY REGISTRY:                                                                                    -->
+<!-- ========================================================================================================== -->
+
+<!-- **************************************************************************************** -->
+<!--           DIMENSIONS             -->
+<!-- **************************************************************************************** -->
+   <dims>
+      <dim name="nChem"              definition="namelist:num_chem"
+          description="Number of chemical tracers (nscalar minus nmoist)"/>
+      <dim name="nkemit"             definition="namelist:kemit"
+          description="Number of vertical levels in anthropogenic emission file"/>
+      <dim name="nkfire"             definition="namelist:kfire"
+          description="Number of vertical levels in biomass burning emission file"/>
+      <dim name="nkbio"             definition="namelist:kbio"
+          description="Number of vertical levels in biogenic emission file"/>
+      <dim name="nkvol"             definition="namelist:kvol"
+          description="Number of vertical levels in volcanic emission file"/>
+   </dims>
+
+<!-- **************************************************************************************** -->
+<!-- **************************************  Packages  ************************************** -->
+<!-- **************************************************************************************** -->
+
+   <packages>
+         <package name="mpas_smoke_in"  description="parameterization of smoke."/>
+         <package name="mpas_pollen_in" description="parameterization of pollen"/>
+         <package name="speciated_pollen_rupture" description="parameterization of speciated rupture for pollen"/>
+         <package name="mpas_dust_in"   description="parameterization of dust"/>
+         <package name="mpas_ssalt_in"  description="parameterization of sea salt"/>
+         <package name="mpas_anthro_in" description="parameterization of anthropogenic emissions for mpas-smoke"/>
+         <package name="mpas_volc_in"   description="parameterization of volcanic emissions for mpas-smoke"/>
+         <package name="mpas_sna_in"    description="parameterization of sulfate-nitrate-ammonium"/>
+         <package name="mpas_aerosols_in" description="parameterization of mpas aerosols"/>
+   </packages>
+
+
+<!-- ============================================================================================================ -->
+<!--            CHEMISTRY NAMELIST -->
+<!-- ============================================================================================================ -->
+   <nml_record name="chemistry" in_defaults="true">
+      <nml_option name="config_smoke_scheme" type="character" default_value="off" in_defaults="false"
+           units="-"
+           description="configuration for mpas smoke model"
+           possible_values="`on',`off'"/>
+      <nml_option name="config_pollen_scheme" type="character" default_value="off" in_defaults="false"
+           units="-"
+           description="configuration for mpas pollen model"
+           possible_values="`on',`off'"/>
+      <nml_option name="config_dust_scheme" type="character" default_value="off" in_defaults="false"
+           units="-"
+           description="configuration for mpas dust model"
+           possible_values="`on',`off'"/>
+      <nml_option name="config_ssalt_scheme" type="character" default_value="off" in_defaults="false"
+           units="-"
+           description="configuration for mpas sea salt model"
+           possible_values="`on',`off'"/>
+      <nml_option name="config_anthro_scheme" type="character" default_value="off" in_defaults="false"
+           units="-"
+           description="configuration for mpas anthropogenic emissions model"
+           possible_values="`on',`off'"/>
+      <nml_option name="config_volc_scheme" type="character" default_value="off" in_defaults="false"
+           units="-"
+           description="configuration for mpas volcanic emissions model"
+           possible_values="`on',`off'"/>
+      <nml_option name="config_sna_scheme" type="character" default_value="off" in_defaults="false"
+           units="-"
+           description="configuration for mpas sulfate nitrate ammonium model"
+           possible_values="`on',`off'"/>
+      <nml_option name="num_chem" type="integer" default_value="0"
+           units="-"
+           description="Number of chemical tracers"
+           possible_values="Positive integer values"/>
+      <nml_option name="kemit" type="integer" default_value="1"
+           units="-"
+           description="Number of vertical levels in anthropogenic emission input"
+           possible_values="Positive integer values"/>
+      <nml_option name="kfire" type="integer" default_value="1"
+           units="-"
+           description="Number of vertical levels in biomaass burning emission input"
+           possible_values="Positive integer values"/>
+      <nml_option name="kbio" type="integer" default_value="1"
+           units="-"
+           description="Number of vertical levels in biogenic emission input"
+           possible_values="Positive integer values"/>
+      <nml_option name="kvol" type="integer" default_value="1"
+           units="-"
+           description="Number of vertical levels in volcanic emission input"
+           possible_values="Positive integer values"/>
+      <nml_option name="hwp_method" type="integer" default_value="1"
+           units="-"
+           description="Algorithm choice for the hourly wildfire potential"
+           possible_values="Positive integer values"/>
+      <nml_option name="wetdep_ls_opt" type="integer" default_value="0"
+           units="-"
+           description="Flag to turn on offline wet deposition"
+           possible_values="Positive integer values"/>
+      <nml_option name="wetdep_ls_alpha" type="real" default_value="0.0"
+           units="-"
+           description="Removal fraction for offline wet deposition"
+           possible_values="Real values in the range [0,1]"/>
+      <nml_option name="plumerise_opt" type="integer" default_value="0"
+           units="-"
+           description="Algorithm choice for plumerise"
+           possible_values="Positive integer values"/>
+      <nml_option name="plume_wind_eff" type="integer" default_value="0"
+           units="-"
+           description="Algorithm choice for wind effects in plumerise"
+           possible_values="Positive integer values"/>
+      <nml_option name="plume_alpha" type="real" default_value="0.0"
+           units="-"
+           description="Enrainment constant for plumerise scheme"
+           possible_values="Positive integer values"/>
+      <nml_option name="ebb_dcycle" type="integer" default_value="0"
+           units="-"
+           description="Algorithm choice wildfire emission forecast"
+           possible_values="Positive integer values"/>
+      <nml_option name="add_fire_heat_flux" type="logical" default_value="false" in_defaults="false"
+           units="-"
+           description="Logical flag to turn on/off fire heat flux to the atmosphere"
+           possible_values=".true. or .false."/>
+      <nml_option name="add_fire_moist_flux" type="logical" default_value="false" in_defaults="false"
+           units="-"
+           description="Logical flag to turn on/off fire heat moisture to the atmosphere"
+           possible_values=".true. or .false."/>
+      <nml_option name="fire_emis_scale_factor" type="real" default_value="1.0"
+           units="-"
+           description="Scale factor applied to fire emissions"
+           possible_values="Positive real values"/>
+      <nml_option name="drydep_opt" type="integer" default_value="0"
+           units="-"
+           description="Algorithm choice for dry deposition"
+           possible_values="Positive integer values"/>
+      <nml_option name="pm_settling" type="integer" default_value="0"
+           units="-"
+           description="Algorithm choice for particulate matter settling"
+           possible_values="Positive integer values"/>
+       <nml_option name="dust_alpha" type="real" default_value="1.0"
+           units="-"
+           description="Scaling (linear) factor for dust emissions"
+           possible_values="Positive real values"/>
+       <nml_option name="dust_gamma" type="real" default_value="1.0"
+           units="-"
+           description="Scaling (exponential) factor for sediment supply"
+           possible_values="Positive real values"/>
+       <nml_option name="dust_moist_correction" type="real" default_value="1.0"
+           units="-"
+           description="Moisture correction factor for FENGSHA dust"
+           possible_values="Positive real values"/>
+       <nml_option name="dust_drylimit_factor" type="real" default_value="1.0"
+           units="-"
+           description="soil moisture dry limit factor for FENGSHA dust"
+           possible_values="Positive real values"/>
+       <nml_option name="plumerisefire_frq" type="integer" default_value="60" in_defaults="false"
+            units="minutes"
+            description="frequency of call to fire plumerise"
+            possible_values="Positive integer values"/>
+       <nml_option name="num_pols_per_polp" type="real" default_value="1000.0" in_defaults="false"
+            units="-"
+            description="number of sub-pollen particles per rupture of primary particle"
+            possbile_values="Positive real values"/>
+       <nml_option name="pollen_emis_scale_factor" type="real" default_value="1.0"
+            units="-"
+            description="scale factor for pollen emissions"
+            possible_values="Positive real values"/>
+   </nml_record>
+
+<!-- **************************************************************************************** -->
+<!-- *************************************** Streams **************************************** -->
+<!-- **************************************************************************************** -->
+
+   <streams>
+      <stream name="output"
+              type="output"
+              filename_template="history.$Y-$M-$D_$h.$m.$s.nc"
+              output_interval="6:00:00"
+              runtime_format="separate_file">
+              <var name="ddvel"/>
+              <var name="wetdep_resolved"/>
+              <var name="hwp"/>
+              <var name="frp_out"/>
+              <var name="fre_out"/>
+              <var name="hfx_bb"/>
+              <var name="qfx_bb"/>
+              <var name="PM2_5"/>
+              <var name="PM10"/>
+              <var name="max_bb_plume"/>
+              <var name="min_bb_plume"/>
+              <var name="coef_bb_dc"/>
+              <var name="fire_hist"/>
+              <var name="fire_peak_hr"/>
+              <var name="fire_type"/>
+              
+              <var_array name="e_ant_out"/>
+              <var_array name="e_bb_out"/>
+              <var_array name="e_bio_out"/>
+              <var_array name="e_dust_out"/>
+              <var_array name="e_ss_out"/>
+              <var_array name="e_vol_out"/>
+      </stream>
+
+      <stream name="smoke_forecast_input"
+         type="input"
+         filename_template="x1.40962.smoke.init.forecast.nc"
+         input_interval="initial_only"
+         immutable="true"                        
+         in_defaults="false">
+
+         <var_array name="e_bb_in"/>
+         <var name="fire_end_hr"/>
+         <var name="hwp_davg"/>
+         <var name="totprcp_24hrs"/> 
+         <var name="frp_in"/>
+         <var name="fre_in"/>
+      </stream>
+
+      <stream name="smoke_retro_input"
+         type="input"
+         filename_template="smoke.init.retro.$Y-$M-$D_$h.$m.$s.nc"
+         filename_interval="input_interval"
+         input_interval="1:00:00"
+         immutable="true"                        
+         in_defaults="false">
+
+         <var_array name="e_bb_in"/>
+         <var name="frp_in"/>
+      </stream>
+
+      <stream name="bio_input"
+         type="input"
+         filename_template="x1.40962.pollen.init.nc"
+         input_interval="initial_only"
+         immutable="true"                        
+         in_defaults="false">
+
+         <var_array name="e_bio_in"/>
+      </stream>
+
+      <stream name="dust_input"
+         type="input"
+         filename_template="x1.40962.dust.init.nc"
+         input_interval="initial_only"
+         immutable="true"                        
+         in_defaults="false">
+
+         <var name="sandfrac_in"/>
+         <var name="clayfrac_in"/>
+         <var name="uthres_in"/>
+         <var name="uthres_sg_in"/>
+         <var name="sep_in"/>
+         <var name="albedo_drag_m_in"/>
+         <var name="feff_m_in"/>
+      </stream>
+
+      <stream name="anthro_input"
+         type="input"
+         filename_template="anthro.init.$Y-$M-$D_$h.$m.$s.nc"
+         filename_interval="input_interval"
+         input_interval="1:00:00"
+         immutable="true"
+         in_defaults="false">
+     
+         <var_array name="e_ant_in"/>
+      </stream>
+</streams>
+
+
+<!-- ================================ -->
+<!-- TRACERS = GASES + AEROSOLS -->
+<!-- ================================ -->
+   <var_struct name="state" time_levs="2">
+#ifndef MPAS_CAM_DYCORE
+      <var_array name="scalars" type="real" dimensions="nVertLevels nCells Time">
+         <var name="smoke_fine" array_group="chemistry" units="kg kg^{-1}"
+              description="fine smoke mixing ratio"
+              packages="mpas_smoke_in;mpas_anthro_in"/>
+
+         <var name="smoke_coarse" array_group="chemistry" units="kg kg^{-1}"
+              description="coarse smoke mixing ratio"
+              packages="mpas_smoke_in;mpas_anthro_in"/>
+
+         <var name="polp_tree" array_group="chemistry" units="kg kg^{-1}"
+              description="coarse tree pollen mixing ratio"
+              packages="mpas_pollen_in"/>
+ 
+         <var name="polp_grass" array_group="chemistry" units="kg kg^{-1}"
+              description="coarse grass pollen mixing ratio"
+              packages="mpas_pollen_in"/>
+ 
+         <var name="polp_weed" array_group="chemistry" units="kg kg^{-1}"
+              description="coarse weed pollen mixing ratio"
+              packages="mpas_pollen_in"/>
+
+         <var name="pols_all" array_group="chemistry" units="kg kg^{-1}"
+              description="combined ruptured pollen mixing ratio"
+              packages="mpas_pollen_in"/>
+ 
+         <var name="pols_tree" array_group="chemistry" units="kg kg^{-1}"
+              description="fine tree pollen mixing ratio"
+              packages="speciated_pollen_rupture"/>
+ 
+         <var name="pols_grass" array_group="chemistry" units="kg kg^{-1}"
+              description="fine grass pollen mixing ratio"
+              packages="speciated_pollen_rupture"/>
+ 
+         <var name="pols_weed" array_group="chemistry" units="kg kg^{-1}"
+              description="fine weed pollen mixing ratio"
+              packages="speciated_pollen_rupture"/>
+ 
+         <var name="dust_fine" array_group="chemistry" units="kg kg^{-1}"
+              description="fine dust mixing ratio"
+              packages="mpas_dust_in;mpas_anthro_in"/>
+ 
+         <var name="dust_coarse" array_group="chemistry" units="kg kg^{-1}"
+              description="coarse dust mixing ratio"
+              packages="mpas_dust_in;mpas_anthro_in"/>
+ 
+         <var name="ssalt_fine" array_group="chemistry" units="kg kg^{-1}"
+              description="fine sea salt mixing ratio"
+              packages="mpas_ssalt_in"/>
+ 
+         <var name="ssalt_coarse" array_group="chemistry" units="kg kg^{-1}"
+              description="coarse sea salt mixing ratio"
+              packages="mpas_ssalt_in"/>
+ 
+         <var name="unspc_fine" array_group="chemistry" units="kg kg^{-1}"
+              description="fine anthropogenic primary aerosol mixing ration"
+              packages="mpas_anthro_in"/>
+ 
+         <var name="unspc_coarse" array_group="chemistry" units="kg kg^{-1}"
+              description="coarse anthropogenic primary aerosol"
+              packages="mpas_anthro_in"/>
+
+         <var name="vash_fine" array_group="chemistry" units="kg kg^{-1}"
+              description="fine volcanic ash"
+              packages="mpas_volc_in"/> 
+
+         <var name="vash_coarse" array_group="chemistry" units="kg kg^{-1}"
+              description="coarse volcanic ash"
+              packages="mpas_volc_in"/> 
+
+         <var name="so4_a_fine" array_group="chemistry" units="kg kg^{-1}"
+              description="fine sulfate aerosol"
+              packages="mpas_aerosols_in;mpas_sna_in"/>
+ 
+         <var name="no3_a_fine" array_group="chemistry" units="kg kg^{-1}"
+              description="fine nitrate aerosol"
+              packages="mpas_aerosols_in;mpas_sna_in"/> 
+
+         <var name="nh4_a_fine" array_group="chemistry" units="kg kg^{-1}"
+              description="fine ammonium aerosol"
+              packages="mpas_aerosols_in;mpas_sna_in"/> 
+
+         <var name="so2" array_group="chemistry" units="mol mol^{-1}"
+              description="sulfur dioxide"
+              packages="mpas_aerosols_in;mpas_sna_in"/> 
+
+         <var name="nh3" array_group="chemistry" units="mol mol^{-1}"
+              description="ammonia"
+              packages="mpas_aerosols_in;mpas_sna_in"/> 
+      </var_array>
+#endif
+   </var_struct>
+
+<!-- INPUT EMISSIONS -->
+   <var_struct name="emis_input" time_levs="1">
+     <!-- BIOMASS BURNING -->
+      <var_array name="e_bb_in" type="real" dimensions="nkfire nCells Time">
+         <var name="e_bb_in_smoke_fine" name_in_code="e_bb_in_smoke_fine" array_group="bb_in_aerosols" units="ug m^{-2} s^{-1}"
+              description="input biomass burning fine smoke emissions"
+              packages="mpas_smoke_in"/>
+         <var name="e_bb_in_smoke_coarse" name_in_code="e_bb_in_smoke_coarse" array_group="bb_in_aerosols" units="ug m^{-2} s^{-1}"
+              description="input biomass burning coarse smoke emissions"
+              packages="mpas_smoke_in"/>
+      </var_array>
+     <!-- Anthropogenic -->
+      <var_array name="e_ant_in" type="real" dimensions="nkemit nCells Time">
+
+         <var name="e_ant_in_no3_a_fine" name_in_code="e_ant_in_no3_a_fine" array_group="ant_in_aerosols" units="ug m^{-2} s^{-1}"
+              description="input anthropogenic fine nitrate emissions"
+              packages="mpas_sna_in"/>
+         <var name="e_ant_in_so4_a_fine" name_in_code="e_ant_in_so4_a_fine" array_group="ant_in_aerosols" units="ug m^{-2} s^{-1}"
+              description="input anthropogenic fine sulfate emissions"
+              packages="mpas_sna_in"/>
+         <var name="e_ant_in_nh4_a_fine" name_in_code="e_ant_in_nh4_a_fine" array_group="ant_in_aerosols" units="ug m^{-2} s^{-1}"
+              description="input anthropogenic fine ammonium emissions"
+              packages="mpas_sna_in"/>
+         <var name="e_ant_in_so2" name_in_code="e_ant_in_so2" array_group="ant_in_gases" units="mol m^{-2} hr^{-1}"
+              description="input anthropogenic sulfur dioxide (SO2) emissions"
+              packages="mpas_sna_in"/>
+         <var name="e_ant_in_nh3" name_in_code="e_ant_in_nh3" array_group="ant_in_gases" units="mol m^{-2} hr^{-1}"
+              description="input anthropogenic ammonia (NH3) emissions"
+              packages="mpas_sna_in"/>
+         <var name="e_ant_in_dust_fine" name_in_code="e_ant_in_dust_fine" array_group="ant_in_aerosols" units="ug m^{-2} s^{-1}"
+              description="input anthropogenic fine dust emissions"
+              packages="mpas_anthro_in"/>
+         <var name="e_ant_in_dust_coarse" name_in_code="e_ant_in_dust_coarse" array_group="ant_in_aerosols" units="ug m^{-2} s^{-1}"
+              description="input anthropogenic coarse dust emissions"
+              packages="mpas_anthro_in"/>
+         <var name="e_ant_in_unspc_fine" name_in_code="e_ant_in_unspc_fine" array_group="ant_in_aerosols" units="ug m^{-2} s^{-1}"
+              description="input anthropogenic fine unspeciated emissions"
+              packages="mpas_anthro_in"/>
+         <var name="e_ant_in_unspc_coarse" name_in_code="e_ant_in_unspc_coarse" array_group="ant_in_aerosols" units="ug m^{-2} s^{-1}"
+              description="input anthropogenic coarse unspeciated emissions"
+              packages="mpas_anthro_in"/>
+         <var name="e_ant_in_smoke_fine" name_in_code="e_ant_in_smoke_fine" array_group="ant_in_aerosols" units="ug m^{-2} s^{-1}"
+              description="input anthropogenic fine smoke emissions"
+              packages="mpas_anthro_in"/>
+         <var name="e_ant_in_smoke_coarse" name_in_code="e_ant_in_smoke_coarse" array_group="ant_in_aerosols" units="ug m^{-2} s^{-1}"
+              description="input anthropogenic coarse smoke emissions"
+              packages="mpas_anthro_in"/>
+      </var_array>
+     <!-- Biogenic -->
+      <var_array name="e_bio_in" type="real" dimensions="nkbio nCells Time">
+         <var name="e_bio_in_polp_tree" name_in_code="e_bio_in_polp_tree" array_group="bio_in_aerosols" units="ug m^{-2} s^{-1}"
+              description="input biogenic coarse tree pollen emissions"
+              packages="mpas_pollen_in"/>
+         <var name="e_bio_in_polp_grass" name_in_code="e_bio_in_polp_grass" array_group="bio_in_aerosols" units="ug m^{-2} s^{-1}"
+              description="input biogenic coarse grass pollen emissions"
+              packages="mpas_pollen_in"/>
+         <var name="e_bio_in_polp_weed" name_in_code="e_bio_in_polp_weed" array_group="bio_in_aerosols" units="ug m^{-2} s^{-1}"
+              description="input biogenic coarse weed pollen emissions"
+              packages="mpas_pollen_in"/>
+      </var_array>
+      <var_array name="e_vol_in" type="real" dimensions="nkvol nCells Time">
+             <var name="e_vol_in_vash_fine" name_in_code="e_vol_in_vash_fine" array_group="vol_in_aerosols" units="ug m^{-2} s^{-1}"
+                  description="input volcanic fine ash emissions"
+                  packages="mpas_volc_in"/>
+             <var name="e_vol_in_vash_coarse" name_in_code="e_vol_in_vash_coarse" array_group="vol_in_aerosols" units="ug m^{-2} s^{-1}"
+                  description="input volcanic coarse ash emissions"
+                  packages="mpas_volc_in"/>
+      </var_array>
+   </var_struct>
+
+<!-- Chemistry Diagnostics -->                   
+   <var_struct name="diag_physics" time_levs="1">
+<!-- OUTPUT EMISSIONS -->
+      <var_array name="e_bb_out" type="real" dimensions="nVertLevels nCells Time">
+         <var name="e_bb_smoke_fine" name_in_code="e_bb_out_smoke_fine" array_group="bb_out_aerosols" units="ug m^{-2} s^{-1}"
+              description="output biomass burning fine smoke emissions"
+              packages="mpas_smoke_in"/>
+         <var name="e_bb_smoke_coarse" name_in_code="e_bb_out_smoke_coarse" array_group="bb_out_aerosols" units="ug m^{-2} s^{-1}"
+              description="output biomass burning coarse smoke emissions"
+              packages="mpas_smoke_in"/>
+      </var_array>
+
+      <var_array name="e_vol_out" type="real" dimensions="nVertLevels nCells Time">
+         <var name="e_vol_vash_fine" name_in_code="e_vol_out_vash_fine" array_group="vol_out_aerosols" units="ug m^{-2} s^{-1}"
+              description="output volcancic fine ash emissions"
+              packages="mpas_volc_in"/>
+         <var name="e_vol_vash_coarse" name_in_code="e_vol_out_vash_coarse" array_group="vol_out_aerosols" units="ug m^{-2} s^{-1}"
+              description="output volcancic coarse ash emissions"
+              packages="mpas_volc_in"/>
+      </var_array>
+
+      <var_array name="e_ant_out" type="real" dimensions="nVertLevels nCells Time">
+         <var name="e_ant_dust_fine" name_in_code="e_ant_out_dust_fine" array_group="ant_out_aerosols" units="ug m^{-2} s^{-1}"
+              description="ouput anthropogenic fine dust emissions"
+              packages="mpas_anthro_in"/>
+         <var name="e_ant_dust_coarse" name_in_code="e_ant_out_dust_coarse" array_group="ant_out_aerosols" units="ug m^{-2} s^{-1}"
+              description="output anthropogenic coarse dust emissions"
+              packages="mpas_anthro_in"/>
+         <var name="e_ant_unspc_fine" name_in_code="e_ant_out_unspc_fine" array_group="ant_out_aerosols" units="ug m^{-2} s^{-1}"
+              description="output anthropogenic fine unspeciated emissions"
+              packages="mpas_anthro_in"/>
+         <var name="e_ant_unspc_coarse" name_in_code="e_ant_out_unspc_coarse" array_group="ant_out_aerosols" units="ug m^{-2} s^{-1}"
+              description="output anthropogenic coarse unspeciated emissions"
+              packages="mpas_anthro_in"/>
+         <var name="e_ant_smoke_fine" name_in_code="e_ant_out_smoke_fine" array_group="ant_out_aerosols" units="ug m^{-2} s^{-1}"
+              description="output anthropogenic fine smoke emissions"
+              packages="mpas_anthro_in"/>
+         <var name="e_ant_smoke_coarse" name_in_code="e_ant_out_smoke_coarse" array_group="ant_out_aerosols" units="ug m^{-2} s^{-1}"
+              description="output anthropogenic coarse smoke emissions"
+              packages="mpas_anthro_in"/>
+
+         <var name="e_ant_no3_a_fine" name_in_code="e_ant_out_no3_a_fine" array_group="ant_out_aerosols" units="ug m^{-2} s^{-1}"
+              description="ouput anthropogenic fine nitrate (NO3) emissions"
+              packages="mpas_anthro_in"/>
+         <var name="e_ant_nh4_a_fine" name_in_code="e_ant_out_nh4_a_fine" array_group="ant_out_aerosols" units="ug m^{-2} s^{-1}"
+              description="ouput anthropogenic fine ammonium (NH4) emissions"
+              packages="mpas_anthro_in"/>
+         <var name="e_ant_so4_a_fine" name_in_code="e_ant_out_so4_a_fine" array_group="ant_out_aerosols" units="ug m^{-2} s^{-1}"
+              description="ouput anthropogenic fine sulfate (SO4) emissions"
+              packages="mpas_anthro_in"/>
+         <var name="e_ant_nh3" name_in_code="e_ant_out_nh3" array_group="ant_out_gases" units="ug m^{-2} s^{-1}"
+              description="ouput anthropogenic fine ammonia (NH3) emissions"
+              packages="mpas_anthro_in"/>
+         <var name="e_ant_so2" name_in_code="e_ant_out_so2" array_group="ant_out_gases" units="ug m^{-2} s^{-1}"
+              description="ouput anthropogenic fine nitrate (NO3) emissions"
+              packages="mpas_anthro_in"/>
+      </var_array>
+
+      <var_array name="e_bio_out" type="real" dimensions="nVertLevels nCells Time">
+         <var name="e_bio_polp_tree"  name_in_code="e_bio_out_polp_tree" array_group="bio_out_aerosols" units="ug m^{-2} s^{-1}" 
+              description="output emissions of coarse tree pollen"
+              packages="mpas_pollen_in"/>
+         <var name="e_bio_polp_grass" name_in_code="e_bio_out_polp_grass" array_group="bio_out_aerosols" units="ug m^{-2} s^{-1}" 
+              description="output emissions of coarse grass pollen"
+              packages="mpas_pollen_in"/>
+         <var name="e_bio_polp_weed"  name_in_code="e_bio_out_polp_weed" array_group="bio_out_aerosols"  units="ug m^{-2} s^{-1}" 
+              description="output_emissions of coarse weed pollen"
+              packages="mpas_pollen_in"/>
+      </var_array>
+
+      <var_array name="e_dust_out" type="real" dimensions="nVertLevels nCells Time">
+         <var name="e_dust_dust_fine"   name_in_code="e_dust_out_dust_fine" array_group="dust_out_aerosols" units="ug m^{-2} s^{-1}" 
+              description="emissions of fine dust"
+              packages="mpas_dust_in"/>
+         <var name="e_dust_dust_coarse" name_in_code="e_dust_out_dust_coarse" array_group="dust_out_aerosols" units="ug m^{-2} s^{-1}" 
+              description="emissions of fine dust"
+              packages="mpas_dust_in"/>
+      </var_array>
+
+      <var_array name="e_ss_out" type="real" dimensions="nVertLevels nCells Time">
+         <var name="e_ssalt_fine"   name_in_code="e_ss_out_ssalt_fine" array_group="ss_out_aerosols" units="ug m^{-2} s^{-1}" 
+              description="emissions of fine ss"
+              packages="mpas_ssalt_in"/>
+         <var name="e_ssalt_coarse" name_in_code="e_ss_out_ssalt_coarse"  array_group="ss_out_aerosols" units="ug m^{-2} s^{-1}" 
+              description="emissions of fine ss"
+              packages="mpas_ssalt_in"/>
+      </var_array>
+
+      <var name="frac_grid_burned" type="real" dimensions="nCells Time" units="-"
+           description="fraction of grid cell area burned"/>
+      <var name="hfx_bb" type="real" dimensions="nCells Time" units="W m^{-2}"
+           description="heat flux from biomass burning"/>
+      <var name="qfx_bb" type="real" dimensions="nCells Time" units="kg m^{-2}"
+           description="water vapor flux from biomass burning"/> 
+      <var name="flam_frac" type="real" dimensions="nCells Time" units="-"
+           description="fraction of flaming bb emissions"/>
+      <var name="min_bb_plume" type="integer" dimensions="nCells Time" units="-"
+           description="minimumum biomass burning plumerise injection level"/>
+      <var name="max_bb_plume" type="integer" dimensions="nCells Time" units="-"
+           description="maximumum biomass burning plumerise injection level"/>
+      <var name="fire_type" type="integer" dimensions="nCells Time" units="-"
+           description="type of fire"/>
+      <var name="fire_peak_hr" type="real" dimensions="nCells Time" units="hr"
+           description="peak hour of wildfire"/>
+      <var name="fire_hist" type="real" dimensions="nCells Time" units="-"
+           description="coefficient to scale the fire activity depending on the fire duration"/>
+      <var name="coef_bb_dc" type="real" dimensions="nCells Time" units="-"
+           description="coefficient of diurnal cycle of biomass burning emissions"/>
+      <var name="frp_in" type="real" dimensions="nCells Time" units="W"
+           description="Input fire radiative power"/>
+      <var name="frp_out" type="real" dimensions="nCells Time" units="W"
+           description="Output fire radiative power"/>
+      <var name="fre_in" type="real" dimensions="nCells Time" units="W s"
+           description="Input fire radiative energy"/>
+      <var name="fre_out" type="real" dimensions="nCells Time" units="W s"
+           description="Output fire radiative energy"/>
+      <var name="hwp" type="real" dimensions="nCells Time" units="-"
+           description="Hourly Wildfire Potential"/>
+      <var name="hwp_davg" type="real" dimensions="nCells Time" units="-"
+           description="Daily Average Hourly Wildfire Potential"/>
+      <var name="totprcp_24hrs" type="real" dimensions="nCells Time" units="m" 
+           description="Total precipitation over the last 24 hours"/>
+      <var name="fire_end_hr" type="real" dimensions="nCells Time" units="hr"
+           description="Hours since fire was last detected"/>
+      <var name="ddvel"                 type="real" dimensions="nChem nCells Time" units="cm s^{-1}"
+           description="dry deposition velocitiy"/>
+      <var name="wetdep_resolved"       type="real" dimensions="nChem nCells Time" units="ug m^{-2} s^{-1}"
+           description="dry deposition velocitiy"/>
+      <var name="PM2_5"             type="real" dimensions="nVertLevels nCells Time" units="ug m^{-3}"
+           description="particulate matter less than or equal to 2.5 micrometers in diameter"/>
+      <var name="PM10"             type="real" dimensions="nVertLevels nCells Time" units="ug m^{-3}"
+           description="particulate matter less than or equal to 10 micrometers in diameter"/>
+      <var name="feff"                  type="real" dimensions="nCells Time" units="-" 
+           description="drag partition (alternate)"/>
+      <var name="albedo_drag"           type="real" dimensions="nCells Time" units="-" 
+           description="drag partition"/>
+      <var name="uthres_in" type="real" dimensions="nCells" units="-"
+           description="threshold friction velocity"/>
+      <var name="uthres_sg_in" type="real" dimensions="nCells" units="-"
+           description="threshold friction velocity (alternate"/>
+      <var name="sandfrac_in" type="real" dimensions="nCells" units="-"
+           description="sand fraction"/>
+      <var name="clayfrac_in" type="real" dimensions="nCells" units="-"
+           description="clay fraction"/>
+      <var name="albedo_drag_m_in" type="real" dimensions="nMonths nCells" units="-"
+           description="drag partition"/>
+      <var name="feff_m_in" type="real" dimensions="nMonths nCells" units="-"
+           description="drag partition (alternate)"/>
+      <var name="sep_in" type="real" dimensions="nCells" units="-"
+           description="soil erosion potential"/>
+      <var name="hno3_bkgd"             type="real" dimensions="nVertLevels nCells Time" units="mol mol^{-1}"
+           description="background HNO3 (nitric acid) concentration"/>
+  </var_struct>
+
+
+<!-- ================================ -->
+<!-- TRACER TENDENCIES -->
+<!-- ================================ -->
+   <var_struct name="tend" time_levs="1">
+#ifndef MPAS_CAM_DYCORE
+      <var_array name="scalars_tend" type="real" dimensions="nVertLevels nCells Time">
+         <var name="tend_smoke_fine" name_in_code="smoke_fine" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of fine smoke mass per unit volume divided by d(zeta)/dz"
+               packages="mpas_smoke_in"/>
+
+         <var name="tend_smoke_coarse" name_in_code="smoke_coarse" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of coarse smoke mass per unit volume divided by d(zeta)/dz"
+               packages="mpas_smoke_in"/>
+   
+          <var name="tend_polp_tree" name_in_code="polp_tree" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of coarse tree pollen mass per unit volume divided by d(zeta)/dz"
+               packages="mpas_pollen_in"/>
+   
+          <var name="tend_polp_grass" name_in_code="polp_grass" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of coarse grass pollen mass per unit volume divided by d(zeta)/dz"
+               packages="mpas_pollen_in"/>
+   
+          <var name="tend_polp_weed" name_in_code="polp_weed" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of coarse weed pollen mass per unit volume divided by d(zeta)/dz"
+               packages="mpas_pollen_in"/>
+          
+          <var name="tend_pols_all" name_in_code="pols_all" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of total fine pollen mass per unit volume divided by d(zeta)/dz"
+               packages="mpas_pollen_in"/>
+   
+          <var name="tend_pols_tree" name_in_code="pols_tree" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of fine tree pollen mass per unit volume divided by d(zeta)/dz"
+               packages="speciated_pollen_rupture"/>
+   
+          <var name="tend_pols_grass" name_in_code="pols_grass" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of fine grass pollen mass per unit volume divided by d(zeta)/dz"
+               packages="speciated_pollen_rupture"/>
+   
+          <var name="tend_pols_weed" name_in_code="pols_weed" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of fine weed pollen mass per unit volume divided by d(zeta)/dz"
+               packages="speciated_pollen_rupture"/>
+   
+          <var name="tend_dust_fine" name_in_code="dust_fine" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of fine dust mass per unit volume divided by d(zeta)/dz"
+               packages="mpas_dust_in"/>
+   
+          <var name="tend_dust_coarse" name_in_code="dust_coarse" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of fine dust mass per unit volume divided by d(zeta)/dz"
+               packages="mpas_dust_in"/>
+   
+          <var name="tend_ssalt_fine" name_in_code="ssalt_fine" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of fine sea salt mass per unit volume divided by d(zeta)/dz"
+               packages="mpas_ssalt_in"/>
+   
+          <var name="tend_ssalt_coarse" name_in_code="ssalt_coarse" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of fine sea salt mass per unit volume divided by d(zeta)/dz"
+               packages="mpas_ssalt_in"/>
+   
+          <var name="tend_unspc_fine" name_in_code="unspc_fine" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of fine unspeciated aerosol mass per unit volume divided by d(zeta)/dz"
+               packages="mpas_anthro_in"/>
+   
+          <var name="tend_unspc_coarse" name_in_code="unspc_coarse" array_group="chemistry" units="kg m^{-3} s^{-1}"
+               description="Tendency of coarse unspeciated aerosol mass per unit volume divided by d(zeta)/dz"
+               packages="mpas_anthro_in"/>
+            </var_array>
+#endif
+        </var_struct>
+
+<!-- =================================== -->
+<!-- TRACER LATERAL BOUNDARY CONDITIONS  -->
+<!-- =================================== -->
+   <var_struct name="lbc" time_levs="2" packages="limited_area">
+      <var_array name="lbc_scalars" type="real" dimensions="nVertLevels nCells Time">
+         <var name="lbc_smoke_fine" name_in_code="smoke_fine" array_group="chemistry"  packages="mpas_smoke_in" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of fine smoke mixing ratio"/>
+
+         <var name="lbc_smoke_coarse" name_in_code="smoke_coarse" array_group="chemistry"  packages="mpas_smoke_in" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of coarse smoke mixing ratio"/>
+  
+         <var name="lbc_polp_tree" name_in_code="polp_tree" array_group="chemistry"  packages="mpas_pollen_in" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of coarse tree pollen mixing ratio"/>
+  
+         <var name="lbc_polp_grass" name_in_code="polp_grass" array_group="chemistry"  packages="mpas_pollen_in" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of coarse grass pollen mixing ratio"/>
+  
+         <var name="lbc_polp_weed" name_in_code="polp_weed" array_group="chemistry"  packages="mpas_pollen_in" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of coarse weed pollen mixing ratio"/>
+         
+         <var name="lbc_pols_all" name_in_code="pols_all" array_group="chemistry"  packages="mpas_pollen_in" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of total fine pollen mixing ratio"/>
+  
+         <var name="lbc_pols_tree" name_in_code="pols_tree" array_group="chemistry"  packages="speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of fine tree pollen mixing ratio"/>
+  
+         <var name="lbc_pols_grass" name_in_code="pols_grass" array_group="chemistry"  packages="speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of fine grass pollen mixing ratio"/>
+  
+         <var name="lbc_pols_weed" name_in_code="pols_weed" array_group="chemistry"  packages="speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of fine weed pollen mixing ratio"/>
+  
+         <var name="lbc_dust_fine" name_in_code="dust_fine" array_group="chemistry"  packages="mpas_dust_in" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of fine dust mixing ratio"/>
+  
+         <var name="lbc_dust_coarse" name_in_code="dust_coarse" array_group="chemistry"  packages="mpas_dust_in" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of coarse dust mixing ratio"/>
+  
+         <var name="lbc_ssalt_fine" name_in_code="ssalt_fine" array_group="chemistry"  packages="mpas_ssalt_in" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of fine dust mixing ratio"/>
+  
+         <var name="lbc_ssalt_coarse" name_in_code="ssalt_coarse" array_group="chemistry"  packages="mpas_ssalt_in" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of coarse dust mixing ratio"/>
+  
+         <var name="lbc_unspc_fine" name_in_code="unspc_fine" array_group="chemistry"  packages="mpas_anthro_in" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of fine primary aerosol mixing ratio"/>
+  
+         <var name="lbc_unspc_coarse" name_in_code="unspc_coarse" array_group="chemistry"  packages="mpas_anthro_in" units="kg kg^{-1} s^{-1}"
+              description="Lateral boundary tendency of coarse primary aerosol mixing ratio"/>
+      </var_array>
+   </var_struct>
+
+   <var_struct name="tend_physics" time_levs="1">
+           <var  name="tend_chem_settle" type="real" dimensions="nChem nVertLevels nCells Time" units="kg kg^{-1} s^{-1}"
+                description="tendency of chemistry due to gravitational settling"
+                packages="mpas_smoke_in;mpas_pollen_in;mpas_dust_in;mpas_anthro_in;mpas_ssalt_in"/>
+   </var_struct>
