@@ -332,6 +332,7 @@
  logical :: &
     f_smoke_fine,     &!parameter set to true to include the smoke mixing ratio.
     f_smoke_coarse,   &
+    f_polp_all,       &
     f_polp_tree,      &
     f_polp_grass,     &
     f_polp_weed,      &

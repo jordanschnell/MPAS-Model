@@ -20,7 +20,7 @@
  use mpas_atmphys_driver_sfclayer,only: init_sfclayer
  use mpas_atmphys_vars,only: f_qc,f_qr,f_qi,f_qs,f_qg,f_qoz,f_nc,f_ni,f_nifa,f_nwfa,f_nbca,&
                              f_smoke_fine,f_smoke_coarse,&
-                             f_polp_tree,f_polp_weed,f_polp_grass,&
+                             f_polp_all,f_polp_tree,f_polp_weed,f_polp_grass,&
                              f_pols_tree,f_pols_weed,f_pols_grass,f_pols_all, &
                              f_dust_fine,f_dust_coarse,f_unspc_fine,f_unspc_coarse, &
                              f_ssalt_fine,f_ssalt_coarse, &
@@ -268,7 +268,7 @@ use mpas_stream_manager
 !number concentrations from the Thompson cloud microphysics:
  call init_physics_flags(state,f_qc,f_qr,f_qi,f_qs,f_qg,f_qoz,f_nc,f_ni,f_nifa,f_nwfa,f_nbca,&
                          f_smoke_fine,f_smoke_coarse,f_polp_tree,f_polp_grass,f_polp_weed,   &
-                         f_pols_all,f_pols_tree,f_pols_grass,f_pols_weed,                    &
+                         f_polp_all,f_pols_all,f_pols_tree,f_pols_grass,f_pols_weed,                    &
                          f_dust_fine,f_dust_coarse,f_unspc_fine,f_unspc_coarse,              &
                          f_ssalt_fine,f_ssalt_coarse,                                        &
                          f_so4a_fine,f_no3a_fine,f_nh4a_fine,f_nh3,f_so2                     )
@@ -494,7 +494,7 @@ use mpas_stream_manager
 
 !=================================================================================================================
  subroutine init_physics_flags(state,f_qc,f_qr,f_qi,f_qs,f_qg,f_qoz,f_nc,f_ni,f_nifa,f_nwfa,f_nbca,&
-                               f_smoke_fine,f_smoke_coarse,f_polp_tree,f_polp_grass,f_polp_weed,&
+                               f_smoke_fine,f_smoke_coarse,f_polp_tree,f_polp_grass,f_polp_weed,f_polp_all,&
                                f_pols_all,f_pols_tree,f_pols_grass,f_pols_weed, &
                                f_dust_fine,f_dust_coarse,f_unspc_fine,f_unspc_coarse,&
                                f_ssalt_fine,f_ssalt_coarse,&
@@ -507,7 +507,7 @@ use mpas_stream_manager
 !output arguments:
  logical,intent(out):: f_qc,f_qr,f_qi,f_qs,f_qg,f_qoz
  logical,intent(out):: f_nc,f_ni,f_nifa,f_nwfa,f_nbca
- logical,intent(out):: f_smoke_fine,f_smoke_coarse,f_polp_tree,f_polp_grass,f_polp_weed,&
+ logical,intent(out):: f_smoke_fine,f_smoke_coarse,f_polp_tree,f_polp_grass,f_polp_weed,f_polp_all,&
                        f_pols_all,f_pols_tree,f_pols_grass,f_pols_weed, &
                        f_dust_fine,f_dust_coarse,f_unspc_fine,f_unspc_coarse,&
                        f_ssalt_fine,f_ssalt_coarse,&
@@ -518,7 +518,7 @@ use mpas_stream_manager
  integer,pointer:: index_qc,index_qr,index_qi,index_qs,index_qg
  integer,pointer:: index_nc,index_ni,index_nifa,index_nwfa
  integer,pointer:: index_smoke_fine,index_smoke_coarse, &
-                   index_polp_tree,index_polp_grass,index_polp_weed, &
+                   index_polp_tree,index_polp_grass,index_polp_weed,index_polp_all, &
                    index_pols_all,index_pols_tree,index_pols_grass,index_pols_weed, &
                    index_dust_fine,index_dust_coarse,index_unspc_fine,index_unspc_coarse,&
                    index_ssalt_fine,index_ssalt_coarse, &
@@ -538,6 +538,7 @@ use mpas_stream_manager
  f_polp_tree    = .false.
  f_polp_grass   = .false.
  f_polp_weed    = .false.
+ f_polp_all     = .false.
  f_pols_all     = .false.
  f_pols_tree    = .false.
  f_pols_grass   = .false.
@@ -563,6 +564,7 @@ use mpas_stream_manager
  call mpas_pool_get_dimension(state,'index_polp_tree',index_polp_tree)
  call mpas_pool_get_dimension(state,'index_polp_grass',index_polp_grass)
  call mpas_pool_get_dimension(state,'index_polp_weed',index_polp_weed)
+ call mpas_pool_get_dimension(state,'index_polp_all',index_polp_all)
  call mpas_pool_get_dimension(state,'index_pols_all',index_pols_all)
  call mpas_pool_get_dimension(state,'index_pols_tree',index_pols_tree)
  call mpas_pool_get_dimension(state,'index_pols_grass',index_pols_grass)
@@ -589,6 +591,7 @@ use mpas_stream_manager
  if(index_polp_tree    .gt. -1) f_polp_tree = .true.
  if(index_polp_grass   .gt. -1) f_polp_grass = .true.
  if(index_polp_weed    .gt. -1) f_polp_weed = .true.
+ if(index_polp_all    .gt. -1)  f_polp_all = .true.
  if(index_pols_all     .gt. -1) f_pols_all = .true.
  if(index_pols_tree    .gt. -1) f_pols_tree = .true.
  if(index_pols_grass   .gt. -1) f_pols_grass = .true.

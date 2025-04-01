@@ -34,7 +34,7 @@ contains
            index_dust_fine       , index_dust_coarse           ,                             &
            index_ssalt_fine      , index_ssalt_coarse          ,                             &
            index_polp_tree       , index_polp_grass            , index_polp_weed,            &
-           index_pols_all        ,                                                           &
+           index_polp_all        , index_pols_all              ,                             &
            index_pols_tree       , index_pols_grass            , index_pols_weed,            &
            index_unspc_fine      , index_unspc_coarse          ,                             &
            index_no3_a_fine      , index_so4_a_fine            , index_nh4_a_fine,           &
@@ -154,7 +154,7 @@ contains
                            index_dust_fine,  index_dust_coarse,                     &
                            index_polp_tree,  index_polp_grass,   index_polp_weed,   &
                            index_pols_tree,  index_pols_grass,   index_pols_weed,   &
-                           index_pols_all,                                          &
+                           index_pols_all,   index_polp_all,                        &
                            index_unspc_fine, index_unspc_coarse,                    &
                            index_ssalt_fine, index_ssalt_coarse,                    &
                            index_so4_a_fine, index_no3_a_fine, index_nh4_a_fine,    &
@@ -295,17 +295,22 @@ contains
     ! plumerise frequency in minutes set up by the namelist input
     call_plume       = (do_plumerise .and. (plumerisefire_frq > 0))
     if (call_plume) call_plume = (mod(int(curr_secs), max(1, 60*plumerisefire_frq)) == 0) .or. (ktau == 2)
-
-    call set_scalar_indices(chemistry_start,                            &
-                    index_smoke_fine, index_smoke_coarse,               &
-                    index_dust_fine, index_dust_coarse,                 &
-                    index_polp_tree, index_polp_grass, index_polp_weed, &
-                    index_pols_tree, index_pols_grass, index_pols_weed, &
-                    index_pols_all,                                     &
-                    index_unspc_fine, index_unspc_coarse,               &
-                    index_ssalt_fine, index_ssalt_coarse,               &
+! 
+!   Reorder chemistry indices -- TODO if ktau = 1?
+!
+    call set_scalar_indices(chemistry_start,                             &
+                    index_smoke_fine, index_smoke_coarse,                &
+                    index_dust_fine, index_dust_coarse,                  &
+                    index_polp_tree, index_polp_grass, index_polp_weed,  &
+                    index_pols_tree, index_pols_grass, index_pols_weed,  &
+                    index_pols_all,  index_polp_all,                     &
+                    index_unspc_fine, index_unspc_coarse,                &
+                    index_ssalt_fine, index_ssalt_coarse,                &
                     index_no3_a_fine, index_so4_a_fine, index_nh4_a_fine,&
-                    index_so2, index_nh3)
+                    index_so2, index_nh3                                 )
+!
+!
+!
     call mpas_log_write( ' Calling smoke prep')
     !>- get ready for chemistry run
     call mpas_smoke_prep(                                                   &
@@ -495,7 +500,7 @@ contains
 
     if ( do_mpas_anthro ) then
        call mpas_smoke_anthro_emis_driver(dt,gmt,julday,kemit,        &
-            xlat,xlong, chem,num_chem,dz8w,rho_phy,                   &
+            xlat,xlong, chem,num_chem,dz8w,t_phy,rho_phy,             &
             e_ant_in, e_ant_out, num_e_ant_in, num_e_ant_out,         &
             index_e_ant_in_unspc_fine, index_e_ant_in_unspc_coarse,   &
             index_e_ant_in_smoke_fine, index_e_ant_in_smoke_coarse,   &

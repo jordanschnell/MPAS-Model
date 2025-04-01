@@ -15,6 +15,7 @@ module mpas_smoke_init
    p_smoke_coarse, &
    p_dust_fine,  &
    p_dust_coarse, &
+   p_polp_all, &
    p_polp_tree, &
    p_polp_grass  , & 
    p_polp_weed, &
@@ -39,7 +40,7 @@ module mpas_smoke_init
                                  index_dust_fine, index_dust_coarse,                  &
                                  index_polp_tree, index_polp_grass, index_polp_weed,  &
                                  index_pols_tree, index_pols_grass, index_pols_weed,  &
-                                 index_pols_all,                                      &
+                                 index_pols_all,  index_polp_all,                     &
                                  index_unspc_fine, index_unspc_coarse,                &
                                  index_ssalt_fine, index_ssalt_coarse,                &
                                  index_no3_a_fine, index_so4_a_fine, index_nh4_a_fine,&
@@ -52,7 +53,7 @@ module mpas_smoke_init
                            index_dust_fine, index_dust_coarse,                 &
                            index_polp_tree, index_polp_grass, index_polp_weed, &
                            index_pols_tree, index_pols_grass, index_pols_weed, &
-                           index_pols_all,                                     & 
+                           index_pols_all,  index_polp_all,                    & 
                            index_unspc_fine, index_unspc_coarse,               &
                            index_ssalt_fine, index_ssalt_coarse,               &
                            index_no3_a_fine, index_so4_a_fine, index_nh4_a_fine,&
@@ -62,6 +63,7 @@ module mpas_smoke_init
         p_smoke_coarse  = index_smoke_coarse - chemistry_start + 1
         p_dust_fine     = index_dust_fine - chemistry_start + 1
         p_dust_coarse   = index_dust_coarse - chemistry_start + 1
+        p_polp_all      = index_polp_all - chemistry_start + 1
         p_polp_tree     = index_polp_tree - chemistry_start + 1
         p_polp_grass    = index_polp_grass - chemistry_start + 1
         p_polp_weed     = index_polp_weed - chemistry_start + 1

@@ -100,133 +100,50 @@ CONTAINS
     jmx=1
     lmx=1
 
-!    emis_ssalt_fine = 0._RKIND
-!    emis_ssalt_coarse = 0._RKIND
+    ! -- original GOCART sea salt scheme
+    do j = jts, jte
+      do i = its, ite
 
-!   select case (config % chem_opt)
-!    select case (chem_opt)
+        ! -- only use sea salt scheme over water
+        if ( ( xland(i,j)-1.5) .gt. 0. ) then
 
-!      case default
+          ! -- compute auxiliary variables
+          delp = p8w(i,kts,j)-p8w(i,kts+1,j)
+          if (dz8w(i,kts,j) < 12.) then
+            w10m = sqrt(u_phy(i,kts,j)*u_phy(i,kts,j)+v_phy(i,kts,j)*v_phy(i,kts,j))
+          else
+            w10m = sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
+          end if
 
-!        select case (seas_opt)
-!          case (1)
-            ! -- original GOCART sea salt scheme
-            do j = jts, jte
-              do i = its, ite
+          ilwi(1,1)=0
+          tc = 0.
+          tskin(1,1)=tsk(i,j)
+          airmas(1,1)=area(i,j) * delp / g
+          dxy(1)=area(i,j)
+          ipr=0
 
-                ! -- only use sea salt scheme over water
-                if ( ( xland(i,j)-1.5) .gt. 0. ) then
+          airmas1(1,1,1) = airmas(1,1)
+          tc1(1,1,1,:) = tc
+          bems1(1,1,:) = bems
+          call source_ss( imx,jmx,lmx,number_ss_bins, dt, tc1, pi, ilwi, dxy, w10m, airmas1, bems1,ipr)
+          tc   = tc1(1,1,1,:)
+          bems = bems1(1,1,:)
 
-                  ! -- compute auxiliary variables
-                  delp = p8w(i,kts,j)-p8w(i,kts+1,j)
-                  if (dz8w(i,kts,j) < 12.) then
-                    w10m = sqrt(u_phy(i,kts,j)*u_phy(i,kts,j)+v_phy(i,kts,j)*v_phy(i,kts,j))
-                  else
-                    w10m = sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
-                  end if
+          chem(i,kts,j,p_ssalt_fine)   = chem(i,kts,j,p_ssalt_fine) + &
+                                          (tc(1) + 0.286*tc(2)) * converi
+          chem(i,kts,j,p_ssalt_coarse) = chem(i,kts,j,p_ssalt_coarse) + &
+                                          (0.714*tc(2) + tc(3) + tc(4)) * converi
+!           [ ug/m2/s ]
+           e_ss_out(i,1,j,index_e_ss_out_ssalt_fine) = converi *( bems(1) + 0.286*bems(2) )
+           e_ss_out(i,1,j,index_e_ss_out_ssalt_coarse) = converi *( 0.714*bems(2) + bems(3) + bems(4) )
 
-                  ilwi(1,1)=0
-                  tc = 0.
-                  tskin(1,1)=tsk(i,j)
-                  airmas(1,1)=area(i,j) * delp / g
-                  dxy(1)=area(i,j)
-                  ipr=0
+          ! for output diagnostics
 
-                  airmas1(1,1,1) = airmas(1,1)
-                  tc1(1,1,1,:) = tc
-                  bems1(1,1,:) = bems
-                  call source_ss( imx,jmx,lmx,number_ss_bins, dt, tc1, pi, ilwi, dxy, w10m, airmas1, bems1,ipr)
-                  tc   = tc1(1,1,1,:)
-                  bems = bems1(1,1,:)
+        end if
 
-                  ! -- add sea salt emission increments to existing airborne concentrations
-!                  chem(i,kts,j,p_seas_1) = chem(i,kts,j,p_seas_1) + tc(1)*converi
-!                  chem(i,kts,j,p_seas_2) = chem(i,kts,j,p_seas_2) + tc(2)*converi
-!                  chem(i,kts,j,p_seas_3) = chem(i,kts,j,p_seas_3) + tc(3)*converi
-!                  chem(i,kts,j,p_seas_4) = chem(i,kts,j,p_seas_4) + tc(4)*converi
-!                  chem(i,kts,j,p_seas_5) = chem(i,kts,j,p_seas_5) + tc(5)*converi
+      end do
+    end do
 
-                   chem(i,kts,j,p_ssalt_fine)   = chem(i,kts,j,p_ssalt_fine) + &
-                                                  (tc(1) + 0.286*tc(2)) * converi
-                   chem(i,kts,j,p_ssalt_coarse) = chem(i,kts,j,p_ssalt_coarse) + &
-                                                  (0.714*tc(2) + tc(3) + tc(4)) * converi
-!                  [ ug/m2/s ]
-                   e_ss_out(i,1,j,index_e_ss_out_ssalt_fine) = converi *( bems(1) + 0.286*bems(2) )
-                   e_ss_out(i,1,j,index_e_ss_out_ssalt_coarse) = converi *( 0.714*bems(2) + bems(3) + bems(4) )
-
-                  ! for output diagnostics
-!                  emis_seas(i,1,j,p_eseas1) = bems(1)
-!                  emis_seas(i,1,j,p_eseas2) = bems(2)
-!                  emis_seas(i,1,j,p_eseas3) = bems(3)
-!                  emis_seas(i,1,j,p_eseas4) = bems(4)
-!                  emis_seas(i,1,j,p_eseas5) = bems(5)
-
-                end if
-
-              end do
-            end do
-
-!          case (2)
-!            ! -- NGAC sea salt scheme
-!            do j = jts, jte
-!              do i = its, ite
-!
-!                ! -- only use sea salt scheme over water
-!                if (xland(i,j) < 0.5) then
-!
-!                  ! -- compute auxiliary variables
-!                  delp = p8w(i,kts,j)-p8w(i,kts+1,j)
-!                  if (dz8w(i,kts,j) < 12.) then
-!                    ws10m = sqrt(u_phy(i,kts,j)*u_phy(i,kts,j)+v_phy(i,kts,j)*v_phy(i,kts,j))
-!                  else
-!                    ws10m = sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
-!                  end if
-!
-!                  ! -- compute NGAC SST correction
-!                  tskin_c  = tsk(i,j) - 273.15
-!                  tskin_c  = min(max(tskin_c, -0.1), 36.0)    ! temperature range (0, 36) C
-!
-!                  fsstemis = -1.107211 &
-!                             - tskin_c*(0.010681+0.002276*tskin_c) &
-!                             + 60.288927/(40.0 - tskin_c)
-!                  fsstemis = min(max(fsstemis, 0.0), 7.0)
-!
-!                  do n = 1, number_ss_bins
-!                    memissions = 0.
-!                    nemissions = 0.
-!                    call SeasaltEmission( ra(n), rb(n), emission_scheme, &
-!                                          ws10m, ustar(i,j), pi, memissions, nemissions, rc )
-!!                    if (chem_rc_test((rc /= 0), msg="Error in NGAC sea salt scheme", &
-!!                      file=__FILE__, line=__LINE__)) return
-!
-!                    bems(n) = emission_scale(n) * fsstemis * memissions
-!                    tc(n) = bems(n) * dt * g / delp
-!                  end do
-!
-!                  ! -- add sea salt emission increments to existing airborne concentrations
-!                  chem(i,kts,j,p_seas_1) = chem(i,kts,j,p_seas_1) + tc(1)*converi
-!                  chem(i,kts,j,p_seas_2) = chem(i,kts,j,p_seas_2) + tc(2)*converi
-!                  chem(i,kts,j,p_seas_3) = chem(i,kts,j,p_seas_3) + tc(3)*converi
-!                  chem(i,kts,j,p_seas_4) = chem(i,kts,j,p_seas_4) + tc(4)*converi
-!                  chem(i,kts,j,p_seas_5) = chem(i,kts,j,p_seas_5) + tc(5)*converi
-!
-!                  ! for output diagnostics kg/m2/s
-!                  emis_seas(i,1,j,p_eseas1) = bems(1)
-!                  emis_seas(i,1,j,p_eseas2) = bems(2)
-!                  emis_seas(i,1,j,p_eseas3) = bems(3)
-!                  emis_seas(i,1,j,p_eseas4) = bems(4)
-!                  emis_seas(i,1,j,p_eseas5) = bems(5)
-!                end if
-!
-!              end do
-!            end do
-!
-!          case default
-!          ! -- no sea salt scheme
-!
-!        end select
-!
-!    end select
 
   end subroutine gocart_seasalt_driver
 

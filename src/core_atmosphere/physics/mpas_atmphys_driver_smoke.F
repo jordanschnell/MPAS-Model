@@ -929,7 +929,7 @@
 
  !local pointers:
  integer,pointer :: index_smoke_fine, index_smoke_coarse
- integer,pointer :: index_polp_tree, index_polp_grass, index_polp_weed, &
+ integer,pointer :: index_polp_tree, index_polp_grass, index_polp_weed, index_polp_all,&
                     index_pols_tree, index_pols_grass, index_pols_weed, index_pols_all
  integer,pointer :: index_dust_fine, index_dust_coarse
  integer,pointer :: index_unspc_fine, index_unspc_coarse
@@ -1080,6 +1080,7 @@
  call mpas_pool_get_dimension(state,'index_polp_tree'  ,index_polp_tree )
  call mpas_pool_get_dimension(state,'index_polp_grass'  ,index_polp_grass )
  call mpas_pool_get_dimension(state,'index_polp_weed'  ,index_polp_weed )
+ call mpas_pool_get_dimension(state,'index_polp_all'  ,index_polp_all )
  call mpas_pool_get_dimension(state,'index_pols_all'  ,index_pols_all )
  call mpas_pool_get_dimension(state,'index_pols_tree'  ,index_pols_tree )
  call mpas_pool_get_dimension(state,'index_pols_grass'  ,index_pols_grass )
@@ -1108,7 +1109,7 @@
      do_mpas_dust  = .true.
  endif
  if (config_pollen_scheme .ne. 'off' .and. &
-    (index_polp_tree .gt. 0 .or. index_polp_grass .gt. 0 .or. index_polp_weed .gt. 0 )) then
+    (index_polp_tree .gt. 0 .or. index_polp_grass .gt. 0 .or. index_polp_weed .gt. 0 .or. index_polp_all .gt. 0)) then
     do_mpas_pollen= .true.
  endif
  if (config_anthro_scheme .ne. 'off' .and. &
@@ -1137,7 +1138,8 @@
            index_dust_fine  = index_dust_fine,  index_dust_coarse  = index_dust_coarse,  &
            index_ssalt_fine = index_ssalt_fine, index_ssalt_coarse = index_ssalt_coarse, &
            index_polp_tree  = index_polp_tree,  index_polp_grass   = index_polp_grass,   &
-           index_polp_weed  = index_polp_weed,  index_pols_all     = index_pols_all,     &
+           index_polp_weed  = index_polp_weed,  index_polp_all     = index_polp_all,     &
+           index_pols_all     = index_pols_all,     &
            index_pols_tree    = index_pols_tree,    &
            index_pols_grass = index_pols_grass, index_pols_weed    = index_pols_weed,    &
            index_unspc_fine = index_unspc_fine, index_unspc_coarse = index_unspc_coarse, &
@@ -1269,6 +1271,7 @@
       if (index_dust_coarse .gt.  0) PM10_p(i,k,j) = PM10_p(i,k,j) + chem_p(i,k,j,index_dust_coarse  - chemistry_start + 1)
       if (index_unspc_coarse .gt. 0) PM10_p(i,k,j) = PM10_p(i,k,j) + chem_p(i,k,j,index_unspc_coarse - chemistry_start + 1) 
       if (index_ssalt_coarse .gt. 0) PM10_p(i,k,j) = PM10_p(i,k,j) + chem_p(i,k,j,index_ssalt_coarse - chemistry_start + 1)
+      if (index_polp_all .gt.     0) PM10_p(i,k,j) = PM10_p(i,k,j) + chem_p(i,k,j,index_polp_all    - chemistry_start + 1) 
       if (index_polp_tree .gt.    0) PM10_p(i,k,j) = PM10_p(i,k,j) + chem_p(i,k,j,index_polp_tree    - chemistry_start + 1) 
       if (index_polp_grass .gt.   0) PM10_p(i,k,j) = PM10_p(i,k,j) + chem_p(i,k,j,index_polp_grass   - chemistry_start + 1)
       if (index_polp_weed .gt.    0) PM10_p(i,k,j) = PM10_p(i,k,j) + chem_p(i,k,j,index_polp_weed   - chemistry_start + 1)
