@@ -14,36 +14,12 @@ module mpas_smoke_config
   real(RKIND), parameter :: epsilc     = 1.e-12
   real(RKIND), parameter :: pi         = 3.1415926
   !-- aerosol module configurations
-!  integer :: chem_opt = 1   
-!  integer :: kemit = 1
-!  integer :: dust_opt = 1
-!  real(RKIND) :: dust_drylimit_factor  = 1.0
-!  real(RKIND) :: dust_moist_correction = 1.0
-!  real(RKIND) :: dust_alpha = 0.
-!  real(RKIND) :: dust_gamma = 0.
   integer :: seas_opt = 1  ! GOCART scheme by default (2 = NGAC) 
-!  integer :: plume_wind_eff = 0   ! turn off by default
-!  logical :: do_plumerise  = .true.
   integer :: addsmoke_flag = 1
-!  integer :: plumerisefire_frq=60
   integer :: n_dbg_lines = 3
-!  integer :: wetdep_ls_opt = 1
-!  integer :: drydep_opt  = 1
-!  integer :: pm_settling = 1
   integer :: nfire_types = 5
-!  integer :: ebb_dcycle  = 1 ! 1: read in ebb_smoke(i,24), 2: daily
-!  integer :: hwp_method = 2
-!  logical :: do_mpas_smoke = .true.
-!  logical :: do_mpas_pollen = .true.
-!  logical :: do_mpas_dust   = .true.
   logical :: dbg_opt       = .false.
   logical :: aero_ind_fdb  = .false.
-!  logical :: add_fire_heat_flux= .false.
-!  logical :: add_fire_moist_flux= .false.
-!  real(RKIND) :: wetdep_ls_alpha = .5 ! scavenging factor
-!  real(RKIND) :: plume_alpha = 0.05
-!  real(RKIND) :: sc_factor = 1.0
-
   ! --
   integer, parameter :: CHEM_OPT_GOCART= 1
   integer, parameter :: num_moist=2

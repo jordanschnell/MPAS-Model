@@ -31,7 +31,11 @@ module mpas_smoke_init
    p_so4_a_fine, &
    p_nh4_a_fine, &
    p_so2, &
-   p_nh3
+   p_nh3, &
+   p_mold_fine, &
+   p_bact_fine, &
+   p_plastic_fine, &
+   p_dms
 
    contains
 

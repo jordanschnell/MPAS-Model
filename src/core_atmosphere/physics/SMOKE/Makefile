@@ -22,6 +22,7 @@ OBJS = \
 	mpas_smoke_wrapper.o \
 	mpas_smoke_init.o \
 	module_anthro_emissions.o \
+	module_rwc_emissions.o \
 	seas_ngac_mod.o \
 	seas_data_mod.o \
 	module_tactic_sna.o
@@ -94,6 +95,9 @@ seas_data_mod.o:
 seas_ngac_mod.o:
 
 module_anthro_emissions.o: \
+	mpas_smoke_init.o
+
+module_rwc_emissions.o: \
 	mpas_smoke_init.o
 
 #module_smoke_plumerise.o: module_smoke_plumerise.F90

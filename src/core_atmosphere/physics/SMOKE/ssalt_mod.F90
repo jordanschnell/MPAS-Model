@@ -53,6 +53,9 @@ CONTAINS
                                                        xland,                &
                                                        xlat,                 &
                                                        xlong,area
+! JLS TODO FOR HAB
+!     REAL(RKIND), DIMENSION( ims:ime, jms:jme ), 
+!            INTENT(IN   ) :: bacteria_concentration
      REAL(RKIND),  DIMENSION( ims:ime , kms:kme , jms:jme ),                        &
             INTENT(IN   ) ::                                                 &
                                                           alt,               &
@@ -133,11 +136,18 @@ CONTAINS
                                           (tc(1) + 0.286*tc(2)) * converi
           chem(i,kts,j,p_ssalt_coarse) = chem(i,kts,j,p_ssalt_coarse) + &
                                           (0.714*tc(2) + tc(3) + tc(4)) * converi
+          ! for output diagnostics
 !           [ ug/m2/s ]
            e_ss_out(i,1,j,index_e_ss_out_ssalt_fine) = converi *( bems(1) + 0.286*bems(2) )
            e_ss_out(i,1,j,index_e_ss_out_ssalt_coarse) = converi *( 0.714*bems(2) + bems(3) + bems(4) )
 
-          ! for output diagnostics
+! JLS TODO FOR HAB
+!           if ( do_mpas_bact .and. p_bact_fine .gt. 0 ) then
+!               call source_hab()
+!               chem(i,kts,j,p_bact_fine) = chem(i,kts,j,p_bact_fine) + emis * converi
+!           endif
+ 
+
 
         end if
 

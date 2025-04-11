@@ -16,6 +16,8 @@
           description="Number of vertical levels in biogenic emission file"/>
       <dim name="nkvol"             definition="namelist:kvol"
           description="Number of vertical levels in volcanic emission file"/>
+      <dim name="TWENTYFOUR"          definition="24"
+          description="A constant value of 24"/>
    </dims>
 
 <!-- **************************************************************************************** -->
@@ -36,6 +38,7 @@
          <package name="mpas_mold_in"   description="parameterization of mold"/>
          <package name="mpas_bact_in"   description="parameterization of bacteria"/>
          <package name="mpas_dms_in"   description="parameterization of DMS"/>
+         <package name="mpas_plastic_in"   description="parameterization of microplastics"/>
    </packages>
 
 
@@ -95,6 +98,18 @@
            units="-"
            description="Algorithm choice for the hourly wildfire potential"
            possible_values="Positive integer values"/>
+      <nml_option name="hwp_alpha" type="real" default_value="1.0"
+           units="-"
+           description="Scale factor for the hourly wildfire potential"
+           possible_values="Positive real values"/>
+      <nml_option name="bb_input_prevh" type="integer" default_value="24"
+           units="-"
+           description="Number of previous hours to average smoke input variables"
+           possible_values="factors of 24 (1,2,3,4,6,8,12,24)"/>
+      <nml_option name="online_rwc_emis" type="integer" default_value="0"
+           units="-"
+           description="Option for online residential wood burning emissions"
+           possible_values="0,1"/>
       <nml_option name="wetdep_ls_opt" type="integer" default_value="0"
            units="-"
            description="Flag to turn on offline wet deposition"
@@ -127,9 +142,13 @@
            units="-"
            description="Logical flag to turn on/off fire heat moisture to the atmosphere"
            possible_values=".true. or .false."/>
-      <nml_option name="fire_emis_scale_factor" type="real" default_value="1.0"
+      <nml_option name="bb_emis_scale_factor" type="real" default_value="1.0"
            units="-"
-           description="Scale factor applied to fire emissions"
+           description="Scale factor applied to biomass burning fire emissions"
+           possible_values="Positive real values"/>
+      <nml_option name="rwc_emis_scale_factor" type="real" default_value="1.0"
+           units="-"
+           description="Scale factor applied to residnetial wood fire emissions"
            possible_values="Positive real values"/>
       <nml_option name="drydep_opt" type="integer" default_value="0"
            units="-"
@@ -203,21 +222,6 @@
               <var_array name="e_vol_out"/>
       </stream>
 
-      <stream name="smoke_forecast_input"
-         type="input"
-         filename_template="x1.40962.smoke.init.forecast.nc"
-         input_interval="initial_only"
-         immutable="true"                        
-         in_defaults="false">
-
-         <var_array name="e_bb_in"/>
-         <var name="fire_end_hr"/>
-         <var name="hwp_davg"/>
-         <var name="totprcp_24hrs"/> 
-         <var name="frp_in"/>
-         <var name="fre_in"/>
-      </stream>
-
       <stream name="smoke_retro_input"
          type="input"
          filename_template="smoke.init.retro.$Y-$M-$D_$h.$m.$s.nc"
@@ -228,6 +232,20 @@
 
          <var_array name="e_bb_in"/>
          <var name="frp_in"/>
+         <var name="fre_in"/>
+      </stream>
+
+      <stream name="smoke_input"
+         type="input"
+         filename_template="x1.40962.bb.init.nc"
+         input_interval="initial_only"
+         immutable="true"                        
+         in_defaults="false">
+
+         <var name="hwp_prev24"/>
+         <var name="totprcp_prev24"/>
+         <var name="frp_prev24"/>
+         <var name="fre_prev24"/>
       </stream>
 
       <stream name="bio_input"
@@ -266,6 +284,23 @@
      
          <var_array name="e_ant_in"/>
       </stream>
+
+      <stream name="rwc_input"
+         type="input"
+         filename_template="rwc.init.nc"
+         input_interval="intial_only"
+         immutable="true"
+         in_defaults="false">
+     
+         <var name="RWC_annual_sum"/>
+         <var name="RWC_denominator"/>
+         <var name="RWC_annual_sum_smoke_fine"/>
+         <var name="RWC_annual_sum_smoke_coarse"/>
+         <var name="RWC_annual_sum_unspc_fine"/>
+         <var name="RWC_annual_sum_unspc_coarse"/>
+       </stream>
+         
+         
 </streams>
 
 
@@ -325,6 +360,10 @@
          <var name="dms" array_group="chemistry" units="kg kg^{-1}"
               description="dimethyl-sulfide mixing ratio"
               packages="mpas_dms_in"/>
+         
+         <var name="plastic_fine" array_group="chemistry" units="kg kg^{-1}"
+              description="fine microplastic mixing ratio"
+              packages="mpas_plastic_in"/>
  
          <var name="dust_fine" array_group="chemistry" units="kg kg^{-1}"
               description="fine dust mixing ratio"
@@ -538,41 +577,65 @@
       </var_array>
 
       <var name="frac_grid_burned" type="real" dimensions="nCells Time" units="-"
-           description="fraction of grid cell area burned"/>
+           description="fraction of grid cell area burned"
+           packages="mpas_smoke_in"/>
       <var name="hfx_bb" type="real" dimensions="nCells Time" units="W m^{-2}"
-           description="heat flux from biomass burning"/>
+           description="heat flux from biomass burning"
+           packages="mpas_smoke_in"/>
       <var name="qfx_bb" type="real" dimensions="nCells Time" units="kg m^{-2}"
-           description="water vapor flux from biomass burning"/> 
+           description="water vapor flux from biomass burning"
+           packages="mpas_smoke_in"/>
       <var name="flam_frac" type="real" dimensions="nCells Time" units="-"
-           description="fraction of flaming bb emissions"/>
+           description="fraction of flaming bb emissions"
+           packages="mpas_smoke_in"/>
       <var name="min_bb_plume" type="integer" dimensions="nCells Time" units="-"
-           description="minimumum biomass burning plumerise injection level"/>
+           description="minimumum biomass burning plumerise injection level"
+           packages="mpas_smoke_in"/>
       <var name="max_bb_plume" type="integer" dimensions="nCells Time" units="-"
-           description="maximumum biomass burning plumerise injection level"/>
+           description="maximumum biomass burning plumerise injection level"
+           packages="mpas_smoke_in"/>
       <var name="fire_type" type="integer" dimensions="nCells Time" units="-"
-           description="type of fire"/>
+           description="type of fire"
+           packages="mpas_smoke_in"/>
       <var name="fire_peak_hr" type="real" dimensions="nCells Time" units="hr"
-           description="peak hour of wildfire"/>
+           description="peak hour of wildfire"
+           packages="mpas_smoke_in"/>
       <var name="fire_hist" type="real" dimensions="nCells Time" units="-"
-           description="coefficient to scale the fire activity depending on the fire duration"/>
+           description="coefficient to scale the fire activity depending on the fire duration"
+           packages="mpas_smoke_in"/>
       <var name="coef_bb_dc" type="real" dimensions="nCells Time" units="-"
-           description="coefficient of diurnal cycle of biomass burning emissions"/>
-      <var name="frp_in" type="real" dimensions="nCells Time" units="W"
-           description="Input fire radiative power"/>
-      <var name="frp_out" type="real" dimensions="nCells Time" units="W"
-           description="Output fire radiative power"/>
-      <var name="fre_in" type="real" dimensions="nCells Time" units="W s"
-           description="Input fire radiative energy"/>
-      <var name="fre_out" type="real" dimensions="nCells Time" units="W s"
-           description="Output fire radiative energy"/>
+           description="coefficient of diurnal cycle of biomass burning emissions"
+           packages="mpas_smoke_in"/>
+      <var name="frp_in" type="real" dimensions="nCells Time" units="MW"
+           description="Input fire radiative power"
+           packages="mpas_smoke_in"/>
+      <var name="frp_out" type="real" dimensions="nCells Time" units="MW"
+           description="Output fire radiative power"
+           packages="mpas_smoke_in"/>
+      <var name="fre_in" type="real" dimensions="nCells Time" units="MJs"
+           description="Input fire radiative energy"
+           packages="mpas_smoke_in"/>
+      <var name="fre_out" type="real" dimensions="nCells Time" units="MJs"
+           description="Output fire radiative energy"
+           packages="mpas_smoke_in"/>
       <var name="hwp" type="real" dimensions="nCells Time" units="-"
-           description="Hourly Wildfire Potential"/>
-      <var name="hwp_davg" type="real" dimensions="nCells Time" units="-"
-           description="Daily Average Hourly Wildfire Potential"/>
-      <var name="totprcp_24hrs" type="real" dimensions="nCells Time" units="m" 
-           description="Total precipitation over the last 24 hours"/>
+           description="Hourly Wildfire Potential"
+           packages="mpas_smoke_in"/>
+      <var name="hwp_prev24" type="real" dimensions="nCells TWENTYFOUR" units="-"
+           description="Hourly Wildfire Potential over the last 24 hours"
+           packages="mpas_smoke_in"/>
+      <var name="frp_prev24" type="real" dimensions="nCells TWENTYFOUR" units="MW"
+           description="Fire Radiative Power over the last 24 hours"
+           packages="mpas_smoke_in"/>
+      <var name="fre_prev24" type="real" dimensions="nCells TWENTYFOUR" units="MJs"
+           description="Fire Radiative Energy over the last 24 hours"
+           packages="mpas_smoke_in"/>
+      <var name="totprcp_prev24" type="real" dimensions="nCells TWENTYFOUR" units="m" 
+           description="Total precipitation over the last 24 hours"
+           packages="mpas_smoke_in"/>
       <var name="fire_end_hr" type="real" dimensions="nCells Time" units="hr"
-           description="Hours since fire was last detected"/>
+           description="Hours since fire was last detected"
+           packages="mpas_smoke_in"/>
       <var name="ddvel"                 type="real" dimensions="nChem nCells Time" units="cm s^{-1}"
            description="dry deposition velocitiy"/>
       <var name="wetdep_resolved"       type="real" dimensions="nChem nCells Time" units="ug m^{-2} s^{-1}"
@@ -582,25 +645,47 @@
       <var name="PM10"             type="real" dimensions="nVertLevels nCells Time" units="ug m^{-3}"
            description="particulate matter less than or equal to 10 micrometers in diameter"/>
       <var name="feff"                  type="real" dimensions="nCells Time" units="-" 
-           description="drag partition (alternate)"/>
+           description="drag partition (alternate)"
+           packages="mpas_dust_in"/>
       <var name="albedo_drag"           type="real" dimensions="nCells Time" units="-" 
-           description="drag partition"/>
+           description="drag partition"
+           packages="mpas_dust_in"/>
       <var name="uthres_in" type="real" dimensions="nCells" units="-"
-           description="threshold friction velocity"/>
+           description="threshold friction velocity"
+           packages="mpas_dust_in"/>
       <var name="uthres_sg_in" type="real" dimensions="nCells" units="-"
-           description="threshold friction velocity (alternate"/>
+           description="threshold friction velocity (alternate"
+           packages="mpas_dust_in"/>
       <var name="sandfrac_in" type="real" dimensions="nCells" units="-"
-           description="sand fraction"/>
+           description="sand fraction"
+           packages="mpas_dust_in"/>
       <var name="clayfrac_in" type="real" dimensions="nCells" units="-"
-           description="clay fraction"/>
+           description="clay fraction"
+           packages="mpas_dust_in"/>
       <var name="albedo_drag_m_in" type="real" dimensions="nMonths nCells" units="-"
-           description="drag partition"/>
+           description="drag partition"
+           packages="mpas_dust_in"/>
       <var name="feff_m_in" type="real" dimensions="nMonths nCells" units="-"
-           description="drag partition (alternate)"/>
+           description="drag partition (alternate)"
+           packages="mpas_dust_in"/>
       <var name="sep_in" type="real" dimensions="nCells" units="-"
-           description="soil erosion potential"/>
+           description="soil erosion potential"
+           packages="mpas_dust_in"/>
       <var name="hno3_bkgd"             type="real" dimensions="nVertLevels nCells Time" units="mol mol^{-1}"
-           description="background HNO3 (nitric acid) concentration"/>
+           description="background HNO3 (nitric acid) concentration"
+           packages="mpas_sna_in"/>
+      <var name="RWC_annual_sum" type="real" dimensions="nCells" units="ug m^{-2}"
+           description="Annual sum of residential wood burning emissions"/>
+      <var name="RWC_annual_sum_smoke_fine" type="real" dimensions="nCells" units="ug m^{-2}"
+           description="Annual sum of residential wood burning fine smoke emissions"/>
+      <var name="RWC_annual_sum_smoke_coarse" type="real" dimensions="nCells" units="ug m^{-2}"
+           description="Annual sum of residential wood burning coarse smoke emissions"/>
+      <var name="RWC_annual_sum_unspc_fine" type="real" dimensions="nCells" units="ug m^{-2}"
+           description="Annual sum of residential wood burning fine unspc emissions"/>
+      <var name="RWC_annual_sum_unspc_coarse" type="real" dimensions="nCells" units="ug m^{-2}"
+           description="Annual sum of residential wood burning coarse unspc emissions"/>
+      <var name="RWC_denominator" type="real" dimensions="nCells" units="F"
+           description="Annual Sum of (42.12 - 0.79*daily_minimum_temperature)"/>
   </var_struct>
 
 
@@ -734,6 +819,5 @@
 
    <var_struct name="tend_physics" time_levs="1">
            <var  name="tend_chem_settle" type="real" dimensions="nChem nVertLevels nCells Time" units="kg kg^{-1} s^{-1}"
-                description="tendency of chemistry due to gravitational settling"
-                packages="mpas_smoke_in;mpas_pollen_in;mpas_dust_in;mpas_anthro_in;mpas_ssalt_in"/>
+                description="tendency of chemistry due to gravitational settling"/>
    </var_struct>

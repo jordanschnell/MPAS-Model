@@ -67,7 +67,7 @@ contains
                                                                                
   ! local
    INTEGER :: i,j,k,n
-   REAL(RKIND) :: conv_aer, conv_gas
+   REAL(RKIND) :: conv_aer, conv_gas, emis
 
    REAL(RKIND), PARAMETER :: rwc_t_thresh = 283.15 ! [ 50 F]
 
@@ -83,33 +83,65 @@ contains
       conv_aer = dt / (rho_phy(i,k,j) *  dz8w(i,k,j))
       conv_gas = 4.828e-4_RKIND/rho_phy(i,k,j)*dt/(dz8w(i,k,j) * 60._RKIND)
 !
-!      if (p_smoke_fine   .gt. 0) chem(i,k,j,p_smoke_fine)   = chem(i,k,j,p_smoke_fine)   + conv_aer*e_ant_in(i,k,j,index_e_ant_in_smoke_fine)
-!      if (p_smoke_coarse .gt. 0) chem(i,k,j,p_smoke_coarse) = chem(i,k,j,p_smoke_coarse) + conv_aer*e_ant_in(i,k,j,index_e_ant_in_smoke_coarse)
-      if (p_unspc_fine   .gt. 0) chem(i,k,j,p_unspc_fine)   = chem(i,k,j,p_unspc_fine)   + conv_aer*e_ant_in(i,k,j,index_e_ant_in_unspc_fine)
-      if (p_unspc_coarse .gt. 0) chem(i,k,j,p_unspc_coarse) = chem(i,k,j,p_unspc_coarse) + conv_aer*e_ant_in(i,k,j,index_e_ant_in_unspc_coarse)
-      if (p_dust_fine    .gt. 0) chem(i,k,j,p_dust_fine)    = chem(i,k,j,p_dust_fine)    + conv_aer*e_ant_in(i,k,j,index_e_ant_in_dust_fine)
-      if (p_dust_coarse  .gt. 0) chem(i,k,j,p_dust_coarse)  = chem(i,k,j,p_dust_coarse)  + conv_aer*e_ant_in(i,k,j,index_e_ant_in_dust_coarse)
+      if (p_unspc_fine .gt. 0 .and. index_e_ant_in_unspc_fine .gt. 0 ) then
+         emis = conv_aer*e_ant_in(i,k,j,index_e_ant_in_unspc_fine)
+         chem(i,k,j,p_unspc_fine)   = chem(i,k,j,p_unspc_fine) + emis
+         e_ant_out(i,k,j,index_e_ant_out_unspc_fine) = e_ant_out(i,k,j,index_e_ant_out_unspc_fine) + emis
+      endif
+      if (p_unspc_coarse   .gt. 0  .and. index_e_ant_in_unspc_coarse .gt. 0 ) then
+         emis = conv_aer*e_ant_in(i,k,j,index_e_ant_in_unspc_coarse)
+         chem(i,k,j,p_unspc_coarse)   = chem(i,k,j,p_unspc_coarse) + emis
+         e_ant_out(i,k,j,index_e_ant_out_unspc_coarse) = e_ant_out(i,k,j,index_e_ant_out_unspc_coarse) + emis
+      endif
+      if (p_dust_fine   .gt. 0  .and. index_e_ant_in_dust_fine .gt. 0 ) then
+         emis = conv_aer*e_ant_in(i,k,j,index_e_ant_in_dust_fine)
+         chem(i,k,j,p_dust_fine)   = chem(i,k,j,p_dust_fine) + emis
+         e_ant_out(i,k,j,index_e_ant_out_dust_fine) = e_ant_out(i,k,j,index_e_ant_out_dust_fine) + emis
+      endif
+      if (p_dust_coarse   .gt. 0 .and. index_e_ant_in_dust_coarse .gt. 0 ) then
+         emis = conv_aer*e_ant_in(i,k,j,index_e_ant_in_dust_coarse)
+         chem(i,k,j,p_dust_coarse)   = chem(i,k,j,p_dust_coarse) + emis
+         e_ant_out(i,k,j,index_e_ant_out_dust_coarse) =  e_ant_out(i,k,j,index_e_ant_out_dust_coarse) + emis
+      endif
+      if (p_smoke_fine   .gt. 0 .and. index_e_ant_in_smoke_fine .gt. 0 ) then
+         emis = conv_aer*e_ant_in(i,k,j,index_e_ant_in_smoke_fine)
+         chem(i,k,j,p_smoke_fine)   = chem(i,k,j,p_smoke_fine) + emis
+         e_ant_out(i,k,j,index_e_ant_out_smoke_fine) = e_ant_out(i,k,j,index_e_ant_out_smoke_fine) + emis
+      endif
+      if (p_smoke_coarse   .gt. 0 .and. index_e_ant_in_smoke_coarse .gt. 0 ) then
+         emis = conv_aer*e_ant_in(i,k,j,index_e_ant_in_smoke_coarse)
+         chem(i,k,j,p_smoke_coarse)   = chem(i,k,j,p_smoke_coarse) + emis
+         e_ant_out(i,k,j,index_e_ant_out_smoke_coarse) = e_ant_out(i,k,j,index_e_ant_out_smoke_coarse) + emis
+      endif
+
       if (p_no3_a_fine   .gt. 0) chem(i,k,j,p_no3_a_fine)   = chem(i,k,j,p_no3_a_fine)   + conv_aer*e_ant_in(i,k,j,index_e_ant_in_no3_a_fine)
       if (p_so4_a_fine   .gt. 0) chem(i,k,j,p_so4_a_fine)   = chem(i,k,j,p_so4_a_fine)   + conv_aer*e_ant_in(i,k,j,index_e_ant_in_so4_a_fine)
       if (p_nh4_a_fine   .gt. 0) chem(i,k,j,p_nh4_a_fine)   = chem(i,k,j,p_nh4_a_fine)   + conv_aer*e_ant_in(i,k,j,index_e_ant_in_nh4_a_fine)
 !
       if (p_nh3          .gt. 0) chem(i,k,j,p_nh3)          = chem(i,k,j,p_nh3)          + conv_gas*e_ant_in(i,k,j,index_e_ant_in_nh3)
       if (p_so2          .gt. 0) chem(i,k,j,p_so2)          = chem(i,k,j,p_so2)          + conv_gas*e_ant_in(i,k,j,index_e_ant_in_so2)
-!
+
+!     
    enddo ! i
    enddo ! k
    enddo ! j
 
-
-!   do j = jts, jte
-!   do i = its, ite
-!      if ( t_phy(i,kts,j) .lt. rwc_t_thresh ) then
-!         emis = (42.12_RKIND - 0.79_RKIND*t_min(i,kts,j)) / total_rwc_emis(i,j)
-!      if (p_smoke_fine   .gt. 0) chem(i,k,j,p_smoke_fine)   = chem(i,k,j,p_smoke_fine)   + conv_aer*e_ant_in(i,k,j,index_e_ant_in_smoke_fine)
-!      if (p_smoke_coarse .gt. 0) chem(i,k,j,p_smoke_coarse) = chem(i,k,j,p_smoke_coarse) + conv_aer*e_ant_in(i,k,j,index_e_ant_in_smoke_coarse)
-!      endif
-!   enddo
-!   enddo        
+!   if ( do_online_rwc_emis ) then
+!      do j = jts, jte
+!      do i = its, ite
+!         if ( t_phy(i,kts,j) .lt. rwc_t_thresh ) then
+!            frac = (42.12_RKIND - 0.79_RKIND*t_min_in(i,kts,j)) / summed_min_temperature_rwc(i,j)
+!            if (p_smoke_fine   .gt. 0 .and. index_e_ant_out_smoke_fine .gt. 0 ) then
+!               emis = conv_aer * frac * RWC_total_emissions_smoke_fine(i,j)
+!               e_ant_out(i,k,j,index_e_ant_out_smoke_fine) = emis
+!            endif
+!            if (p_smoke_coarse   .gt. 0 .and. index_e_ant_out_smoke_coarse .gt. 0 ) then
+!               emis = conv_aer * frac * RWC_total_emissions_smoke_coarse(i,j)
+!               e_ant_out(i,k,j,index_e_ant_out_smoke_coarse) = emis
+!            endif
+!      enddo
+!      enddo        
+!   endif
 
   end subroutine mpas_smoke_anthro_emis_driver
 

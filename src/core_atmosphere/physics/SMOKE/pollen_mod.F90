@@ -179,7 +179,7 @@ contains
        ppemfact_mass_weed  = ppemfact_numb_weed  * & 
                              pi/6._RKIND * rho_polp * diam_polp**3._RKIND * converi
        ! Calculate the conversion factor
-       factaa = (dt/dz8w(i,kts,j))/rho(i,kts,j)
+       factaa = dt / ( dz8w(i,kts,j) * rho(i,kts,j) )
 
      ! Compute the mass emissions, update the diagnostic and chemistry arrays
        emis = pollen_emis_scale_factor * factaa * ppemfact_mass_tree

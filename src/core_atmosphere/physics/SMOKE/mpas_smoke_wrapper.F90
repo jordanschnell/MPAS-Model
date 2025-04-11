@@ -18,6 +18,7 @@ module mpas_smoke_wrapper
    use dust_fengsha_mod,      only : gocart_dust_fengsha_driver
    use ssalt_mod
    use module_anthro_emissions
+   use module_rwc_emissions
    use module_tactic_sna
 
    implicit none
@@ -60,6 +61,7 @@ contains
            index_e_dust_out_dust_fine, index_e_dust_out_dust_coarse,                         &
            index_e_ss_out_ssalt_fine, index_e_ss_out_ssalt_coarse,                           &
            frp_in                , frp_out,    fre_in, fre_out, hwp,  coef_bb_dc          ,  &
+           totprcp_prev24        , hwp_prev24     , frp_prev24,    fre_prev24,               &
            hfx_bb                , qfx_bb         ,  frac_grid_burned    ,                   &
            min_bb_plume          , max_bb_plume,                                             &
            sandfrac_in           , clayfrac_in           , uthres_in            ,            &
@@ -74,15 +76,19 @@ contains
            do_mpas_smoke         , do_mpas_dust          , do_mpas_pollen        ,           &
            do_mpas_anthro        , do_mpas_ssalt         , do_mpas_volc          ,           &
            do_mpas_sna           ,                                                           &
-           hwp_method           ,  wetdep_ls_opt         ,                                   &
+           hwp_method            , hwp_alpha             , wetdep_ls_opt         ,           &
            wetdep_ls_alpha       , plumerise_opt         , plume_wind_eff       ,            &
-           plume_alpha           , fire_emis_scale_factor, ebb_dcycle           ,            &
+           plume_alpha           , bb_emis_scale_factor, ebb_dcycle             ,            &
            drydep_opt            , pm_settling           , add_fire_heat_flux   ,            &
            add_fire_moist_flux   , plumerisefire_frq     ,                                   &
            dust_alpha            , dust_gamma            , dust_drylimit_factor ,            &
            dust_moist_correction ,                                                           &
            num_pols_per_polp     , pollen_emis_scale_factor,                                 &
-           nwfa                  , nifa                 ,            &
+           bb_input_prevh        , online_rwc_emis,   rwc_emis_scale_factor,                 &
+           RWC_denominator       , RWC_annual_sum       ,                                    &
+           RWC_annual_sum_smoke_fine, RWC_annual_sum_smoke_coarse,                           &
+           RWC_annual_sum_unspc_fine, RWC_annual_sum_unspc_coarse,                           &
+           nwfa                  , nifa                 ,                                    &
            hno3_bkgd             ,                                                           &
            ktau                  , dt                    , dxcell               ,            &
            area                  ,                                                           & 
@@ -135,6 +141,13 @@ contains
     real(RKIND),intent(in), dimension(ims:ime, jms:jme)             :: swdown, z0, snowh, znt
     real(RKIND),intent(in), dimension(ims:ime, jms:jme)             :: raincv, rainncv, mavail                    
     real(RKIND),intent(inout), dimension(ims:ime, jms:jme)          :: rmol, ust
+! Residential Wood burning
+    real(RKIND),intent(in), dimension(ims:ims, jms:jme),optional    :: RWC_denominator, RWC_annual_sum,                        & 
+                                                                       RWC_annual_sum_smoke_fine, RWC_annual_sum_smoke_coarse, &
+                                                                       RWC_annual_sum_unspc_fine, RWC_annual_sum_unspc_coarse
+! BB forecast input (previous 24 hours)
+    real(RKIND),intent(in), dimension(ims:ims, jms:jme, 24),        & 
+                                                   optional         :: totprcp_prev24, hwp_prev24, frp_prev24, fre_prev24
 ! 3D Met input 
     real(RKIND),intent(in), dimension(ims:ime, kms:kme, jms:jme)    :: p8w,    dz8w,    z_at_w, cldfrac,   &
                                                                        p_phy,  t_phy,   u_phy,  v_phy,     &
@@ -221,12 +234,13 @@ contains
      logical,intent(in)                :: do_mpas_volc
      logical,intent(in)                :: do_mpas_sna
      integer,intent(in)                :: hwp_method
+     real(RKIND),intent(in)            :: hwp_alpha
      integer,intent(in)                :: wetdep_ls_opt
      real(kind=RKIND),intent(in)       :: wetdep_ls_alpha
      integer,intent(in)                :: plumerise_opt
      integer,intent(in)                :: plume_wind_eff
      real(kind=RKIND),intent(in)       :: plume_alpha
-     real(kind=RKIND),intent(in)       :: fire_emis_scale_factor
+     real(kind=RKIND),intent(in)       :: bb_emis_scale_factor, rwc_emis_scale_factor
      integer,intent(in)                :: ebb_dcycle
      integer,intent(in)                :: drydep_opt
      integer,intent(in)                :: pm_settling
@@ -236,6 +250,8 @@ contains
      real(RKIND),intent(in)            :: dust_alpha, dust_gamma
      real(RKIND),intent(in)            :: dust_drylimit_factor, dust_moist_correction
      real(RKIND),intent(in)            :: pollen_emis_scale_factor, num_pols_per_polp
+     integer,intent(in)                :: bb_input_prevh
+     integer,intent(in)                :: online_rwc_emis
 
 !>- plume variables
     ! -- buffers
@@ -330,6 +346,13 @@ contains
         its,ite, jts,jte, kts,kte)
         
    if ( do_mpas_smoke ) then
+
+! HERE IS WHERE WE'LL CALCULATE THE EMISSIONS OR READ IT IN
+!     if ( calc_bb_emis_online ) then
+!     if ( ebb_dcycle .eq. 1 ) then
+!
+
+
     if (ktau==1) then
       do j=jts,jte
       do i=its,ite
@@ -391,7 +414,7 @@ contains
       do j=jts,jte
       do i=its,ite
         if ( fire_type(i,j) .eq. 4 ) then ! only apply scaling factor to wildfires
-           frp_out(i,j) = min(fire_emis_scale_factor*frp_in(i,j)*coef_bb_dc(i,j),frp_max)
+           frp_out(i,j) = min(bb_emis_scale_factor*frp_in(i,j)*coef_bb_dc(i,j),frp_max)
         else
            frp_out(i,j) = min(frp_in(i,j)*coef_bb_dc(i,j),frp_max)
         endif
@@ -432,7 +455,7 @@ contains
                         coef_bb_dc,fire_hist,hwp,hwp_day_avg,         &
                         swdown,ebb_dcycle,ebu,ebu_coarse,fire_type,   &
                         qv, add_fire_moist_flux,                      &
-                        fire_emis_scale_factor,                       &    
+                        bb_emis_scale_factor,                         &   
                         ids,ide, jds,jde, kds,kde,                    &
                         ims,ime, jms,jme, kms,kme,                    &
                         its,ite, jts,jte, kts,kte                     )
@@ -517,8 +540,23 @@ contains
             ids,ide, jds,jde, kds,kde,                                &
             ims,ime, jms,jme, kms,kme,                                &
             its,ite, jts,jte, kts,kte                                 )
+    endif
 
-
+    if ( online_rwc_emis .gt. 0 ) then 
+       call mpas_smoke_rwc_emis_driver(dt,gmt,julday,kemit,           &
+            xlat,xlong, chem,num_chem,dz8w,t_phy,rho_phy,             &
+            rwc_emis_scale_factor,                                    &
+            online_rwc_emis, RWC_denominator, RWC_annual_sum,         &
+            RWC_annual_sum_smoke_fine, RWC_annual_sum_smoke_coarse,   &
+            RWC_annual_sum_unspc_fine, RWC_annual_sum_unspc_coarse,   &
+            e_ant_in, e_ant_out, num_e_ant_in, num_e_ant_out,         &
+            index_e_ant_in_unspc_fine, index_e_ant_in_unspc_coarse,   &
+            index_e_ant_in_smoke_fine, index_e_ant_in_smoke_coarse,   &
+            index_e_ant_out_unspc_fine, index_e_ant_out_unspc_coarse, &
+            index_e_ant_out_smoke_fine, index_e_ant_out_smoke_coarse, &
+            ids,ide, jds,jde, kds,kde,                                &
+            ims,ime, jms,jme, kms,kme,                                &
+            its,ite, jts,jte, kts,kte                                 )
     endif
 
     !>-- compute dry deposition, based on Emerson et al., (2020)
