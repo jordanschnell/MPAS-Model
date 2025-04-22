@@ -24,7 +24,7 @@
                              f_pols_tree,f_pols_weed,f_pols_grass,f_pols_all, &
                              f_dust_fine,f_dust_coarse,f_unspc_fine,f_unspc_coarse, &
                              f_ssalt_fine,f_ssalt_coarse, &
-                             f_no3a_fine,f_so4a_fine,f_nh4a_fine,f_so2,f_nh3                              
+                             f_no3_a_fine,f_so4_a_fine,f_nh4_a_fine,f_so2,f_nh3                              
 
  use mpas_atmphys_landuse
  use mpas_atmphys_o3climatology
@@ -170,8 +170,8 @@ use mpas_stream_manager
  integer:: iCell,iLag
 
 !-----------------------------------------------------------------------------------------------------------------
-!call mpas_log_write('')
-!call mpas_log_write('--- enter subroutine physics_init:')
+call mpas_log_write('')
+call mpas_log_write('--- enter subroutine physics_init:')
 
  call mpas_pool_get_config(configs,'config_do_restart'       ,config_do_restart       )
  call mpas_pool_get_config(configs,'config_o3climatology'    ,config_o3climatology    )
@@ -268,10 +268,10 @@ use mpas_stream_manager
 !number concentrations from the Thompson cloud microphysics:
  call init_physics_flags(state,f_qc,f_qr,f_qi,f_qs,f_qg,f_qoz,f_nc,f_ni,f_nifa,f_nwfa,f_nbca,&
                          f_smoke_fine,f_smoke_coarse,f_polp_tree,f_polp_grass,f_polp_weed,   &
-                         f_polp_all,f_pols_all,f_pols_tree,f_pols_grass,f_pols_weed,                    &
+                         f_polp_all,f_pols_all,f_pols_tree,f_pols_grass,f_pols_weed,         &
                          f_dust_fine,f_dust_coarse,f_unspc_fine,f_unspc_coarse,              &
                          f_ssalt_fine,f_ssalt_coarse,                                        &
-                         f_so4a_fine,f_no3a_fine,f_nh4a_fine,f_nh3,f_so2                     )
+                         f_so4_a_fine,f_no3_a_fine,f_nh4_a_fine,f_nh3,f_so2                     )
 
 !initialization of counters i_rainc and i_rainnc. i_rainc and i_rainnc track the number of
 !times the accumulated convective (rainc) and grid-scale (rainnc) rain exceed the prescribed
@@ -498,7 +498,7 @@ use mpas_stream_manager
                                f_pols_all,f_pols_tree,f_pols_grass,f_pols_weed, &
                                f_dust_fine,f_dust_coarse,f_unspc_fine,f_unspc_coarse,&
                                f_ssalt_fine,f_ssalt_coarse,&
-                               f_so4a_fine,f_no3a_fine,f_nh4a_fine,f_nh3,f_so2)
+                               f_so4_a_fine,f_no3_a_fine,f_nh4_a_fine,f_nh3,f_so2)
 !=================================================================================================================
 
 !input arguments:
@@ -511,7 +511,7 @@ use mpas_stream_manager
                        f_pols_all,f_pols_tree,f_pols_grass,f_pols_weed, &
                        f_dust_fine,f_dust_coarse,f_unspc_fine,f_unspc_coarse,&
                        f_ssalt_fine,f_ssalt_coarse,&
-                       f_so4a_fine,f_no3a_fine,f_nh4a_fine,f_nh3,f_so2
+                       f_so4_a_fine,f_no3_a_fine,f_nh4_a_fine,f_nh3,f_so2
 
 
 !local pointers:
@@ -522,7 +522,7 @@ use mpas_stream_manager
                    index_pols_all,index_pols_tree,index_pols_grass,index_pols_weed, &
                    index_dust_fine,index_dust_coarse,index_unspc_fine,index_unspc_coarse,&
                    index_ssalt_fine,index_ssalt_coarse, &
-                   index_so4a_fine,index_no3a_fine,index_nh4a_fine,index_nh3,index_so2
+                   index_so4_a_fine,index_no3_a_fine,index_nh4_a_fine,index_nh3,index_so2
 
 !-----------------------------------------------------------------------------------------------------------------
 
@@ -549,9 +549,9 @@ use mpas_stream_manager
  f_unspc_coarse = .false.
  f_ssalt_fine   = .false.
  f_ssalt_coarse = .false.
- f_so4a_fine    = .false.
- f_no3a_fine    = .false.
- f_nh4a_fine    = .false.
+ f_so4_a_fine    = .false.
+ f_no3_a_fine    = .false.
+ f_nh4_a_fine    = .false.
  f_nh3          = .false.
  f_so2          = .false.
  call mpas_pool_get_dimension(state,'index_qc',index_qc)
@@ -575,9 +575,9 @@ use mpas_stream_manager
  call mpas_pool_get_dimension(state,'index_unspc_coarse',index_unspc_coarse)
  call mpas_pool_get_dimension(state,'index_ssalt_fine',index_ssalt_fine)
  call mpas_pool_get_dimension(state,'index_ssalt_coarse',index_ssalt_coarse)
- call mpas_pool_get_dimension(state,'index_so4a_fine',index_so4a_fine)
- call mpas_pool_get_dimension(state,'index_no3a_fine',index_no3a_fine)
- call mpas_pool_get_dimension(state,'index_nh4a_fine',index_nh4a_fine)
+ call mpas_pool_get_dimension(state,'index_so4_a_fine',index_so4_a_fine)
+ call mpas_pool_get_dimension(state,'index_no3_a_fine',index_no3_a_fine)
+ call mpas_pool_get_dimension(state,'index_nh4_a_fine',index_nh4_a_fine)
  call mpas_pool_get_dimension(state,'index_nh3',index_nh3)
  call mpas_pool_get_dimension(state,'index_so2',index_so2)
 
@@ -602,9 +602,9 @@ use mpas_stream_manager
  if(index_unspc_coarse .gt. -1) f_unspc_coarse = .true.
  if(index_ssalt_fine   .gt. -1) f_ssalt_fine = .true.
  if(index_ssalt_coarse .gt. -1) f_ssalt_coarse = .true.
- if(index_so4a_fine    .gt. -1) f_so4a_fine = .true.
- if(index_no3a_fine    .gt. -1) f_no3a_fine = .true.
- if(index_nh4a_fine    .gt. -1) f_nh4a_fine = .true.
+ if(index_so4_a_fine    .gt. -1) f_so4_a_fine = .true.
+ if(index_no3_a_fine    .gt. -1) f_no3_a_fine = .true.
+ if(index_nh4_a_fine    .gt. -1) f_nh4_a_fine = .true.
  if(index_nh3          .gt. -1) f_nh3 = .true.
  if(index_so2          .gt. -1) f_so2 = .true.
 

@@ -357,7 +357,7 @@ contains
       do j=jts,jte
       do i=its,ite
         ebu(i,kts,j)= e_bb_in(i,kts,j,index_e_bb_in_smoke_fine)
-        ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smoke_coarse)
+if (p_smoke_coarse > 0 ) ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smoke_coarse)
         do k=kts+1,kte
          ebu(i,k,j)= 0._RKIND
          ebu_coarse(i,k,j)= 0._RKIND
@@ -371,8 +371,10 @@ contains
       ! ebu is divided by coef_bb_dc since it is applied in the output
         ebu(i,k,j) = e_bb_out(i,k,j,index_e_bb_out_smoke_fine) / &
                      MAX(1.E-4_RKIND,coef_bb_dc(i,j))
+    if (p_smoke_coarse > 0 ) then
         ebu_coarse(i,k,j) = e_bb_out(i,k,j,index_e_bb_out_smoke_coarse) / &
                      MAX(1.E-4_RKIND,coef_bb_dc(i,j))
+    endif
       enddo
       enddo
       enddo
@@ -448,6 +450,7 @@ contains
     if (addsmoke_flag == 1) then
      call mpas_log_write( ' Calling add_emis_burn')
      call add_emis_burn(dt,dz8w,rho_phy,pi,ebb_min,                   &
+! Pass whole chem array
                         chem(:,:,:,p_smoke_fine),                     &
                         chem(:,:,:,p_smoke_coarse),                   &
                         julday,gmt,xlat,xlong,                        &

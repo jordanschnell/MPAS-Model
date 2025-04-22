@@ -358,9 +358,9 @@
     f_unspc_coarse,   &
     f_ssalt_fine,     &
     f_ssalt_coarse,   &
-    f_so4a_fine,      &
-    f_no3a_fine,      &
-    f_nh4a_fine,      &
+    f_so4_a_fine,      &
+    f_no3_a_fine,      &
+    f_nh4_a_fine,      &
     f_nh3,            &
     f_so2
 
