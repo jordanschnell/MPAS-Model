@@ -493,10 +493,10 @@
    <var_struct name="diag_physics" time_levs="1">
 <!-- OUTPUT EMISSIONS -->
       <var_array name="e_bb_out" type="real" dimensions="nVertLevels nCells Time">
-         <var name="e_bb_out_smoke_fine" name_in_code="smoke_fine" array_group="bb_out_aerosols" units="ug m^{-2} s^{-1}"
+         <var name="e_bb_out_smoke_fine" name_in_code="e_bb_out_smoke_fine" array_group="bb_out_aerosols" units="ug m^{-2} s^{-1}"
               description="output biomass burning fine smoke emissions"
               packages="mpas_smoke_in"/>
-         <var name="e_bb_out_smoke_coarse" name_in_code="smoke_coarse" array_group="bb_out_aerosols" units="ug m^{-2} s^{-1}"
+         <var name="e_bb_out_smoke_coarse" name_in_code="e_bb_out_smoke_coarse" array_group="bb_out_aerosols" units="ug m^{-2} s^{-1}"
               description="output biomass burning coarse smoke emissions"
               packages="mpas_smoke_in"/>
       </var_array>
@@ -568,10 +568,10 @@
       </var_array>
 
       <var_array name="e_ss_out" type="real" dimensions="nVertLevels nCells Time">
-         <var name="e_ssalt_out_fine"   name_in_code="e_ssalt_out_ssalt_fine" array_group="ss_out_aerosols" units="ug m^{-2} s^{-1}" 
+         <var name="e_ssalt_out_fine"   name_in_code="e_ss_out_ssalt_fine" array_group="ss_out_aerosols" units="ug m^{-2} s^{-1}" 
               description="emissions of fine ss"
               packages="mpas_ssalt_in"/>
-         <var name="e_ssalt_out_coarse" name_in_code="e_ssalt_out_ssalt_coarse"  array_group="ss_out_aerosols" units="ug m^{-2} s^{-1}" 
+         <var name="e_ssalt_out_coarse" name_in_code="e_ss_out_ssalt_coarse"  array_group="ss_out_aerosols" units="ug m^{-2} s^{-1}" 
               description="emissions of fine ss"
               packages="mpas_ssalt_in"/>
       </var_array>

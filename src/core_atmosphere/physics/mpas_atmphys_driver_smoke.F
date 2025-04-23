@@ -118,7 +118,7 @@
     if(.not.allocated(coef_bb_dc_p))         allocate(coef_bb_dc_p(ims:ime,jms:jme))
     if (ebb_dcycle .eq. 1 ) then
        if(.not.allocated(frp_in_p)    )         allocate(frp_in_p(ims:ime,jms:jme))
-       if(.not.allocated(fre_in_p)            )  allocate(fre_in_p(ims:ims,jms:jme))
+       if(.not.allocated(fre_in_p)            )  allocate(fre_in_p(ims:ime,jms:jme))
     else
        if(.not.allocated(totprcp_prev24_p)    )  allocate(totprcp_prev24_p(ims:ime,jms:jme,24))
        if(.not.allocated(hwp_prev24_p)        )  allocate(hwp_prev24_p(ims:ime,jms:jme,24))
@@ -643,7 +643,7 @@
          coef_bb_dc_p(i,j) = coef_bb_dc(i)
          if ( ebb_dcycle .eq. 1 ) then
             frp_in_p(i,j)  = frp_in(i)
-            fre_in_p(i,j)         = fre_in(i)
+            fre_in_p(i,j)  = fre_in(i)
          else
             do h = 1,24 
                totprcp_prev24_p(i,j,h) = totprcp_prev24(i,h)
