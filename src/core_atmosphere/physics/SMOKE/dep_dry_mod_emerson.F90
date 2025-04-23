@@ -148,7 +148,8 @@ contains
                       aerodens = 2.2e+3
                    elseif (  (nv == p_polp_tree ) .or. &
                              (nv == p_polp_grass) .or. &
-                             (nv == p_polp_weed ) ) then
+                             (nv == p_polp_weed ) .or. &
+                             (nv == p_polp_all  )) then
                        dp = 20.E-6
                        aerodens = 1200.0
                    elseif ( ( nv == p_pols_tree) .or. &
@@ -249,7 +250,8 @@ contains
                  aerodens = 2.2e+3
                elseif ( ( nv == p_polp_tree) .or. &
                       ( nv == p_polp_grass) .or. &
-                      ( nv == p_polp_weed) ) then
+                      ( nv == p_polp_weed) .or. &
+                      ( nv == p_polp_all)  ) then
                   dp = 20.E-6
                   aerodens = 1200.0
                elseif ( ( nv == p_pols_tree) .or. &
