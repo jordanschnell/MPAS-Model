@@ -502,6 +502,20 @@ module atm_time_integration
       integer, pointer :: index_nc, index_nr, index_ni, index_ns, index_ng, index_nh, index_nccn
       integer, pointer :: index_volg, index_volh, index_zrw, index_zgw, index_zhw
 
+      ! JLS, chemistry
+      character (len=StrKIND), pointer :: config_smoke_scheme
+      character (len=StrKIND), pointer :: config_pollen_scheme
+      character (len=StrKIND), pointer :: config_dust_scheme
+      character (len=StrKIND), pointer :: config_anthro_scheme
+      character (len=StrKIND), pointer :: config_ssalt_scheme
+      character (len=StrKIND), pointer :: config_volc_scheme
+      integer, pointer :: index_smoke_fine, index_smoke_coarse
+      integer, pointer :: index_polp_tree, index_polp_grass, index_polp_weed, index_polp_all, &
+                          index_pols_tree, index_pols_grass, index_pols_weed, index_pols_all
+      integer, pointer :: index_dust_fine, index_dust_coarse
+      integer, pointer :: index_unspc_fine, index_unspc_coarse
+      integer, pointer :: index_ssalt_fine, index_ssalt_coarse
+
       character(len=StrKIND), pointer :: config_IAU_option
 
       type (mpas_pool_type), pointer :: state
@@ -541,6 +555,12 @@ module atm_time_integration
       !  config variables for dynamics-transport splitting, WCS 18 November 2014
       call mpas_pool_get_config(block % configs, 'config_split_dynamics_transport', config_split_dynamics_transport)
       call mpas_pool_get_config(block % configs, 'config_dynamics_split_steps', config_dynamics_split)
+      ! JLS, chemistry
+      call mpas_pool_get_config(block % configs, 'config_smoke_scheme', config_smoke_scheme)
+      call mpas_pool_get_config(block % configs, 'config_pollen_scheme', config_pollen_scheme)
+      call mpas_pool_get_config(block % configs, 'config_dust_scheme', config_dust_scheme)
+      call mpas_pool_get_config(block % configs, 'config_anthro_scheme', config_anthro_scheme)
+      call mpas_pool_get_config(block % configs, 'config_ssalt_scheme', config_ssalt_scheme)
       !  config variables for cloud microphysics
 #ifdef DO_PHYSICS
       call mpas_pool_get_config(block % configs, 'config_microp_scheme', config_microp_scheme)
@@ -617,6 +637,22 @@ module atm_time_integration
          call mpas_pool_get_dimension(state, 'index_zrw', index_zrw)
          call mpas_pool_get_dimension(state, 'index_zgw', index_zgw)
          call mpas_pool_get_dimension(state, 'index_zhw', index_zhw)
+         call mpas_pool_get_dimension(state, 'index_smoke_fine', index_smoke_fine)
+         call mpas_pool_get_dimension(state, 'index_smoke_coarse', index_smoke_coarse)
+         call mpas_pool_get_dimension(state, 'index_polp_all', index_polp_all)
+         call mpas_pool_get_dimension(state, 'index_polp_tree', index_polp_tree)
+         call mpas_pool_get_dimension(state, 'index_polp_grass', index_polp_grass)
+         call mpas_pool_get_dimension(state, 'index_polp_weed', index_polp_weed)
+         call mpas_pool_get_dimension(state, 'index_pols_tree', index_pols_tree)
+         call mpas_pool_get_dimension(state, 'index_pols_grass', index_pols_grass)
+         call mpas_pool_get_dimension(state, 'index_pols_weed', index_pols_weed)
+         call mpas_pool_get_dimension(state, 'index_pols_all', index_pols_all)
+         call mpas_pool_get_dimension(state, 'index_dust_fine', index_dust_fine)
+         call mpas_pool_get_dimension(state, 'index_dust_coarse', index_dust_coarse)
+         call mpas_pool_get_dimension(state, 'index_unspc_fine', index_unspc_fine)
+         call mpas_pool_get_dimension(state, 'index_unspc_coarse', index_unspc_coarse)
+         call mpas_pool_get_dimension(state, 'index_ssalt_fine', index_ssalt_fine)
+         call mpas_pool_get_dimension(state, 'index_ssalt_coarse', index_ssalt_coarse)
       endif
 
       !
@@ -1112,6 +1148,55 @@ module atm_time_integration
                   if (index_zhw > 0) then
                      scalars_driving(index_zhw,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'zhw', rk_timestep(rk_step) )
                   end if
+                  ! JLS, chemistry
+                  if (index_smoke_fine > 0) then
+                     scalars_driving(index_smoke_fine,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'smoke_fine', rk_timestep(rk_step) )
+                  end if
+                  if (index_smoke_coarse > 0) then
+                     scalars_driving(index_smoke_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'smoke_coarse', rk_timestep(rk_step) )
+                  end if
+                  if (index_polp_all > 0) then
+                     scalars_driving(index_polp_all,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'polp_all', rk_timestep(rk_step) )
+                  end if
+                  if (index_polp_tree > 0) then
+                     scalars_driving(index_polp_tree,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'polp_tree', rk_timestep(rk_step) )
+                  end if
+                  if (index_polp_grass > 0) then
+                     scalars_driving(index_polp_grass,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'polp_grass', rk_timestep(rk_step) )
+                  end if
+                  if (index_polp_weed > 0) then
+                     scalars_driving(index_polp_weed,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'polp_weed', rk_timestep(rk_step) )
+                  end if
+                  if (index_pols_all > 0) then
+                     scalars_driving(index_pols_all,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'pols_all', rk_timestep(rk_step) )
+                  end if
+                  if (index_pols_tree > 0) then
+                     scalars_driving(index_pols_tree,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'pols_tree', rk_timestep(rk_step) )
+                  end if
+                  if (index_pols_grass > 0) then
+                     scalars_driving(index_pols_grass,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'pols_grass', rk_timestep(rk_step) )
+                  end if
+                  if (index_pols_weed > 0) then
+                     scalars_driving(index_pols_weed,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'pols_weed', rk_timestep(rk_step) )
+                  end if
+                  if (index_dust_fine > 0) then
+                     scalars_driving(index_dust_fine,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'dust_fine', rk_timestep(rk_step) )
+                  end if
+                  if (index_dust_coarse > 0) then
+                     scalars_driving(index_dust_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'dust_coarse', rk_timestep(rk_step) )
+                  end if
+                  if (index_unspc_fine > 0) then
+                     scalars_driving(index_unspc_fine,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'unspc_fine', rk_timestep(rk_step) )
+                  end if
+                  if (index_unspc_coarse > 0) then
+                     scalars_driving(index_unspc_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'unspc_coarse', rk_timestep(rk_step) )
+                  end if
+                  if (index_ssalt_fine > 0) then
+                     scalars_driving(index_ssalt_fine,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'ssalt_fine', rk_timestep(rk_step) )
+                  end if
+                  if (index_ssalt_coarse > 0) then
+                     scalars_driving(index_ssalt_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'ssalt_coarse', rk_timestep(rk_step) )
+                  end if
                   
                   !$OMP PARALLEL DO
                   do thread=1,nThreads
@@ -1318,6 +1403,55 @@ module atm_time_integration
                if (index_zhw > 0) then
                   scalars_driving(index_zhw,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'zhw', rk_timestep(rk_step) )
                end if
+               ! JLS, chemistry
+               if (index_smoke_fine > 0) then
+                  scalars_driving(index_smoke_fine,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'smoke_fine', rk_timestep(rk_step) )
+               end if
+               if (index_smoke_coarse > 0) then
+                  scalars_driving(index_smoke_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'smoke_coarse', rk_timestep(rk_step) )
+               end if
+               if (index_polp_all > 0) then
+                  scalars_driving(index_polp_all,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'polp_all', rk_timestep(rk_step) )
+               end if
+               if (index_polp_tree > 0) then
+                  scalars_driving(index_polp_tree,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'polp_tree', rk_timestep(rk_step) )
+               end if
+               if (index_polp_grass > 0) then
+                  scalars_driving(index_polp_grass,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'polp_grass', rk_timestep(rk_step) )
+               end if
+               if (index_polp_weed > 0) then
+                  scalars_driving(index_polp_weed,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'polp_weed', rk_timestep(rk_step) )
+               end if
+               if (index_pols_all > 0) then
+                  scalars_driving(index_pols_all,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'pols_all', rk_timestep(rk_step) )
+               end if
+               if (index_pols_tree > 0) then
+                  scalars_driving(index_pols_tree,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'pols_tree', rk_timestep(rk_step) )
+               end if
+               if (index_pols_grass > 0) then
+                  scalars_driving(index_pols_grass,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'pols_grass', rk_timestep(rk_step) )
+               end if
+               if (index_pols_weed > 0) then
+                  scalars_driving(index_pols_weed,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'pols_weed', rk_timestep(rk_step) )
+               end if
+               if (index_dust_fine > 0) then
+                  scalars_driving(index_dust_fine,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'dust_fine', rk_timestep(rk_step) )
+               end if
+               if (index_dust_coarse > 0) then
+                  scalars_driving(index_dust_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'dust_coarse', rk_timestep(rk_step) )
+               end if
+               if (index_unspc_fine > 0) then
+                  scalars_driving(index_unspc_fine,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'unspc_fine', rk_timestep(rk_step) )
+               end if
+               if (index_unspc_coarse > 0) then
+                  scalars_driving(index_unspc_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'unspc_coarse', rk_timestep(rk_step) )
+               end if
+               if (index_ssalt_fine > 0) then
+                  scalars_driving(index_ssalt_fine,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'ssalt_fine', rk_timestep(rk_step) )
+               end if
+               if (index_ssalt_coarse > 0) then
+                  scalars_driving(index_ssalt_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'ssalt_coarse', rk_timestep(rk_step) )
+               end if
                
 !$OMP PARALLEL DO
                do thread=1,nThreads
@@ -1517,6 +1651,56 @@ module atm_time_integration
          if (index_zhw > 0) then
             scalars_driving(index_zhw,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'zhw', dt)
          end if
+         ! JLS, chemistry
+         if (index_smoke_fine > 0) then
+            scalars_driving(index_smoke_fine,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'smoke_fine', dt)
+         end if
+         if (index_smoke_coarse > 0) then
+            scalars_driving(index_smoke_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'smoke_coarse', dt)
+         end if
+         if (index_polp_all > 0) then
+            scalars_driving(index_polp_all,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'polp_all', dt)
+         end if
+         if (index_polp_tree > 0) then
+            scalars_driving(index_polp_tree,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'polp_tree', dt)
+         end if
+         if (index_polp_grass > 0) then
+            scalars_driving(index_polp_grass,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'polp_grass', dt)
+         end if
+         if (index_polp_weed > 0) then
+            scalars_driving(index_polp_weed,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'polp_weed', dt)
+         end if
+         if (index_pols_all > 0) then
+            scalars_driving(index_pols_all,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'pols_all', dt)
+         end if
+         if (index_pols_tree > 0) then
+            scalars_driving(index_pols_tree,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'pols_tree', dt)
+         end if
+         if (index_pols_grass > 0) then
+            scalars_driving(index_pols_grass,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'pols_grass', dt)
+         end if
+         if (index_pols_weed > 0) then
+            scalars_driving(index_pols_weed,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'pols_weed', dt)
+         end if
+         if (index_dust_fine > 0) then
+            scalars_driving(index_dust_fine,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'dust_fine', dt )
+         end if
+         if (index_dust_coarse > 0) then
+            scalars_driving(index_dust_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'dust_coarse', dt )
+         end if
+         if (index_unspc_fine > 0) then
+            scalars_driving(index_unspc_fine,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'unspc_fine', dt )
+         end if
+         if (index_unspc_coarse > 0) then
+            scalars_driving(index_unspc_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'unspc_coarse', dt )
+         end if
+         if (index_ssalt_fine > 0) then
+            scalars_driving(index_ssalt_fine,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'ssalt_fine', dt )
+         end if
+         if (index_ssalt_coarse > 0) then
+            scalars_driving(index_ssalt_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'ssalt_coarse', dt )
+         end if
+
       
 !$OMP PARALLEL DO
          do thread=1,nThreads
