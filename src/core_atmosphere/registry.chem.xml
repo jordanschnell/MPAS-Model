@@ -26,9 +26,9 @@
 
    <packages>
          <package name="mpas_smoke_in"  description="parameterization of smoke."/>
-         <package name="mpas_pollen_in" description="parameterization of pollen"/>
          <package name="speciated_pollen_rupture" description="parameterization of speciated rupture for pollen"/>
          <package name="speciated_pollen_primary" description="parameterization of speciated primary pollen"/>
+         <package name="simple_pollen" description="parameterization of speciated primary pollen"/>
          <package name="mpas_dust_in"   description="parameterization of dust"/>
          <package name="mpas_ssalt_in"  description="parameterization of sea salt"/>
          <package name="mpas_anthro_in" description="parameterization of anthropogenic emissions for mpas-smoke"/>
@@ -319,23 +319,23 @@
 
          <var name="polp_tree" array_group="chemistry" units="kg kg^{-1}"
               description="coarse tree pollen mixing ratio"
-              packages="speciated_pollen_primary"/>
+              packages="speciated_pollen_primary;speciated_pollen_rupture"/>
  
          <var name="polp_grass" array_group="chemistry" units="kg kg^{-1}"
               description="coarse grass pollen mixing ratio"
-              packages="speciated_pollen_primary"/>
+              packages="speciated_pollen_primary;speciated_pollen_rupture"/>
  
          <var name="polp_weed" array_group="chemistry" units="kg kg^{-1}"
               description="coarse weed pollen mixing ratio"
-              packages="speciated_pollen_primary"/>
+              packages="speciated_pollen_primary;speciated_pollen_rupture"/>
          
          <var name="polp_all" array_group="chemistry" units="kg kg^{-1}"
               description="combined primary pollen mixing ratio"
-              packages="mpas_pollen_in"/>
+              packages="simple_pollen"/>
 
          <var name="pols_all" array_group="chemistry" units="kg kg^{-1}"
               description="combined ruptured pollen mixing ratio"
-              packages="mpas_pollen_in"/>
+              packages="simple_pollen;speciated_pollen_primary"/>
  
          <var name="pols_tree" array_group="chemistry" units="kg kg^{-1}"
               description="fine tree pollen mixing ratio"
@@ -471,13 +471,13 @@
       <var_array name="e_bio_in" type="real" dimensions="nkbio nCells Time">
          <var name="e_bio_in_polp_tree" name_in_code="e_bio_in_polp_tree" array_group="bio_in_aerosols" units="ug m^{-2} s^{-1}"
               description="input biogenic coarse tree pollen emissions"
-              packages="mpas_pollen_in"/>
+              packages="simple_pollen;speciated_pollen_primary;speciated_pollen_rupture"/>
          <var name="e_bio_in_polp_grass" name_in_code="e_bio_in_polp_grass" array_group="bio_in_aerosols" units="ug m^{-2} s^{-1}"
               description="input biogenic coarse grass pollen emissions"
-              packages="mpas_pollen_in"/>
+              packages="simple_pollen;speciated_pollen_primary;speciated_pollen_rupture"/>
          <var name="e_bio_in_polp_weed" name_in_code="e_bio_in_polp_weed" array_group="bio_in_aerosols" units="ug m^{-2} s^{-1}"
               description="input biogenic coarse weed pollen emissions"
-              packages="mpas_pollen_in"/>
+              packages="simple_pollen;speciated_pollen_primary;speciated_pollen_rupture"/>
       </var_array>
       <var_array name="e_vol_in" type="real" dimensions="nkvol nCells Time">
              <var name="e_vol_in_vash_fine" name_in_code="e_vol_in_vash_fine" array_group="vol_in_aerosols" units="ug m^{-2} s^{-1}"
@@ -549,13 +549,13 @@
       <var_array name="e_bio_out" type="real" dimensions="nVertLevels nCells Time">
          <var name="e_bio_out_polp_tree"  name_in_code="e_bio_out_polp_tree" array_group="bio_out_aerosols" units="ug m^{-2} s^{-1}" 
               description="output emissions of coarse tree pollen"
-              packages="mpas_pollen_in"/>
+              packages="simple_pollen;speciated_pollen_primary;speciated_pollen_rupture"/>
          <var name="e_bio_out_polp_grass" name_in_code="e_bio_out_polp_grass" array_group="bio_out_aerosols" units="ug m^{-2} s^{-1}" 
               description="output emissions of coarse grass pollen"
-              packages="mpas_pollen_in"/>
+              packages="simple_pollen;speciated_pollen_primary;speciated_pollen_rupture"/>
          <var name="e_bio_out_polp_weed"  name_in_code="e_bio_out_polp_weed" array_group="bio_out_aerosols"  units="ug m^{-2} s^{-1}" 
               description="output_emissions of coarse weed pollen"
-              packages="mpas_pollen_in"/>
+              packages="simple_pollen;speciated_pollen_primary;speciated_pollen_rupture"/>
       </var_array>
 
       <var_array name="e_dust_out" type="real" dimensions="nVertLevels nCells Time">
@@ -705,23 +705,23 @@
    
           <var name="tend_polp_tree" name_in_code="polp_tree" array_group="chemistry" units="kg m^{-3} s^{-1}"
                description="Tendency of coarse tree pollen mass per unit volume divided by d(zeta)/dz"
-               packages="speciated_pollen_primary"/>
+               packages="speciated_pollen_primary;speciated_pollen_rupture"/>
    
           <var name="tend_polp_grass" name_in_code="polp_grass" array_group="chemistry" units="kg m^{-3} s^{-1}"
                description="Tendency of coarse grass pollen mass per unit volume divided by d(zeta)/dz"
-               packages="speciated_pollen_primary"/>
+               packages="speciated_pollen_primary;speciated_pollen_rupture"/>
    
           <var name="tend_polp_weed" name_in_code="polp_weed" array_group="chemistry" units="kg m^{-3} s^{-1}"
                description="Tendency of coarse weed pollen mass per unit volume divided by d(zeta)/dz"
-               packages="speciated_pollen_primary"/>
+               packages="speciated_pollen_primary;speciated_pollen_rupture"/>
 
           <var name="tend_polp_all" name_in_code="polp_all" array_group="chemistry" units="kg m^{-3} s^{-1}"
                description="Tendency of total coarse pollen mass per unit volume divided by d(zeta)/dz"
-               packages="mpas_pollen_in"/>
+               packages="simple_pollen"/>
           
           <var name="tend_pols_all" name_in_code="pols_all" array_group="chemistry" units="kg m^{-3} s^{-1}"
                description="Tendency of total fine pollen mass per unit volume divided by d(zeta)/dz"
-               packages="mpas_pollen_in"/>
+               packages="simple_pollen;speciated_pollen_primary"/>
    
           <var name="tend_pols_tree" name_in_code="pols_tree" array_group="chemistry" units="kg m^{-3} s^{-1}"
                description="Tendency of fine tree pollen mass per unit volume divided by d(zeta)/dz"
@@ -737,11 +737,11 @@
    
           <var name="tend_dust_fine" name_in_code="dust_fine" array_group="chemistry" units="kg m^{-3} s^{-1}"
                description="Tendency of fine dust mass per unit volume divided by d(zeta)/dz"
-               packages="mpas_dust_in"/>
+               packages="mpas_dust_in;mpas_anthro_in"/>
    
           <var name="tend_dust_coarse" name_in_code="dust_coarse" array_group="chemistry" units="kg m^{-3} s^{-1}"
                description="Tendency of fine dust mass per unit volume divided by d(zeta)/dz"
-               packages="mpas_dust_in"/>
+               packages="mpas_dust_in;mpas_anthro_in"/>
    
           <var name="tend_ssalt_fine" name_in_code="ssalt_fine" array_group="chemistry" units="kg m^{-3} s^{-1}"
                description="Tendency of fine sea salt mass per unit volume divided by d(zeta)/dz"
@@ -773,19 +773,19 @@
          <var name="lbc_smoke_coarse" name_in_code="smoke_coarse" array_group="chemistry"  packages="mpas_smoke_in" units="kg kg^{-1} s^{-1}"
               description="Lateral boundary tendency of coarse smoke mixing ratio"/>
   
-         <var name="lbc_polp_tree" name_in_code="polp_tree" array_group="chemistry"  packages="speciated_pollen_primary" units="kg kg^{-1} s^{-1}"
+         <var name="lbc_polp_tree" name_in_code="polp_tree" array_group="chemistry"  packages="speciated_pollen_primary;speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
               description="Lateral boundary tendency of coarse tree pollen mixing ratio"/>
   
-         <var name="lbc_polp_grass" name_in_code="polp_grass" array_group="chemistry"  packages="speciated_pollen_primary" units="kg kg^{-1} s^{-1}"
+         <var name="lbc_polp_grass" name_in_code="polp_grass" array_group="chemistry"  packages="speciated_pollen_primary;speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
               description="Lateral boundary tendency of coarse grass pollen mixing ratio"/>
   
-         <var name="lbc_polp_weed" name_in_code="polp_weed" array_group="chemistry"  packages="speciated_pollen_primary" units="kg kg^{-1} s^{-1}"
+         <var name="lbc_polp_weed" name_in_code="polp_weed" array_group="chemistry"  packages="speciated_pollen_primary;speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
               description="Lateral boundary tendency of coarse weed pollen mixing ratio"/>
 
-         <var name="lbc_polp_all" name_in_code="polp_all" array_group="chemistry"  packages="mpas_pollen_in" units="kg kg^{-1} s^{-1}"
+         <var name="lbc_polp_all" name_in_code="polp_all" array_group="chemistry"  packages="simple_pollen" units="kg kg^{-1} s^{-1}"
               description="Lateral boundary tendency of total primary pollen mixing ratio"/>
          
-         <var name="lbc_pols_all" name_in_code="pols_all" array_group="chemistry"  packages="mpas_pollen_in" units="kg kg^{-1} s^{-1}"
+         <var name="lbc_pols_all" name_in_code="pols_all" array_group="chemistry"  packages="simple_pollen;speciated_pollen_primary" units="kg kg^{-1} s^{-1}"
               description="Lateral boundary tendency of total fine pollen mixing ratio"/>
   
          <var name="lbc_pols_tree" name_in_code="pols_tree" array_group="chemistry"  packages="speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
@@ -797,17 +797,17 @@
          <var name="lbc_pols_weed" name_in_code="pols_weed" array_group="chemistry"  packages="speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
               description="Lateral boundary tendency of fine weed pollen mixing ratio"/>
   
-         <var name="lbc_dust_fine" name_in_code="dust_fine" array_group="chemistry"  packages="mpas_dust_in" units="kg kg^{-1} s^{-1}"
+         <var name="lbc_dust_fine" name_in_code="dust_fine" array_group="chemistry"  packages="mpas_dust_in;mpas_anthro_in" units="kg kg^{-1} s^{-1}"
               description="Lateral boundary tendency of fine dust mixing ratio"/>
   
-         <var name="lbc_dust_coarse" name_in_code="dust_coarse" array_group="chemistry"  packages="mpas_dust_in" units="kg kg^{-1} s^{-1}"
+         <var name="lbc_dust_coarse" name_in_code="dust_coarse" array_group="chemistry"  packages="mpas_dust_in;mpas_anthro_in" units="kg kg^{-1} s^{-1}"
               description="Lateral boundary tendency of coarse dust mixing ratio"/>
   
          <var name="lbc_ssalt_fine" name_in_code="ssalt_fine" array_group="chemistry"  packages="mpas_ssalt_in" units="kg kg^{-1} s^{-1}"
-              description="Lateral boundary tendency of fine dust mixing ratio"/>
+              description="Lateral boundary tendency of fine sea salt mixing ratio"/>
   
          <var name="lbc_ssalt_coarse" name_in_code="ssalt_coarse" array_group="chemistry"  packages="mpas_ssalt_in" units="kg kg^{-1} s^{-1}"
-              description="Lateral boundary tendency of coarse dust mixing ratio"/>
+              description="Lateral boundary tendency of coarse sea salt mixing ratio"/>
   
          <var name="lbc_unspc_fine" name_in_code="unspc_fine" array_group="chemistry"  packages="mpas_anthro_in" units="kg kg^{-1} s^{-1}"
               description="Lateral boundary tendency of fine primary aerosol mixing ratio"/>

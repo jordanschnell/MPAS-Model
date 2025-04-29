@@ -612,6 +612,16 @@ if (p_smoke_coarse > 0 ) ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smo
     endif
 
     !>-- output of MPAS-Smoke
+    ! UPP/MPASSIT expects FRP in MW 
+    do j=jts,jte
+    do i=its,ite
+       if ( fire_type(i,j) .eq. 4 ) then ! only apply scaling factor to wildfires
+          frp_out(i,j) = 1.e-6_RKIND * min(bb_emis_scale_factor*frp_in(i,j)*coef_bb_dc(i,j),frp_max)
+       else
+          frp_out(i,j) = 1.e-6_RKIND * min(frp_in(i,j)*coef_bb_dc(i,j),frp_max)
+       endif
+    enddo
+    enddo
     do j=jts,jte
     do k=kts,kte
     do i=its,ite

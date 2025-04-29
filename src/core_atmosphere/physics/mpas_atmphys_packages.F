@@ -55,7 +55,7 @@
  logical,pointer:: sf_noahmp_in
  logical,pointer:: mpas_smoke_in, mpas_pollen_in, mpas_dust_in, &
                    mpas_anthro_in, mpas_ssalt_in, mpas_volc_in, &
-                   mpas_sna_in, speciated_pollen_rupture, speciated_pollen_primary
+                   mpas_sna_in, speciated_pollen_rupture, speciated_pollen_primary, simple_pollen
 
  integer :: ierr
 
@@ -327,14 +327,23 @@
 
   call mpas_pool_get_config(configs,'config_pollen_scheme', config_pollen_scheme)
 
-  nullify(mpas_pollen_in)
+!  nullify(mpas_pollen_in)
+  nullify(simple_pollen)
   nullify(speciated_pollen_rupture)
   nullify(speciated_pollen_primary)
-  call mpas_pool_get_package(packages,'mpas_pollen_inActive', mpas_pollen_in)
+  call mpas_pool_get_package(packages,'simple_pollenActive', simple_pollen)
+!  call mpas_pool_get_package(packages,'mpas_pollen_inActive', mpas_pollen_in)
   call mpas_pool_get_package(packages,'speciated_pollen_ruptureActive', speciated_pollen_rupture)
   call mpas_pool_get_package(packages,'speciated_pollen_primaryActive', speciated_pollen_primary)
 
-   if(.not.associated(mpas_pollen_in)) then
+!   if(.not.associated(mpas_pollen_in)) then
+!    call mpas_log_write('================================================================================',messageType=MPAS_LOG_ERR)
+!    call mpas_log_write('* Error while setting up packages for pollen options in atmosphere core.',  messageType=MPAS_LOG_ERR)
+!    call mpas_log_write('================================================================================',messageType=MPAS_LOG_ERR)
+!    ierr = 1
+!    return
+!   endif
+   if(.not.associated(simple_pollen)) then
     call mpas_log_write('================================================================================',messageType=MPAS_LOG_ERR)
     call mpas_log_write('* Error while setting up packages for pollen options in atmosphere core.',  messageType=MPAS_LOG_ERR)
     call mpas_log_write('================================================================================',messageType=MPAS_LOG_ERR)
@@ -356,13 +365,14 @@
     return
    endif
 
- mpas_pollen_in = .false.
+! mpas_pollen_in = .false.
+ simple_pollen = .false.
  speciated_pollen_rupture = .false.
  speciated_pollen_primary = .false.
 
- if(config_pollen_scheme.eq.'on') then
-   mpas_pollen_in = .true.
- endif
+! if(config_pollen_scheme.ne.'off') then
+!   mpas_pollen_in = .true.
+! endif
  if(config_pollen_scheme.eq.'speciated') then
    speciated_pollen_primary = .true.
    speciated_pollen_rupture = .true.
@@ -370,8 +380,13 @@
  if(config_pollen_scheme.eq.'speciated_primary_only') then
    speciated_pollen_primary = .true.
  endif
+ if(config_pollen_scheme.eq.'simple')then
+   simple_pollen = .true.
+ endif
 
- call mpas_log_write('    mpas_pollen_in              = $l', logicArgs=(/mpas_pollen_in/))
+! call mpas_log_write('    mpas_pollen_in              = $l', logicArgs=(/mpas_pollen_in/))
+! call mpas_log_write('')
+ call mpas_log_write('    simple_pollen              = $l', logicArgs=(/simple_pollen/))
  call mpas_log_write('')
  call mpas_log_write('    speciated_pollen_rupture              = $l', logicArgs=(/speciated_pollen_rupture/))
  call mpas_log_write('')
