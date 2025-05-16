@@ -25,6 +25,7 @@ OBJS = \
 	module_rwc_emissions.o \
 	seas_ngac_mod.o \
 	seas_data_mod.o \
+	module_smoke_diagnostics.o \
 	module_tactic_sna.o
    
 
@@ -42,6 +43,9 @@ dep_dry_mod_emerson.o: \
         dep_data_mod.o \
 	mpas_smoke_init.o \
 	mpas_smoke_config.o
+        
+dep_data_mod.o: \
+	mpas_smoke_init.o
 
 pollen_mod.o: \
 	mpas_smoke_config.o \
@@ -53,6 +57,10 @@ dust_fengsha_mod.o: \
 	mpas_smoke_init.o
 
 dust_data_mod.o: \
+	mpas_smoke_init.o
+
+module_smoke_diagnostics.o: \
+	mpas_smoke_config.o \
 	mpas_smoke_init.o
 
 module_wetdep_ls.o: \
@@ -80,7 +88,8 @@ mpas_smoke_wrapper.o:      \
         pollen_mod.o \
         module_anthro_emissions.o \
         ssalt_mod.o \
-	module_tactic_sna.o
+	module_tactic_sna.o \
+	module_smoke_diagnostics.o
 
 module_zero_plumegen_coms.o: \ \
         mpas_smoke_config.o

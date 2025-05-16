@@ -239,6 +239,8 @@
  real(kind=RKIND),dimension(:,:,:),allocatable:: &
     ddvel_p, wetdep_resolved_p
 ! PM Diags
+ real(kind=RKIND),dimension(:,:),allocatable:: &
+    vis_p
  real(kind=RKIND),dimension(:,:,:),allocatable:: &
     PM1_p, PM2_5_p, PM10_p
 ! Input/output smoke 2D fields - JLS

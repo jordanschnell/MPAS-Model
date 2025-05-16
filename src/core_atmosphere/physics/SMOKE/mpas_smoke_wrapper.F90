@@ -13,6 +13,7 @@ module mpas_smoke_wrapper
    use module_add_emiss_burn, only : add_emis_burn
    use dep_dry_simple_mod,    only : dry_dep_driver_simple
    use dep_dry_mod_emerson,   only : dry_dep_driver_emerson
+   use dep_data_mod,          only : aero_dry_dep_init
    use module_wetdep_ls,      only : wetdep_ls
    use pollen_mod,            only : pollen_driver
    use dust_fengsha_mod,      only : gocart_dust_fengsha_driver
@@ -20,6 +21,7 @@ module mpas_smoke_wrapper
    use module_anthro_emissions
    use module_rwc_emissions
    use module_tactic_sna
+   use module_smoke_diagnostics
 
    implicit none
 
@@ -88,8 +90,9 @@ contains
            RWC_denominator       , RWC_annual_sum       ,                                    &
            RWC_annual_sum_smoke_fine, RWC_annual_sum_smoke_coarse,                           &
            RWC_annual_sum_unspc_fine, RWC_annual_sum_unspc_coarse,                           &
-           nwfa                  , nifa                 ,                                    &
-           hno3_bkgd             ,                                                           &
+           nwfa                  , nifa                 ,  vis                  ,            &
+           qc_vis, qr_vis, qi_vis, qs_vis, qg_vis, blcldw_vis, blcldi_vis,                   &
+           hno3_bkgd             , coszen,                                                   &
            ktau                  , dt                    , dxcell               ,            &
            area                  ,                                                           & 
            xland                 , u10                   , v10                  ,            &
@@ -139,6 +142,7 @@ contains
     real(RKIND),intent(in), dimension(ims:ime, jms:jme)             :: pblh              ! PBL height [m]
     real(RKIND),intent(in), dimension(ims:ime, jms:jme)             :: vegfra
     real(RKIND),intent(in), dimension(ims:ime, jms:jme)             :: swdown, z0, snowh, znt
+    real(RKIND),intent(in), dimension(ims:ime, jms:jme)             :: coszen
     real(RKIND),intent(in), dimension(ims:ime, jms:jme)             :: raincv, rainncv, mavail                    
     real(RKIND),intent(inout), dimension(ims:ime, jms:jme)          :: rmol, ust
 ! Residential Wood burning
@@ -153,6 +157,8 @@ contains
                                                                        p_phy,  t_phy,   u_phy,  v_phy,     &
                                                                        pi_phy, rho_phy, vvel   
     real(RKIND),intent(inout),dimension(ims:ime, kms:kme, jms:jme),optional            :: nifa, nwfa, hno3_bkgd
+! 3D (2D + first 3 levels) for visibility calculations
+    real(RKIND),intent(in),dimension(ims:ime,kms:kme,jms:jme),optional :: qc_vis, qr_vis, qi_vis, qs_vis, qg_vis, blcldw_vis, blcldi_vis
 ! 3D emission input
     real(RKIND),intent(in), dimension(ims:ime,1:kemit,jms:jme,1:num_e_ant_in),optional :: e_ant_in
     real(RKIND),intent(in), dimension(ims:ime,1:kfire,jms:jme,1:num_e_bb_in),optional  :: e_bb_in
@@ -204,7 +210,9 @@ contains
 ! 2D + chem output arrays
     real(RKIND),intent(inout), dimension(ims:ime, jms:jme, 1:num_chem),optional :: wetdep_resolved
     real(RKIND),intent(inout), dimension(ims:ime, jms:jme, 1:num_chem),optional :: ddvel
-! 3D output arrays
+! 2D output arrays
+    real(RKIND),intent(inout), dimension(ims:ime, jms:jme),optional                   :: vis
+! 3D output emissions
     real(RKIND),intent(inout), dimension(ims:ime, kms:kme, jms:jme,1:num_e_ant_out),optional   :: e_ant_out
     real(RKIND),intent(inout), dimension(ims:ime, kms:kme, jms:jme,1:num_e_bb_out),optional    :: e_bb_out
     real(RKIND),intent(inout), dimension(ims:ime, kms:kme, jms:jme,1:num_e_bio_out),optional   :: e_bio_out
@@ -219,6 +227,7 @@ contains
 !>-- 3D met
     real(RKIND), dimension(ims:ime, kms:kme, jms:jme) :: rri,     &
                      wind_phy,theta_phy,zmid,t8w,relhum
+    real(RKIND), dimension(ims:ime,jms:jme) :: rh2m
 !>-- indexes, time
     integer :: julday
 !>- dust & chemistry variables
@@ -259,7 +268,7 @@ contains
     real(RKIND), dimension(ims:ime, jms:jme)          :: flam_frac,                               &
                                                          fire_hist, peak_hr,                      &
                                                          fire_end_hr, hwp_day_avg,                &
-                                                         uspdavg2d, hpbl2d 
+                                                         uspdavg2d, hpbl2d, wind10m 
     real(RKIND), dimension(ims:ime, jms:jme)          :: lu_nofire, lu_qfire, lu_sfire
     integer,     dimension(ims:ime, jms:jme)          :: fire_type
     integer,     dimension(ims:ime, jms:jme)          :: kpbl_thetav
@@ -333,10 +342,10 @@ contains
         do_mpas_smoke,                                                      &
         ktau, nlcat,cp,ebb_dcycle,ebb_min,                                  &
         xland,xlat,xlong,ivgtyp,isltyp,landusef,                            & ! JLS TODO LANDUSEF /= VEGFRA?
-        snowh,u10,v10,t2m,dpt2m,mavail,hwp,hwp_day_avg,                     &
+        snowh,u10,v10,wind10m,t2m,dpt2m,mavail,hwp,hwp_day_avg,             &
         index_e_bb_in_smoke_fine,num_e_bb_in,kfire,e_bb_in,                 &
         t_phy,u_phy,v_phy,p_phy,pi_phy,z_at_w,                              &     
-        rho_phy,qv,relhum,rri,                                              &
+        rho_phy,qv,relhum,rh2m,rri,                                         &
         total_flashrate,                                                    &
         wind_phy,theta_phy,zmid,kpbl_thetav,                                &
         peak_hr,coef_bb_dc,fire_hist,                                       &
@@ -357,7 +366,9 @@ contains
       do j=jts,jte
       do i=its,ite
         ebu(i,kts,j)= e_bb_in(i,kts,j,index_e_bb_in_smoke_fine)
-if (p_smoke_coarse > 0 ) ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smoke_coarse)
+        if (p_smoke_coarse > 0 ) then 
+           ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smoke_coarse)
+        endif
         do k=kts+1,kte
          ebu(i,k,j)= 0._RKIND
          ebu_coarse(i,k,j)= 0._RKIND
@@ -371,10 +382,10 @@ if (p_smoke_coarse > 0 ) ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smo
       ! ebu is divided by coef_bb_dc since it is applied in the output
         ebu(i,k,j) = e_bb_out(i,k,j,index_e_bb_out_smoke_fine) / &
                      MAX(1.E-4_RKIND,coef_bb_dc(i,j))
-    if (p_smoke_coarse > 0 ) then
-        ebu_coarse(i,k,j) = e_bb_out(i,k,j,index_e_bb_out_smoke_coarse) / &
+       if (p_smoke_coarse > 0 ) then
+           ebu_coarse(i,k,j) = e_bb_out(i,k,j,index_e_bb_out_smoke_coarse) / &
                      MAX(1.E-4_RKIND,coef_bb_dc(i,j))
-    endif
+       endif
       enddo
       enddo
       enddo
@@ -409,8 +420,6 @@ if (p_smoke_coarse > 0 ) ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smo
       enddo
     endif
 
-    ! compute wild-fire plumes
-    if (call_plume) then
       ! Apply the diurnal cycle coefficient to frp_out ()
  ! JLS -- Should this be moved outside the "call_plume" IF block?
       do j=jts,jte
@@ -423,6 +432,8 @@ if (p_smoke_coarse > 0 ) ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smo
       enddo
       enddo
 
+    ! compute wild-fire plumes
+    if (call_plume) then
       call mpas_log_write( ' Calling ebu_driver')
       call ebu_driver (                                               &
                  flam_frac,kfire,                                     &
@@ -564,6 +575,10 @@ if (p_smoke_coarse > 0 ) ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smo
 
     !>-- compute dry deposition, based on Emerson et al., (2020)
     if (drydep_opt == 1) then
+     ! Set up the arrays if this is the first time through
+     if (ktau == 1) then
+       call aero_dry_dep_init()
+     endif
      call mpas_log_write( ' Calling dry_dep_driver_emerson')
      call dry_dep_driver_emerson(rmol,ust,znt,num_chem,ddvel,         &
         vgrav,chem,dz8w,snowh,t_phy,p_phy,rho_phy,ivgtyp,g,dt,        &
@@ -612,7 +627,18 @@ if (p_smoke_coarse > 0 ) ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smo
     endif
 
     !>-- output of MPAS-Smoke
-    ! UPP/MPASSIT expects FRP in MW 
+    call mpas_visibility_diag(    qc_vis,qr_vis,qi_vis,qs_vis,qg_vis,    &
+                                  blcldw_vis,blcldi_vis,                 &
+                                  rho_phy,wind10m,wind_phy,              &
+                                  rh2m,relhum,qv, &
+                                  t2m,t_phy, &
+                                  coszen,vis,                       &
+                                  ids,ide, jds,jde, kds,kde,        &
+                                  ims,ime, jms,jme, kms,kme,        &
+                                  its,ite, jts,jte, kts,kte         )
+
+
+    ! UPP/MPASSIT expects FRP in MW
     do j=jts,jte
     do i=its,ite
        if ( fire_type(i,j) .eq. 4 ) then ! only apply scaling factor to wildfires
@@ -640,13 +666,13 @@ if (p_smoke_coarse > 0 ) ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smo
  end subroutine mpas_smoke_driver
 
  subroutine mpas_smoke_prep(                                                &
-        do_mpas_smoke, &
+        do_mpas_smoke,                                                      &
         ktau, nlcat,cp,ebb_dcycle,ebb_min,                                  &
         xland,xlat,xlong,ivgtyp,isltyp,vegfrac,                             &
-        snowh,u10,v10,t2m,dpt2m,wetness,hwp,hwp_day_avg,                    &
+        snowh,u10,v10,wind10m,t2m,dpt2m,wetness,hwp,hwp_day_avg,            &
         index_e_bb_in_smoke_fine,num_e_bb_in,kfire,e_bb_in,                 &
         t_phy,u_phy,v_phy,p_phy,pi_phy,z_at_w,                              &
-        rho_phy,qv,relhum,rri,                                              &
+        rho_phy,qv,relhum,rh2m,rri,                                         &
         total_flashrate,                                                    &
         wind_phy,theta_phy,zmid,kpbl_thetav,                                &
         peak_hr,coef_bb_dc,fire_hist,                                       &
@@ -677,7 +703,7 @@ if (p_smoke_coarse > 0 ) ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smo
     real(RKIND),intent(out),  dimension(ims:ime, jms:jme) :: lu_nofire, lu_qfire, lu_sfire
     real(RKIND),intent(out),  dimension(ims:ime, jms:jme) :: fire_hist, peak_hr, hwp_day_avg
     real(RKIND),intent(inout),dimension(ims:ime,jms:jme),optional :: hwp, coef_bb_dc
-    real(RKIND),intent(out),  dimension(ims:ime, jms:jme) :: total_flashrate
+    real(RKIND),intent(out),  dimension(ims:ime, jms:jme) :: total_flashrate, wind10m, rh2m
     real(RKIND),intent(in),   dimension(ims:ime,1:kfire,jms:jme,1:num_e_bb_in),optional :: e_bb_in
 
     !local variables
@@ -729,15 +755,8 @@ if (p_smoke_coarse > 0 ) ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smo
     enddo
     enddo
     enddo
-
-    ! JLS, TODO, lightning flashrate
-    do j=jts,jte
-    do i=its,ite
-       total_flashrate(i,j) = 0._RKIND
-    enddo
-    enddo
     
-    ! Calculate relative humidity [0.1 -- 0.95]
+   ! Calculate relative humidity [0.1 -- 0.95]
     do j=jts,jte
     do k=kts,kte
     do i=its,ite
@@ -747,6 +766,18 @@ if (p_smoke_coarse > 0 ) ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smo
     enddo
     enddo
     enddo
+
+    ! JLS, TODO, lightning flashrate
+    do j=jts,jte
+    do i=its,ite
+       total_flashrate(i,j) = 0._RKIND
+       rh2m(i,j) = relhum(i,1,j)
+! TODO, JLS, check
+!       rh2m(i,j) = EXP((17.625_RKIND*(dpt2m(i,j)+273.15_RKIND))/(243.04_RKIND+(dpt2m(i,j)+273.15_RKIND))) / &
+!                   EXP((17.625_RKIND*(t2m(i,j)+273.15_RKIND))/(243.04_RKIND+(t2m(i,j)+273.15_RKIND)))
+    enddo
+    enddo
+    
 
     !---- Calculate PBLH and K-PBL based on virtual potential temperature profile
     !---- First calculate THETAV
@@ -812,7 +843,8 @@ if (p_smoke_coarse > 0 ) ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smo
        !>-- HWP: Pre-release of RRFSv1 method - using wind gust calculated via UPP Method
        do i=its, ite
        do j=jts, jte
-         wdgust  =max(sqrt(u10(i,j)**2.+v10(i,j)**2.),3._RKIND)
+         wind10m(i,j) = sqrt(u10(i,j)**2.+v10(i,j)**2.)
+         wdgust  =max(wind10m(i,j),3._RKIND)
          snoweq  =max((25._RKIND - snowh(i,j))/25._RKIND,0._RKIND)
 !         term2   = max(t2m(i,j)-dpt2m(i,j),15._RKIND)**1.03 ! TODO, floating point exception
          term2   = 15._RKIND

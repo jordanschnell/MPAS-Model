@@ -198,6 +198,7 @@
               filename_template="history.$Y-$M-$D_$h.$m.$s.nc"
               output_interval="6:00:00"
               runtime_format="separate_file">
+              <var name="vis"/>
               <var name="ddvel"/>
               <var name="wetdep_resolved"/>
               <var name="hwp"/>
@@ -416,6 +417,14 @@
          <var name="nh3" array_group="chemistry" units="mol mol^{-1}"
               description="ammonia"
               packages="mpas_aerosols_in;mpas_sna_in"/> 
+         
+         <var name="co" array_group="chemistry" units="mol mol^{-1}"
+              description="carbon monoxide"
+              packages="mpas_aerosols_in"/> 
+
+         <var name="no2" array_group="chemistry" units="mol mol^{-1}"
+              description="nitrogen dioxide"
+              packages="mpas_aerosols_in"/> 
       </var_array>
    </var_struct>
 
@@ -576,6 +585,8 @@
               packages="mpas_ssalt_in"/>
       </var_array>
 
+      <var name="vis" type="real" dimensions="nCells Time" units="m"
+           description="Visibility"/>
       <var name="frac_grid_burned" type="real" dimensions="nCells Time" units="-"
            description="fraction of grid cell area burned"
            packages="mpas_smoke_in"/>
