@@ -128,42 +128,8 @@ contains
                 ! Air molecular freepath (cm)  ! Check against XLM from above
                 freepath = 7.39758e-4 * airkinvisc / sqrt( t_phy(i,k,j) )
                 do nv = 1, num_chem
-                   if ( nv == p_smoke_fine ) then
-                      dp = 4.E-8 !dgacc
-                      aerodens = 1.4e+3 !pdensa
-                   elseif (nv == p_smoke_coarse ) then
-                      dp = 10.e-6
-                      aerodens = 1.4e+3
-                   elseif ( nv == p_dust_fine .or. nv == p_unspc_fine ) then
-                      dp = 1.E-6 !dgacc 
-                      aerodens = 2.6e+3 !pdensa
-                   elseif ( nv == p_dust_coarse .or. nv == p_unspc_coarse ) then
-                      dp = 4.5E-6 !dgcor
-                      aerodens = 2.6e+3 !pdensc
-                   elseif ( nv == p_ssalt_fine ) then
-                      dp = 0.632e-6
-                      aerodens = 2.2e+3
-                   elseif ( nv == p_ssalt_coarse) then
-                      dp = 5.632E-6
-                      aerodens = 2.2e+3
-                   elseif (  (nv == p_polp_tree ) .or. &
-                             (nv == p_polp_grass) .or. &
-                             (nv == p_polp_weed ) .or. &
-                             (nv == p_polp_all  )) then
-                       dp = 20.E-6
-                       aerodens = 1200.0
-                   elseif ( ( nv == p_pols_tree) .or. &
-                          ( nv == p_pols_grass)  .or.  &
-                          ( nv == p_pols_weed)   .or.  &
-                          ( nv == p_pols_all  )) then
-                       dp = 0.15E-6
-                       aerodens = 1425.0                    
-                   else
-                       dp = 0.15E-6
-                       aerodens = 1200.0_RKIND
-                       ddvel(i,j,nv) = 0.0_RKIND
-                       cycle
-                   endif
+                   dp = aero_diam(nv)
+                   aerodens = aero_dens(nv) 
                    ! Convert diameter to cm and aerodens to g/cm3
                    aerodens = aerodens / 1000._RKIND
                    dp = dp * 100._RKIND
@@ -230,41 +196,8 @@ contains
              do nv = 1, num_chem
                ! -- NOTE, diameters and densities are NOT converted to cm and g/cm3 like above
                ! -- dt_settl calculations (from original coarsepm_settling)
-               if ( nv == p_smoke_fine ) then
-                 dp = 4.E-8 !dgacc
-                 aerodens = 1.4e+3 !pdensa
-               elseif ( nv == p_smoke_coarse ) then
-                 dp = 10.E-6 !dgacc
-                 aerodens = 1.4e+3 !pdensa
-               elseif ( nv == p_dust_fine .or. nv == p_unspc_fine ) then
-                 dp = 1.E-6 !dgacc 
-                 aerodens = 2.6e+3 !pdensa
-               elseif ( nv == p_dust_coarse .or. nv == p_unspc_coarse ) then
-                 dp = 4.5E-6 !dgcor
-                 aerodens = 2.6e+3 !pdensc
-               elseif ( nv == p_ssalt_fine ) then
-                 dp = 0.632e-6
-                 aerodens = 2.2e+3
-               elseif ( nv == p_ssalt_coarse) then
-                 dp = 5.632E-6
-                 aerodens = 2.2e+3
-               elseif ( ( nv == p_polp_tree) .or. &
-                      ( nv == p_polp_grass) .or. &
-                      ( nv == p_polp_weed) .or. &
-                      ( nv == p_polp_all)  ) then
-                  dp = 20.E-6
-                  aerodens = 1200.0
-               elseif ( ( nv == p_pols_tree) .or. &
-                      ( nv == p_pols_grass)  .or. &
-                      ( nv == p_pols_weed)   .or. &
-                      ( nv == p_pols_all) ) then
-                  dp = 0.15E-6
-                  aerodens = 1425.0
-               else
-                  dp = 0.15E-6
-                  aerodens = 1200.0_RKIND
-                  cycle
-               endif
+               dp = aero_diam(nv)
+               aerodens = aero_dens(nv)
                ! 1.5E-5 = dyn_visc --> dust_data_mod.F90
                vsettl = 2.0 / 9.0 * g0 * aerodens * ( growth_fac * ( 0.5 * dp ))**2.0 / ( 0.5 * 1.5E-5 )
                dtmax = dzmin / vsettl

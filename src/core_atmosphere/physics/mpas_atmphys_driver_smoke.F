@@ -80,6 +80,7 @@
  if(.not.allocated(vegfra_p)    ) allocate(vegfra_p(ims:ime,jms:jme)             )
  if(.not.allocated(ivgtyp_p)    ) allocate(ivgtyp_p(ims:ime,jms:jme)             )
  if(.not.allocated(landusef_p)  ) allocate(landusef_p(ims:ime,1:num_landcat,jms:jme))
+ if(.not.allocated(coszr_p)      ) allocate(coszr_p(ims:ime,jms:jme)              )
 
  if(.not.allocated(tsk_p)       ) allocate(tsk_p(ims:ime,jms:jme)                )
  if(.not.allocated(hpbl_p)      ) allocate(hpbl_p(ims:ime,jms:jme)               )
@@ -96,6 +97,9 @@
  if(.not.allocated(znt_p)       ) allocate(znt_p(ims:ime,jms:jme)                )
  if(.not.allocated(dpt2m_p)     ) allocate(dpt2m_p(ims:ime,jms:jme)              )
  if(.not.allocated(mavail_p)    )  allocate(mavail_p(ims:ime,jms:jme)            )
+ 
+ if(.not.allocated(qcbl_p)      ) allocate(qcbl_p(ims:ime,kms:kme,jms:jme)      )      
+ if(.not.allocated(qibl_p)      ) allocate(qibl_p(ims:ime,kms:kme,jms:jme)      )
 
  if(.not.allocated(cldfrac_p)   ) allocate(cldfrac_p(ims:ime,kms:kme,jms:jme))
  if(.not.allocated(ktop_deep_p) ) allocate(ktop_deep_p(ims:ime,jms:jme)        )
@@ -104,6 +108,8 @@
  if(.not.allocated(tslb_p)      ) allocate(tslb_p(ims:ime,1:num_soils,jms:jme)   )
 
  if(.not.allocated(zgrid_p)     ) allocate(zgrid_p(ims:ime,kms:kme,jms:jme)      )
+
+ if(.not.allocated(vis_p)       ) allocate(vis_p(ims:ime,jms:jme)      )
 
  if (config_sna_scheme .ne. 'off' ) then
     if(.not.allocated(nifa_p))    allocate(nifa_p(ims:ime,kms:kme,jms:jme))
@@ -220,6 +226,9 @@
  if(allocated(vegfra_p)       ) deallocate(vegfra_p       )
  if(allocated(ivgtyp_p)       ) deallocate(ivgtyp_p       )
  if(allocated(landusef_p)     ) deallocate(landusef_p     )
+ if(allocated(coszr_p)        ) deallocate(coszr_p        )
+ if(allocated(qcbl_p)      ) deallocate(qcbl_p      )
+ if(allocated(qibl_p)      ) deallocate(qibl_p      )
 
  if(allocated(tsk_p)          ) deallocate(tsk_p          )
  if(allocated(hpbl_p)         ) deallocate(hpbl_p         )
@@ -241,6 +250,8 @@
 
  if(allocated(smois_p)        ) deallocate(smois_p        )
  if(allocated(tslb_p)         ) deallocate(tslb_p         )
+
+ if(allocated(vis_p)          ) deallocate(vis_p          )
 
  if(allocated(nifa_p)         ) deallocate(nifa_p)
  if(allocated(nwfa_p)         ) deallocate(nwfa_p)
@@ -325,12 +336,13 @@
       real(kind=RKIND),dimension(:),pointer      :: raincv,rainncv,mavail
       real(kind=RKIND),dimension(:),pointer      :: rmol,snowh,z0,t2m,dpt2m
       real(kind=RKIND),dimension(:),pointer      :: dewpoint_surface
-      real(kind=RKIND),dimension(:),pointer      :: u10,v10,znt,hpbl,skintemp,vegfra
+      real(kind=RKIND),dimension(:),pointer      :: u10,v10,znt,hpbl,skintemp,vegfra,coszr
       real(kind=RKIND),dimension(:,:),pointer    :: cldfrac
       real(kind=RKIND),dimension(:,:),pointer    :: landusef
       real(kind=RKIND),dimension(:,:),pointer    :: smois,tslb
       real(kind=RKIND),dimension(:,:),pointer    :: zgrid
       real(kind=RKIND),dimension(:,:),pointer    :: ddvel
+      real(kind=RKIND),dimension(:,:),pointer    :: qc_bl, qi_bl
       real(kind=RKIND),dimension(:,:),pointer    :: wetdep_resolved
       real(kind=RKIND),dimension(:,:),pointer    :: nifa,nwfa  ! already made avaialbe in forallpysics/interface
       real(kind=RKIND),dimension(:,:),pointer    :: hno3_bkgd
@@ -399,6 +411,8 @@
       call mpas_pool_get_array(mesh,'areaCell',areaCell)
       call mpas_pool_get_array(sfc_input,'xland',xland)
       call mpas_pool_get_array(diag_physics,'ust',ust)
+      
+      call mpas_pool_get_array(diag_physics,'coszr',coszr)
      
       call mpas_pool_get_array(diag_physics,'u10',u10)
       call mpas_pool_get_array(diag_physics,'v10',v10)
@@ -409,7 +423,10 @@
       if ( config_convection_scheme .eq. 'cu_grell_freitas' ) then
          call mpas_pool_get_array(diag_physics,'ktop_deep',ktop_deep)
       endif
-     
+    
+      call mpas_pool_get_array(diag_physics,'qc_bl'     ,qc_bl     )
+      call mpas_pool_get_array(diag_physics,'qi_bl'     ,qi_bl     )
+ 
       call mpas_pool_get_array(mesh,'zgrid',zgrid)
       call mpas_pool_get_array(sfc_input,'smois',smois)
       call mpas_pool_get_array(sfc_input,'tslb',tslb)
@@ -528,6 +545,8 @@
       do i = its, ite
          zgrid_p(i,k,j)      = zgrid(k,i)
          cldfrac_p(i,k,j)    = cldfrac(k,i)
+         qcbl_p(i,k,j)     = qc_bl(k,i)
+         qibl_p(i,k,j)     = qi_bl(k,i)
          if ( config_sna_scheme .ne. 'off' ) then ! .or. config_indfdb
              nifa_p(i,k,j)   = nifa(k,i)
              nwfa_p(i,k,j)   = nwfa(k,i)
@@ -610,6 +629,7 @@
          isltyp_p(i,j)  = isltyp(i)
          ivgtyp_p(i,j)  = ivgtyp(i)
          vegfra_p(i,j)  = vegfra(i)
+         coszr_p(i,j)   = coszr(i)
      ! Met
          kpbl_p(i,j)    = kpbl(i)
          if ( config_convection_scheme .eq. 'cu_grell_freitas' ) then
@@ -760,6 +780,7 @@
  real(kind=RKIND),dimension(:,:),pointer:: hno3_bkgd
  real(kind=RKIND),dimension(:,:),  pointer:: ddvel, wetdep_resolved
  real(kind=RKIND),dimension(:,:,:),pointer:: tend_chem_settle
+ real(kind=RKIND),dimension(:)    ,pointer:: vis
  real(kind=RKIND),dimension(:),    pointer:: frp_out, fre_out, hwp, coef_bb_dc
  real(kind=RKIND),dimension(:),    pointer:: hfx_bb, qfx_bb, frac_grid_burned
  real(kind=RKIND),dimension(:,:)  ,pointer:: PM2_5, PM10
@@ -792,6 +813,8 @@
 
  call mpas_pool_get_array(diag_physics,'ddvel',ddvel)
  call mpas_pool_get_array(diag_physics,'wetdep_resolved',wetdep_resolved)
+ 
+ call mpas_pool_get_array(diag_physics,'vis',vis)
 
  call mpas_pool_get_array(tend_physics,'tend_chem_settle',tend_chem_settle)
 
@@ -918,6 +941,7 @@
  
  do j = jts,jte
  do i = its,ite
+    vis(i)       = vis_p(i,j)
     if (config_smoke_scheme .ne. 'off') then
        frp_out(i)          = frp_out_p(i,j)
        fre_out(i)          = fre_out_p(i,j)
@@ -1262,7 +1286,7 @@
            totprcp_prev24 = totprcp_prev24_p, hwp_prev24 = hwp_prev24_p,                 &
            frp_prev24     = frp_prev24_p,     fre_prev24 = fre_prev24_p,                 &
            hfx_bb         = hfx_bb_p,             qfx_bb = qfx_bb_p,                     &
-           frac_grid_burned                              = frac_grid_burned_p,           &
+           frac_grid_burned = frac_grid_burned_p, vis    = vis_p,                        &
            min_bb_plume   = min_bb_plume_p, max_bb_plume = max_bb_plume_p,               &
            coef_bb_dc     = coef_bb_dc_p,                                                &
            sandfrac_in    = sandfrac_in_p, clayfrac_in    = clayfrac_in_p,               &
@@ -1313,6 +1337,14 @@
            p8w     = pres2_hyd_p , dz8w     = dz_p       , z_at_w   = zgrid_p    ,       &
            p_phy   = pres_hyd_p  , t_phy    = t_p        , u_phy    = u_p        ,       &
            v_phy   = v_p         , qv       = qv_p       , vvel     = w_p        ,       &
+           qc_vis  = qc_p, & !(:,1:3,:), &
+           qr_vis  = qr_p, & !(:,1:3,:), &
+           qi_vis  = qi_p, & !(:,1:3,:), &
+           qs_vis  = qs_p, & !(:,1:3,:), & 
+           qg_vis  = qg_p, & !(:,1:3,:), &
+           blcldw_vis = qcbl_p, & !(:,1:3,:), &
+           blcldi_vis = qibl_p, & !(:,1:3,:), &
+           coszen = coszr_p, &
            pi_phy  = pi_p        , rho_phy  = rho_p      , kpbl     = kpbl_p     ,       &
            nsoil   = num_soils   , smois    = smois_p    , tslb     = tslb_p     ,       &
            ivgtyp  = ivgtyp_p    , isltyp   = isltyp_p   , nlcat    = num_landcat,       &

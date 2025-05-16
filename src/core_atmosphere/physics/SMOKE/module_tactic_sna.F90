@@ -1,10 +1,11 @@
-!>\file  module_wildfire_smoke_emissions.F90
-!! This file contains the MPAS-Aerosols/RRFS wildfire emission module
+!>\file  module_tactic_sna.F90
+!! This file contains the MPAS-Aerosols/RRFS SNA module
 
 module module_tactic_sna
 !
-!  This module developed by Johana Romero-Alvarez and Jordan Schnell (NOAA GSL)
-!  For serious questions contact johana.romero-alvarez@noaa.gov
+!  This module developed by Jordan Schnell (CIRES/NOAA GSL) following 
+!  Druge et al., (2019) - https://doi.org/10.5194/acp-19-3707-2019
+!  For serious questions contact jordan.schnell@noaa.gov
 !
   use mpas_kind_types
   use mpas_smoke_init
@@ -17,7 +18,6 @@ module module_tactic_sna
   public :: mpas_smoke_tactic_sna_driver
 
 contains
-
 
   subroutine mpas_smoke_tactic_sna_driver (                                          &
                            dt, chem, num_chem,                                       &

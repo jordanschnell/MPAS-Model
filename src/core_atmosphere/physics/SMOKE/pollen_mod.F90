@@ -9,7 +9,8 @@ module pollen_mod
 !
   use mpas_kind_types
   use mpas_smoke_init
-  use mpas_smoke_config, only:   pi 
+  use mpas_smoke_config, only:   pi
+  use dep_data_mod 
 
   implicit none
 
@@ -101,6 +102,8 @@ contains
     REAL(RKIND) :: depth, ratio, cgfrac
     REAL(RKIND), DIMENSION( its:ite , jts:jte ) :: ic_flashrate, cg_flashrate
     INTEGER     :: ierr
+    REAL(RKIND) :: diam_polp_tree, diam_polp_grass, diam_polp_weed
+    REAL(RKIND) :: rho_polp_tree, rho_polp_grass, rho_polp_weed
 
 ! Define some constants (TODO, move to namelist)
     REAL(RKIND), PARAMETER :: pr_low    = 0._RKIND     ! [mm/day] lowest rainfall
@@ -130,12 +133,39 @@ contains
     LOGICAL, PARAMETER :: do_pollen_lightning_rupture = .false.
     LOGICAL, PARAMETER :: do_pollen_rh_rupture = .true.
 
+
+  ! Set the densities / diameters based on what is available
+  if ( p_polp_tree > 0 ) then
+     diam_polp_tree = 1.E6_RKIND * aero_diam(p_polp_tree)
+     rho_polp_tree  = aerodens(p_polp_tree)
+  else
+     diam_polp_tree = diam_polp
+     rho_polp_tree  = rho_polp
+  endif 
+!
+  if ( p_polp_grass > 0 ) then
+     diam_polp_grass = 1.E6_RKIND * aero_diam(p_polp_grass)
+     rho_polp_grass  = aerodens(p_polp_grass)
+  else
+     diam_polp_grass = diam_polp
+     rho_polp_grass  = rho_polp
+  endif 
+!
+  if ( p_polp_weed > 0 ) then
+     diam_polp_weed = 1.E6_RKIND * aero_diam(p_polp_weed)
+     rho_polp_weed  = aerodens(p_polp_weed)
+  else
+     diam_polp_weed = diam_polp
+     rho_polp_weed  = rho_polp
+  endif
+
+  write(*,*) 'JLS, diam_polp_weed, rho_polp_weed', diam_polp_weed, rho_polp_weed
+
   ! Loop over the grid cells to calculate and add the emissions
     do j = jts, jte
     do i = its, ite
    
       ! No emissions over water or at night
-!      if( xland(i,j) > 1.5 .or. swdown(i,j) < 25.0)  cycle
     if ( xland(i,j) .lt. 1.5_RKIND .and. swdown(i,j) .gt. 0._RKIND ) then ! land
 
      ! Compute the rainfall at the current time step (and convert to mm)
@@ -173,11 +203,11 @@ contains
      ! Convert number emissions to mass emissions 
      ! = # * pi/6 * dens * diam^3 * 1.e-9
        ppemfact_mass_tree  = ppemfact_numb_tree  * &
-                             pi/6._RKIND * rho_polp * diam_polp**3._RKIND * converi
+                             pi/6._RKIND * rho_polp_tree  * diam_polp_tree**3._RKIND * converi
        ppemfact_mass_grass = ppemfact_numb_grass * &
-                             pi/6._RKIND * rho_polp * diam_polp**3._RKIND * converi
+                             pi/6._RKIND * rho_polp_grass * diam_polp_grass**3._RKIND * converi
        ppemfact_mass_weed  = ppemfact_numb_weed  * & 
-                             pi/6._RKIND * rho_polp * diam_polp**3._RKIND * converi
+                             pi/6._RKIND * rho_polp_weed  * diam_polp_weed**3._RKIND * converi
        ! Calculate the conversion factor
        factaa = dt / ( dz8w(i,kts,j) * rho(i,kts,j) )
 
@@ -222,10 +252,16 @@ contains
 
    
              chem(i,k,j,p_pols_all)  = chem(i,k,j,p_pols_all)   +    &
-                                       (chem(i,k,j,p_polp_tree) + chem(i,k,j,p_polp_grass) + chem(i,k,j,p_polp_weed)) *    &
+                                       ((chem(i,k,j,p_polp_tree)*    &
+                                         rho_pols/rho_polp_tree *    &
+                                         ((diam_pols)**3._RKIND)/((diam_polp_tree)**3._RKIND)) + &
+                                        (chem(i,k,j,p_polp_grass)*   &
+                                         rho_pols/rho_polp_grass *   &
+                                         ((diam_pols)**3._RKIND)/((diam_polp_grass)**3._RKIND)) + &
+                                        (chem(i,k,j,p_polp_weed)*    &
+                                         rho_pols/rho_polp_weed*     &
+                                         ((diam_pols)**3._RKIND)/((diam_polp_weed)**3._RKIND))) * &
                                        pols_to_polp_frac_rh    *    &
-                                       rho_pols/rho_polp       *    & 
-                                       ((diam_pols)**3._RKIND)/((diam_polp)**3._RKIND) * &
                                        num_pols_per_polp
           endif
        else
@@ -233,20 +269,20 @@ contains
           chem(i,k,j,p_pols_tree)  = chem(i,k,j,p_pols_tree) +    &
                                      chem(i,k,j,p_polp_tree) *    &
                                      pols_to_polp_frac_rh    *    &
-                                     rho_pols/rho_polp       *    & 
-                                     ((diam_pols)**3._RKIND)/((diam_polp)**3._RKIND) * &
+                                     rho_pols/rho_polp_tree       *    & 
+                                     ((diam_pols)**3._RKIND)/((diam_polp_tree)**3._RKIND) * &
                                      num_pols_per_polp
           chem(i,k,j,p_pols_grass) = chem(i,k,j,p_pols_grass) +   &
                                      chem(i,k,j,p_polp_grass) *   &
                                      pols_to_polp_frac_rh     *   &
-                                     rho_pols/rho_polp        *   &
-                                     ((diam_pols)**3._RKIND)/((diam_polp)**3._RKIND) * &
+                                     rho_pols/rho_polp_grass        *   &
+                                     ((diam_pols)**3._RKIND)/((diam_polp_grass)**3._RKIND) * &
                                      num_pols_per_polp
           chem(i,k,j,p_pols_weed)  = chem(i,k,j,p_pols_weed)  +   &
                                      chem(i,k,j,p_polp_weed)  *   &
                                      pols_to_polp_frac_rh     *   &
-                                     rho_pols/rho_polp        *   &
-                                     ((diam_pols)**3._RKIND)/((diam_polp)**3._RKIND) * &
+                                     rho_pols/rho_polp_weed        *   &
+                                     ((diam_pols)**3._RKIND)/((diam_polp_weed)**3._RKIND) * &
                                      num_pols_per_polp
        endif
        ! Remove the converted amount from polp
@@ -318,36 +354,41 @@ contains
                                      ((diam_pols)**3._RKIND)/((diam_polp)**3._RKIND) * &
                                      flashrate_for_rupture
          else
+          chem(i,k,j,p_pols_all)  = chem(i,k,j,p_pols_all)   +    &
+                                    ((chem(i,k,j,p_polp_tree)*    &
+                                      rho_pols/rho_polp_tree *    &
+                                      ((diam_pols)**3._RKIND)/((diam_polp_tree)**3._RKIND)) + &
+                                     (chem(i,k,j,p_polp_grass)*   &
+                                      rho_pols/rho_polp_grass *   &
+                                      ((diam_pols)**3._RKIND)/((diam_polp_grass)**3._RKIND)) + &
+                                     (chem(i,k,j,p_polp_weed)*    &
+                                      rho_pols/rho_polp_weed*     &
+                                      ((diam_pols)**3._RKIND)/((diam_polp_weed)**3._RKIND))) * &
+                                    pols_to_polp_frac_lt    *    &
+                                    flashrate_for_rupture
 
-          chem(i,k,j,p_pols_all)  = chem(i,k,j,p_pols_all)               + &
-                                     (chem(i,k,j,p_polp_tree)+chem(i,k,j,p_polp_grass)+chem(i,k,j,p_polp_weed))             * &
-                                     pols_to_polp_frac_lt                * &
-                                     num_pols_per_polp                    * &
-                                     rho_pols/rho_polp                   * &
-                                     ((diam_pols)**3._RKIND)/((diam_polp)**3._RKIND) * &
-                                     flashrate_for_rupture
          endif
        else
           chem(i,k,j,p_pols_tree)  = chem(i,k,j,p_pols_tree)             + &
                                      chem(i,k,j,p_polp_tree)             * &
                                      pols_to_polp_frac_lt                * &
                                      num_pols_per_polp                    * &
-                                     rho_pols/rho_polp                   * &
-                                     ((diam_pols)**3._RKIND)/((diam_polp)**3._RKIND) * &
+                                     rho_pols/rho_polp_tree                   * &
+                                     ((diam_pols)**3._RKIND)/((diam_polp_tree)**3._RKIND) * &
                                      flashrate_for_rupture
           chem(i,k,j,p_pols_grass) = chem(i,k,j,p_pols_grass)            + &
                                      chem(i,k,j,p_polp_grass)            * &
                                      pols_to_polp_frac_lt                * &
                                      num_pols_per_polp                    * &
-                                     rho_pols/rho_polp                   * &
-                                     ((diam_pols)**3._RKIND)/((diam_polp)**3._RKIND) * &
+                                     rho_pols/rho_polp_grass                   * &
+                                     ((diam_pols)**3._RKIND)/((diam_polp_grass)**3._RKIND) * &
                                      flashrate_for_rupture
           chem(i,k,j,p_pols_weed)  = chem(i,k,j,p_pols_weed)             + &
                                      chem(i,k,j,p_polp_weed)             * &
                                      pols_to_polp_frac_lt                * &
                                      num_pols_per_polp                    * &
-                                     rho_pols/rho_polp                   * &
-                                     ((diam_pols)**3._RKIND)/((diam_polp)**3._RKIND) * &
+                                     rho_pols/rho_polp_weed                   * &
+                                     ((diam_pols)**3._RKIND)/((diam_polp_weed)**3._RKIND) * &
                                      flashrate_for_rupture
        endif 
      ! Remove the converted amount from polp
