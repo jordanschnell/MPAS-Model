@@ -128,6 +128,10 @@ contains
                 ! Air molecular freepath (cm)  ! Check against XLM from above
                 freepath = 7.39758e-4 * airkinvisc / sqrt( t_phy(i,k,j) )
                 do nv = 1, num_chem
+                   !
+                   if (i .eq. 1 .and. j .eq. 1 .and. k .eq. 1 ) then
+                      write(*,*) 'nv,dp,aerodens',nv,dp,aerodens
+                   endif
                    dp = aero_diam(nv)
                    aerodens = aero_dens(nv) 
                    ! Convert diameter to cm and aerodens to g/cm3

@@ -9,7 +9,6 @@ module pollen_mod
 !
   use mpas_kind_types
   use mpas_smoke_init
-  use mpas_smoke_config, only:   pi
   use dep_data_mod 
 
   implicit none
@@ -137,7 +136,7 @@ contains
   ! Set the densities / diameters based on what is available
   if ( p_polp_tree > 0 ) then
      diam_polp_tree = 1.E6_RKIND * aero_diam(p_polp_tree)
-     rho_polp_tree  = aerodens(p_polp_tree)
+     rho_polp_tree  = aero_dens(p_polp_tree)
   else
      diam_polp_tree = diam_polp
      rho_polp_tree  = rho_polp
@@ -145,7 +144,7 @@ contains
 !
   if ( p_polp_grass > 0 ) then
      diam_polp_grass = 1.E6_RKIND * aero_diam(p_polp_grass)
-     rho_polp_grass  = aerodens(p_polp_grass)
+     rho_polp_grass  = aero_dens(p_polp_grass)
   else
      diam_polp_grass = diam_polp
      rho_polp_grass  = rho_polp
@@ -153,7 +152,7 @@ contains
 !
   if ( p_polp_weed > 0 ) then
      diam_polp_weed = 1.E6_RKIND * aero_diam(p_polp_weed)
-     rho_polp_weed  = aerodens(p_polp_weed)
+     rho_polp_weed  = aero_dens(p_polp_weed)
   else
      diam_polp_weed = diam_polp
      rho_polp_weed  = rho_polp

@@ -26,7 +26,8 @@ OBJS = \
 	seas_ngac_mod.o \
 	seas_data_mod.o \
 	module_smoke_diagnostics.o \
-	module_tactic_sna.o
+	module_tactic_sna.o \
+	module_fire_emissions.o
    
 
 MPAS_SMOKE: $(OBJS)
@@ -34,6 +35,10 @@ MPAS_SMOKE: $(OBJS)
 
 # DEPENDENCIES:
 #
+module_fire_emissions.o: \
+	mpas_smoke_config.o \
+	mpas_smoke_init.o
+
 mpas_smoke_init.o:
 
 module_tactic_sna.o: \

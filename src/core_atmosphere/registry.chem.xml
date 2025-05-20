@@ -106,6 +106,10 @@
            units="-"
            description="Number of previous hours to average smoke input variables"
            possible_values="factors of 24 (1,2,3,4,6,8,12,24)"/>
+      <nml_option name="bb_beta" type="integer" default_value="1"
+           units="-"
+           description="Emission factor dataset choice"
+           possible_values="1,2"/>
       <nml_option name="online_rwc_emis" type="integer" default_value="0"
            units="-"
            description="Option for online residential wood burning emissions"
@@ -130,6 +134,10 @@
            units="-"
            description="Enrainment constant for plumerise scheme"
            possible_values="Positive integer values"/>
+      <nml_option name="bb_qv_scale_factor" type="real" default_value="1.0"
+           units="-"
+           description="Scaling factor for water vapor wildfire emissions"
+           possible_values="Positive integer values"/>
       <nml_option name="ebb_dcycle" type="integer" default_value="0"
            units="-"
            description="Algorithm choice wildfire emission forecast"
@@ -137,11 +145,15 @@
       <nml_option name="add_fire_heat_flux" type="logical" default_value="false" in_defaults="false"
            units="-"
            description="Logical flag to turn on/off fire heat flux to the atmosphere"
-           possible_values=".true. or .false."/>
+           possible_values="true or false"/>
       <nml_option name="add_fire_moist_flux" type="logical" default_value="false" in_defaults="false"
            units="-"
            description="Logical flag to turn on/off fire heat moisture to the atmosphere"
            possible_values=".true. or .false."/>
+      <nml_option name="calc_bb_emis_online" type="logical" default_value="false"
+           units="-"
+           description="Flag to calculate emissions online"
+           possible_values="true or false"/>
       <nml_option name="bb_emis_scale_factor" type="real" default_value="1.0"
            units="-"
            description="Scale factor applied to biomass burning fire emissions"
@@ -247,6 +259,7 @@
          <var name="totprcp_prev24"/>
          <var name="frp_prev24"/>
          <var name="fre_prev24"/>
+         <var name="fmc_prev24"/>
       </stream>
 
       <stream name="bio_input"
@@ -640,6 +653,9 @@
            packages="mpas_smoke_in"/>
       <var name="fre_prev24" type="real" dimensions="nCells TWENTYFOUR" units="MJs"
            description="Fire Radiative Energy over the last 24 hours"
+           packages="mpas_smoke_in"/>
+      <var name="fmc_prev24" type="real" dimensions="nCells TWENTYFOUR" units="MJs"
+           description="Fuel Moisture Content over the last 24 hours"
            packages="mpas_smoke_in"/>
       <var name="totprcp_prev24" type="real" dimensions="nCells TWENTYFOUR" units="m" 
            description="Total precipitation over the last 24 hours"

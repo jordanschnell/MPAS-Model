@@ -60,39 +60,39 @@ module dep_data_mod
 
       implicit none
     ! Aerosol densities (kg/m3)
-      aero_dens(p_smoke_fine)       = 1.4E3_RKIND
-      aero_dens(p_smoke_coarse)     = 1.4E3_RKIND
-      aero_dens(p_dust_fine)        = 2.6E3_RKIND 
-      aero_dens(p_unspc_fine)       = 2.6E3_RKIND
-      aero_dens(p_dust_coarse)      = 2.6E3_RKIND
-      aero_dens(p_unspc_coarse)     = 2.6E3_RKIND
-      aero_dens(p_ssalt_fine)       = 2.2E3_RKIND
-      aero_dens(p_ssalt_coarse)     = 2.2E3_RKIND
-      aero_dens(p_polp_all)         = 1.2E3_RKIND
-      aero_dens(p_polp_tree)        = 1.2E3_RKIND
-      aero_dens(p_polp_grass)       = 1.2E3_RKIND
-      aero_dens(p_polp_weed)        = 1.2E3_RKIND
-      aero_dens(p_pols_all)         = 1.425E3_RKIND
-      aero_dens(p_pols_tree)        = 1.425E3_RKIND
-      aero_dens(p_pols_grass)       = 1.425E3_RKIND
-      aero_dens(p_pols_weed)        = 1.425E3_RKIND
+      if (p_smoke_fine>0)     aero_dens(p_smoke_fine)       = 1.4E3_RKIND
+      if (p_smoke_coarse>0)   aero_dens(p_smoke_coarse)     = 1.4E3_RKIND
+      if (p_dust_fine>0)      aero_dens(p_dust_fine)        = 2.6E3_RKIND 
+      if (p_unspc_fine>0)     aero_dens(p_unspc_fine)       = 2.6E3_RKIND
+      if (p_dust_coarse>0)    aero_dens(p_dust_coarse)      = 2.6E3_RKIND
+      if (p_unspc_coarse>0)   aero_dens(p_unspc_coarse)     = 2.6E3_RKIND
+      if (p_ssalt_fine>0)     aero_dens(p_ssalt_fine)       = 2.2E3_RKIND
+      if (p_ssalt_coarse>0)   aero_dens(p_ssalt_coarse)     = 2.2E3_RKIND
+      if (p_polp_all>0)       aero_dens(p_polp_all)         = 1.2E3_RKIND
+      if (p_polp_tree>0)      aero_dens(p_polp_tree)        = 1.2E3_RKIND
+      if (p_polp_grass>0)     aero_dens(p_polp_grass)       = 1.2E3_RKIND
+      if (p_polp_weed>0)      aero_dens(p_polp_weed)        = 1.2E3_RKIND
+      if (p_pols_all>0)       aero_dens(p_pols_all)         = 1.425E3_RKIND
+      if (p_pols_tree>0)      aero_dens(p_pols_tree)        = 1.425E3_RKIND
+      if (p_pols_grass>0)     aero_dens(p_pols_grass)       = 1.425E3_RKIND
+      if (p_pols_weed>0)      aero_dens(p_pols_weed)        = 1.425E3_RKIND
     ! Aerosol diameters (m)
-      aero_diam(p_smoke_fine)             = 4E-8_RKIND
-      aero_diam(p_smoke_coarse)           = 10E-6_RKIND
-      aero_diam(p_dust_fine)              = 1E-6_RKIND
-      aero_diam(p_unspc_fine)             = 1E-6_RKIND
-      aero_diam(p_dust_coarse)            = 4.5E-6_RKIND
-      aero_diam(p_unspc_coarse)           = 4.5E-6_RKIND
-      aero_diam(p_ssalt_fine)             = 6.32E-7_RKIND
-      aero_diam(p_ssalt_coarse)           = 5.632E-6_RKIND
-      aero_diam(p_polp_all)               = 20E-6_RKIND ! 
-      aero_diam(p_polp_tree)              = 34E-6_RKIND ! Average of DBF, ENF in Wozniak and Steiner, 2017
-      aero_diam(p_polp_grass)             = 35E-6_RKIND ! W&S, 2017
-      aero_diam(p_polp_weed)              = 20E-6_RKIND ! W&S, 2017
-      aero_diam(p_pols_all)               = 1.5E-7_RKIND
-      aero_diam(p_pols_tree)              = 1.5E-7_RKIND
-      aero_diam(p_pols_grass)             = 1.5E-7_RKIND
-      aero_diam(p_pols_weed)              = 1.5E-7_RKIND
+      if (p_smoke_fine>0)    aero_diam(p_smoke_fine)             = 4E-8_RKIND
+      if (p_smoke_coarse>0)  aero_diam(p_smoke_coarse)           = 10E-6_RKIND
+      if (p_dust_fine>0)     aero_diam(p_dust_fine)              = 1E-6_RKIND
+      if (p_unspc_fine>0)    aero_diam(p_unspc_fine)             = 1E-6_RKIND
+      if (p_dust_coarse>0)   aero_diam(p_dust_coarse)            = 4.5E-6_RKIND
+      if (p_unspc_coarse>0)  aero_diam(p_unspc_coarse)           = 4.5E-6_RKIND
+      if (p_ssalt_fine>0)    aero_diam(p_ssalt_fine)             = 6.32E-7_RKIND
+      if (p_ssalt_coarse>0)  aero_diam(p_ssalt_coarse)           = 5.632E-6_RKIND
+      if (p_polp_all>0)      aero_diam(p_polp_all)               = 20E-6_RKIND
+      if (p_polp_tree>0)     aero_diam(p_polp_tree)              = 20E-6_RKIND
+      if (p_polp_grass>0)    aero_diam(p_polp_grass)             = 20E-6_RKIND
+      if (p_polp_weed>0)     aero_diam(p_polp_weed)              = 20E-6_RKIND
+      if (p_pols_all>0)      aero_diam(p_pols_all)               = 1.5E-7_RKIND
+      if (p_pols_tree>0)     aero_diam(p_pols_tree)              = 1.5E-7_RKIND
+      if (p_pols_grass>0)    aero_diam(p_pols_grass)             = 1.5E-7_RKIND
+      if (p_pols_weed>0)     aero_diam(p_pols_weed)              = 1.5E-7_RKIND
 
    end subroutine aero_dry_dep_init
 

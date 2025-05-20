@@ -10,6 +10,7 @@ module mpas_smoke_wrapper
    use mpas_smoke_config
    use mpas_smoke_init 
    use module_plumerise,      only : ebu_driver
+   use module_wildfire_smoke_emissions 
    use module_add_emiss_burn, only : add_emis_burn
    use dep_dry_simple_mod,    only : dry_dep_driver_simple
    use dep_dry_mod_emerson,   only : dry_dep_driver_emerson
@@ -63,7 +64,9 @@ contains
            index_e_dust_out_dust_fine, index_e_dust_out_dust_coarse,                         &
            index_e_ss_out_ssalt_fine, index_e_ss_out_ssalt_coarse,                           &
            frp_in                , frp_out,    fre_in, fre_out, hwp,  coef_bb_dc          ,  &
-           totprcp_prev24        , hwp_prev24     , frp_prev24,    fre_prev24,               &
+           totprcp_prev24        , hwp_avg     , frp_avg,    fre_avg, fire_end_hr,           &
+           nblocks               , EFs_map,                   & 
+           eco_id, efs_smold, efs_flam, efs_rsmold,fmc_avg,                                  &
            hfx_bb                , qfx_bb         ,  frac_grid_burned    ,                   &
            min_bb_plume          , max_bb_plume,                                             &
            sandfrac_in           , clayfrac_in           , uthres_in            ,            &
@@ -77,12 +80,12 @@ contains
            ddvel                 , wetdep_resolved       , tend_chem_settle      ,           & 
            do_mpas_smoke         , do_mpas_dust          , do_mpas_pollen        ,           &
            do_mpas_anthro        , do_mpas_ssalt         , do_mpas_volc          ,           &
-           do_mpas_sna           ,                                                           &
+           do_mpas_sna           , calc_bb_emis_online   , bb_beta               ,           &
            hwp_method            , hwp_alpha             , wetdep_ls_opt         ,           &
            wetdep_ls_alpha       , plumerise_opt         , plume_wind_eff       ,            &
            plume_alpha           , bb_emis_scale_factor, ebb_dcycle             ,            &
            drydep_opt            , pm_settling           , add_fire_heat_flux   ,            &
-           add_fire_moist_flux   , plumerisefire_frq     ,                                   &
+           add_fire_moist_flux   , plumerisefire_frq     , bb_qv_scale_factor   ,            &
            dust_alpha            , dust_gamma            , dust_drylimit_factor ,            &
            dust_moist_correction ,                                                           &
            num_pols_per_polp     , pollen_emis_scale_factor,                                 &
@@ -125,7 +128,7 @@ contains
 ! Timestep, day, constants
     real(RKIND),intent(in) :: dt, julian, g, cp, rd, gmt
 ! Time step #
-    integer,intent(in):: ktau
+    integer,intent(in):: ktau,nblocks
 ! Dimensions and indexes
     integer,intent(in):: nsoil, nlcat, num_chem, chemistry_start
     integer,intent(in):: kemit, kbio, kfire, kvol
@@ -145,13 +148,18 @@ contains
     real(RKIND),intent(in), dimension(ims:ime, jms:jme)             :: coszen
     real(RKIND),intent(in), dimension(ims:ime, jms:jme)             :: raincv, rainncv, mavail                    
     real(RKIND),intent(inout), dimension(ims:ime, jms:jme)          :: rmol, ust
+! 2D Fire Input
+    real(RKIND),intent(in), dimension(ims:ims, jms:jme), optional      :: totprcp_prev24, fire_end_hr,fmc_avg,     &
+                                                                          efs_smold, efs_flam, efs_rsmold
+    integer,intent(in), dimension(ims:ime,jms:jme),optional            :: eco_id
+    real(RKIND),intent(in),dimension(ims:ime, jms:jme),optional        :: frp_in, fre_in      ! Fire input
+! 2D + Time Fire Input
+    real(RKIND),intent(in), dimension(ims:ims, jms:jme, nblocks),        &
+                                                   optional      :: hwp_avg, fre_avg, frp_avg
 ! Residential Wood burning
     real(RKIND),intent(in), dimension(ims:ims, jms:jme),optional    :: RWC_denominator, RWC_annual_sum,                        & 
                                                                        RWC_annual_sum_smoke_fine, RWC_annual_sum_smoke_coarse, &
                                                                        RWC_annual_sum_unspc_fine, RWC_annual_sum_unspc_coarse
-! BB forecast input (previous 24 hours)
-    real(RKIND),intent(in), dimension(ims:ims, jms:jme, 24),        & 
-                                                   optional         :: totprcp_prev24, hwp_prev24, frp_prev24, fre_prev24
 ! 3D Met input 
     real(RKIND),intent(in), dimension(ims:ime, kms:kme, jms:jme)    :: p8w,    dz8w,    z_at_w, cldfrac,   &
                                                                        p_phy,  t_phy,   u_phy,  v_phy,     &
@@ -198,12 +206,11 @@ contains
                            index_e_vol_out_vash_fine,  index_e_vol_out_vash_coarse, &
                            index_e_dust_out_dust_fine, index_e_dust_out_dust_coarse, &
                            index_e_ss_out_ssalt_fine, index_e_ss_out_ssalt_coarse
-! 2D chemistry input (only) arrays 
-    real(RKIND),intent(in),dimension(ims:ime, jms:jme),optional  :: frp_in, fre_in      ! Fire input
+! 2D dust input arrays 
     real(RKIND),intent(in), dimension(ims:ime, jms:jme),optional  :: sandfrac_in, clayfrac_in, uthres_in, &        ! dust (FENGSHA) input
                                                                      uthres_sg_in, albedo_drag_in, feff_in, sep_in ! dust (FENGSHA) input
 ! 2D input/output arrays
-    real(RKIND),intent(inout),dimension(ims:ime, jms:jme),optional :: frp_out, fre_out
+    real(RKIND),intent(inout),dimension(ims:ime, jms:jme),optional :: frp_out, fre_out, EFs_map
     real(RKIND),intent(inout),dimension(ims:ime, jms:jme),optional :: hwp, coef_bb_dc
     real(RKIND),intent(inout),dimension(ims:ime, jms:jme),optional :: hfx_bb, qfx_bb, frac_grid_burned
     integer,intent(inout),dimension(ims:ime,jms:jme),optional      :: min_bb_plume, max_bb_plume
@@ -220,8 +227,8 @@ contains
     real(RKIND),intent(inout), dimension(ims:ime, kms:kme, jms:jme,1:num_e_ss_out),optional    :: e_ss_out
     real(RKIND),intent(inout), dimension(ims:ime, kms:kme, jms:jme,1:num_e_vol_out),optional   :: e_vol_out
 ! 3D + chem output arrays
-    real(RKIND),intent(inout), dimension(ims:ime, kms:kme, jms:jme, 1:num_chem),optional :: tend_chem_settle
-    real(RKIND),intent(inout), dimension(ims:ime, kms:kme, jms:jme, 1:num_chem) :: chem
+    real(RKIND),intent(inout), dimension(ims:ime, kms:kme, jms:jme, 1:num_chem),optional       :: tend_chem_settle
+    real(RKIND),intent(inout), dimension(ims:ime, kms:kme, jms:jme, 1:num_chem)                :: chem
 !----------------------------------
 !>-- Local Variables
 !>-- 3D met
@@ -242,6 +249,7 @@ contains
      logical,intent(in)                :: do_mpas_ssalt
      logical,intent(in)                :: do_mpas_volc
      logical,intent(in)                :: do_mpas_sna
+     logical,intent(in)                :: calc_bb_emis_online
      integer,intent(in)                :: hwp_method
      real(RKIND),intent(in)            :: hwp_alpha
      integer,intent(in)                :: wetdep_ls_opt
@@ -249,25 +257,25 @@ contains
      integer,intent(in)                :: plumerise_opt
      integer,intent(in)                :: plume_wind_eff
      real(kind=RKIND),intent(in)       :: plume_alpha
-     real(kind=RKIND),intent(in)       :: bb_emis_scale_factor, rwc_emis_scale_factor
+     real(kind=RKIND),intent(in)       :: bb_emis_scale_factor, rwc_emis_scale_factor, bb_qv_scale_factor
      integer,intent(in)                :: ebb_dcycle
      integer,intent(in)                :: drydep_opt
      integer,intent(in)                :: pm_settling
      logical,intent(in)                :: add_fire_heat_flux
      logical,intent(in)                :: add_fire_moist_flux
      integer,intent(in)                :: plumerisefire_frq
+     integer,intent(in)                :: bb_beta
      real(RKIND),intent(in)            :: dust_alpha, dust_gamma
      real(RKIND),intent(in)            :: dust_drylimit_factor, dust_moist_correction
      real(RKIND),intent(in)            :: pollen_emis_scale_factor, num_pols_per_polp
      integer,intent(in)                :: bb_input_prevh
      integer,intent(in)                :: online_rwc_emis
-
 !>- plume variables
     ! -- buffers
     real(RKIND), dimension(ims:ime, kms:kme, jms:jme) :: ebu,ebu_coarse
     real(RKIND), dimension(ims:ime, jms:jme)          :: flam_frac,                               &
                                                          fire_hist, peak_hr,                      &
-                                                         fire_end_hr, hwp_day_avg,                &
+                                                         hwp_day_avg,                             &
                                                          uspdavg2d, hpbl2d, wind10m 
     real(RKIND), dimension(ims:ime, jms:jme)          :: lu_nofire, lu_qfire, lu_sfire
     integer,     dimension(ims:ime, jms:jme)          :: fire_type
@@ -278,7 +286,7 @@ contains
 !>- Dry deposition - temporary - move to output 
     real(RKIND), dimension(ims:ime, jms:jme, 1:num_chem)          ::  drydep_flux_local
     real(RKIND), dimension(ims:ime, kms:kme, jms:jme, 1:num_chem) :: vgrav     ! gravitational settling velocit
-    real(RKIND), dimension(ims:ime, kms:kme, jms:jme) :: thetav
+    real(RKIND), dimension(ims:ime, kms:kme, jms:jme)             :: thetav
 !> -- other
     real(RKIND)    :: theta
     real(RKIND)    :: curr_secs
@@ -306,23 +314,9 @@ contains
          (.not. do_mpas_dust ) .and. (.not. do_mpas_anthro) .and. &
          (.not. do_mpas_ssalt) .and. (.not. do_mpas_sna))  return
 
-    uspdavg2d   = 0._RKIND
-    hpbl2d      = 0._RKIND
-    peak_hr     = 0._RKIND
-    flam_frac   = 0._RKIND
-    fire_type   = 0
-
-    curr_secs = ktau * dt
-    julday = int(julian)
-
-    do_plumerise = .false.
-    if (plumerise_opt .gt. 0 ) do_plumerise = .true. 
-    ! plumerise frequency in minutes set up by the namelist input
-    call_plume       = (do_plumerise .and. (plumerisefire_frq > 0))
-    if (call_plume) call_plume = (mod(int(curr_secs), max(1, 60*plumerisefire_frq)) == 0) .or. (ktau == 2)
 ! 
-!   Reorder chemistry indices -- TODO if ktau = 1?
-!
+!   Reorder chemistry indices
+!   TODO if ( ktau ==  1 ) then
     call set_scalar_indices(chemistry_start,                             &
                     index_smoke_fine, index_smoke_coarse,                &
                     index_dust_fine, index_dust_coarse,                  &
@@ -333,9 +327,20 @@ contains
                     index_ssalt_fine, index_ssalt_coarse,                &
                     index_no3_a_fine, index_so4_a_fine, index_nh4_a_fine,&
                     index_so2, index_nh3                                 )
+!   endif
 !
 !
 !
+
+    uspdavg2d   = 0._RKIND
+    hpbl2d      = 0._RKIND
+    peak_hr     = 0._RKIND
+    flam_frac   = 0._RKIND
+    fire_type   = 0
+
+    curr_secs = ktau * dt
+    julday = int(julian)
+
     call mpas_log_write( ' Calling smoke prep')
     !>- get ready for chemistry run
     call mpas_smoke_prep(                                                   &
@@ -355,41 +360,58 @@ contains
         its,ite, jts,jte, kts,kte)
         
    if ( do_mpas_smoke ) then
+! Are we calculating emissions online?
+      if ( calc_bb_emis_online ) then
+         call mpas_log_write( ' Calling module wildfire smoke emissions ')
+         if ( ebb_dcycle .eq. 2 ) then
+           ! Calculate the wildfire emission factors
+             call compute_emission_factors( EFs_map, vegfrac, bb_beta,                       &
+                                            eco_id, efs_smold, efs_flam, efs_rsmold,         &
+                                            fmc_avg, mavail,                                 &
+                                            nlcat, dt, gmt,                                  &
+                                            ids, ide, jds, jde, kds, kde,                    &
+                                            ims, ime, jms, jme, kms, kme,                    &
+                                            its, ite, jts, jte, kts, kte)
+         !TODO, JR replace by dynamic EFs 
+           call calculate_smoke_emissions(   dt, julday, nlcat, EFs_map, fre_avg,            &
+                                             ebb_dcycle, area, nblocks, ktau,                &
+                                             bb_input_prevh,ebu,                             &
+                                             ids, ide, jds, jde, kds, kde,                   &
+                                             ims, ime, jms, jme, kms, kme,                   &
+                                             its, ite, jts, jte, kts, kte)
 
-! HERE IS WHERE WE'LL CALCULATE THE EMISSIONS OR READ IT IN
-!     if ( calc_bb_emis_online ) then
-!     if ( ebb_dcycle .eq. 1 ) then
-!
+         endif
+      else ! i
+         if (ktau==1) then
+           do j=jts,jte
+           do i=its,ite
+             ebu(i,kts,j)= e_bb_in(i,kts,j,index_e_bb_in_smoke_fine)
+             if (p_smoke_coarse > 0 ) then 
+                ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smoke_coarse)
+             endif
+             do k=kts+1,kte
+              ebu(i,k,j)= 0._RKIND
+              ebu_coarse(i,k,j)= 0._RKIND
+             enddo
+           enddo
+           enddo
+         else
+           do j=jts,jte
+           do k=kts,kte
+           do i=its,ite
+           ! ebu is divided by coef_bb_dc since it is applied in the output
+             ebu(i,k,j) = e_bb_out(i,k,j,index_e_bb_out_smoke_fine) / &
+                          MAX(1.E-4_RKIND,coef_bb_dc(i,j))
+            if (p_smoke_coarse > 0 ) then
+                ebu_coarse(i,k,j) = e_bb_out(i,k,j,index_e_bb_out_smoke_coarse) / &
+                          MAX(1.E-4_RKIND,coef_bb_dc(i,j))
+            endif
+           enddo
+           enddo
+           enddo
+         endif ! ktau = 1
+      endif ! calc emis_online
 
-
-    if (ktau==1) then
-      do j=jts,jte
-      do i=its,ite
-        ebu(i,kts,j)= e_bb_in(i,kts,j,index_e_bb_in_smoke_fine)
-        if (p_smoke_coarse > 0 ) then 
-           ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smoke_coarse)
-        endif
-        do k=kts+1,kte
-         ebu(i,k,j)= 0._RKIND
-         ebu_coarse(i,k,j)= 0._RKIND
-        enddo
-      enddo
-      enddo
-    else
-      do j=jts,jte
-      do k=kts,kte
-      do i=its,ite
-      ! ebu is divided by coef_bb_dc since it is applied in the output
-        ebu(i,k,j) = e_bb_out(i,k,j,index_e_bb_out_smoke_fine) / &
-                     MAX(1.E-4_RKIND,coef_bb_dc(i,j))
-       if (p_smoke_coarse > 0 ) then
-           ebu_coarse(i,k,j) = e_bb_out(i,k,j,index_e_bb_out_smoke_coarse) / &
-                     MAX(1.E-4_RKIND,coef_bb_dc(i,j))
-       endif
-      enddo
-      enddo
-      enddo
-    endif
   ! Compute the heat/moisture fluxes
     if ( add_fire_heat_flux ) then
      do j = jts,jte
@@ -420,17 +442,38 @@ contains
       enddo
     endif
 
-      ! Apply the diurnal cycle coefficient to frp_out ()
- ! JLS -- Should this be moved outside the "call_plume" IF block?
-      do j=jts,jte
-      do i=its,ite
-        if ( fire_type(i,j) .eq. 4 ) then ! only apply scaling factor to wildfires
-           frp_out(i,j) = min(bb_emis_scale_factor*frp_in(i,j)*coef_bb_dc(i,j),frp_max)
-        else
-           frp_out(i,j) = min(frp_in(i,j)*coef_bb_dc(i,j),frp_max)
-        endif
-      enddo
-      enddo
+    ! Apply the diurnal cycle coefficient to frp_out ()
+    do j=jts,jte
+    do i=its,ite
+      if ( fire_type(i,j) .eq. 4 ) then ! only apply scaling factor to wildfires
+         frp_out(i,j) = min(bb_emis_scale_factor*frp_in(i,j)*coef_bb_dc(i,j),frp_max)
+      else
+         frp_out(i,j) = min(frp_in(i,j)*coef_bb_dc(i,j),frp_max)
+      endif
+    enddo
+    enddo
+
+    ! Deterimine if this is a plumerise timestep
+    do_plumerise = .false.
+    if (plumerise_opt .gt. 0 ) do_plumerise = .true. 
+    ! plumerise frequency in minutes set up by the namelist input
+    call_plume       = (do_plumerise .and. (plumerisefire_frq > 0))
+    if (call_plume) call_plume = (mod(int(curr_secs), max(1, 60*plumerisefire_frq)) == 0) .or. (ktau == 2)
+
+    if ( ebb_dcycle .eq. 2 ) then
+       call  diurnal_cycle (  dt,dz8w,rho_phy,pi,ebb_min,            &
+                              chem,num_chem,julday,gmt,xlat,xlong,     &
+                              fire_end_hr,peak_hr,curr_secs,coef_bb_dc, &
+                              fire_hist,hwp,hwp_avg,hwp_day_avg,       &  !I think fire_hist replaced sc_factor
+                              vegfrac, eco_id, nblocks,                &
+                              lu_nofire, lu_qfire, lu_sfire,           &
+                              swdown,ebb_dcycle,ebu,fire_type,         &
+                              qv, add_fire_moist_flux,                 &
+                              bb_qv_scale_factor, hwp_alpha,                &
+                              ids,ide, jds,jde, kds,kde,               &
+                              ims,ime, jms,jme, kms,kme,               &
+                              its,ite, jts,jte, kts,kte                )
+    endif
 
     ! compute wild-fire plumes
     if (call_plume) then

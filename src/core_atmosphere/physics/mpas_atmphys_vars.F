@@ -254,7 +254,16 @@
     hfx_bb_p,          &!
     qfx_bb_p,          &!
     frac_grid_burned_p,&!
-    fire_end_hr_p
+    fire_end_hr_p,     &!
+    totprcp_prev24_p,    &!
+    EFs_map_p,         &!JR:Estimated on module emiss
+    efs_smold_p,       &!JR
+    efs_flam_p,        &!JR
+    efs_rsmold_p,      &
+    fire_ef_out_p,     &
+    fmc_avg_p        
+ integer,dimension(:,:),allocatable:: &
+    eco_id_p !JR
 ! RWC fields
  real(kind=RKIND),dimension(:,:),allocatable:: &
     RWC_denominator_p,&
@@ -263,12 +272,10 @@
     RWC_annual_sum_smoke_coarse_p,&
     RWC_annual_sum_unspc_fine_p,&
     RWC_annual_sum_unspc_coarse_p
-! Previous 24 hours fields for BB
- real(kind=RKIND),dimension(:,:,:),allocatable:: &
-    hwp_prev24_p,      &!
-    frp_prev24_p,      &!
-    fre_prev24_p,      &!
-    totprcp_prev24_p!
+  real(kind=RKIND),dimension(:,:,:),allocatable:: &
+    fre_avg_p,         &
+    frp_avg_p,         &
+    hwp_avg_p
  integer,dimension(:,:),allocatable:: &
     min_bb_plume_p, &!
     max_bb_plume_p
