@@ -215,15 +215,15 @@ contains
        e_bio_out(i,kts,j,index_e_bio_out_polp_tree)  = e_bio_out(i,kts,j,index_e_bio_out_polp_tree) + emis
        if (p_polp_tree .gt. 0)   chem(i,kts,j,p_polp_tree)  = chem(i,kts,j,p_polp_tree) + emis
 
-       emis = factaa * ppemfact_mass_grass
+       emis = pollen_emis_scale_factor * factaa * ppemfact_mass_grass
        e_bio_out(i,kts,j,index_e_bio_out_polp_grass)  = e_bio_out(i,kts,j,index_e_bio_out_polp_grass) + emis
        if (p_polp_grass .gt. 0)  chem(i,kts,j,p_polp_grass)  = chem(i,kts,j,p_polp_grass) + emis
 
-       emis = factaa * ppemfact_mass_weed
+       emis = pollen_emis_scale_factor * factaa * ppemfact_mass_weed
        e_bio_out(i,kts,j,index_e_bio_out_polp_weed)  = e_bio_out(i,kts,j,index_e_bio_out_polp_weed) + emis
        if (p_polp_weed .gt. 0)  chem(i,kts,j,p_polp_weed)  = chem(i,kts,j,p_polp_weed) + emis
 
-       emis = factaa * (ppemfact_mass_tree + ppemfact_mass_grass + ppemfact_mass_weed) 
+       emis = pollen_emis_scale_factor * factaa * (ppemfact_mass_tree + ppemfact_mass_grass + ppemfact_mass_weed) 
        if (p_polp_all .gt. 0)   chem(i,kts,j,p_polp_all)   = chem(i,kts,j,p_polp_all)  + emis
 
      endif ! if land
