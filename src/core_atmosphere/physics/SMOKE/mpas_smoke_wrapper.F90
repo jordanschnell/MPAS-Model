@@ -363,7 +363,6 @@ contains
 ! Are we calculating emissions online?
       if ( calc_bb_emis_online ) then
          call mpas_log_write( ' Calling module wildfire smoke emissions ')
-         if ( ebb_dcycle .eq. 2 ) then
            ! Calculate the wildfire emission factors
              call compute_emission_factors( EFs_map, vegfrac, bb_beta,                       &
                                             eco_id, efs_smold, efs_flam, efs_rsmold,         &
@@ -373,13 +372,21 @@ contains
                                             ims, ime, jms, jme, kms, kme,                    &
                                             its, ite, jts, jte, kts, kte)
          !TODO, JR replace by dynamic EFs 
+         if ( ebb_dcycle .eq. 2 ) then
            call calculate_smoke_emissions(   dt, julday, nlcat, EFs_map, fre_avg,            &
                                              ebb_dcycle, area, nblocks, ktau,                &
                                              bb_input_prevh,ebu,                             &
                                              ids, ide, jds, jde, kds, kde,                   &
                                              ims, ime, jms, jme, kms, kme,                   &
                                              its, ite, jts, jte, kts, kte)
-
+         else
+           call calculate_smoke_emissions(   dt, julday, nlcat, EFs_map, fre_in,             &
+                                             ebb_dcycle, area, 1, ktau,                      &
+                                             1,ebu,                                          &
+                                             ids, ide, jds, jde, kds, kde,                   &
+                                             ims, ime, jms, jme, kms, kme,                   &
+                                             its, ite, jts, jte, kts, kte)
+          
          endif
       else ! i
          if (ktau==1) then
@@ -441,6 +448,22 @@ contains
       enddo
       enddo
     endif
+    
+    if ( ebb_dcycle .eq. 2 ) then
+       call  diurnal_cycle (  dt,dz8w,rho_phy,pi,ebb_min,              &
+                              chem,num_chem,julday,gmt,xlat,xlong,     &
+                              fire_end_hr,peak_hr,curr_secs,coef_bb_dc,&
+                              fire_hist,hwp,hwp_avg,hwp_day_avg,       &  !I think fire_hist replaced sc_factor
+                              vegfrac, eco_id, nblocks,                &
+                              lu_nofire, lu_qfire, lu_sfire,           &
+                              swdown,ebb_dcycle,ebu,fire_type,         &
+                              qv, add_fire_moist_flux,                 &
+                              bb_qv_scale_factor, hwp_alpha,           &
+                              ids,ide, jds,jde, kds,kde,               &
+                              ims,ime, jms,jme, kms,kme,               &
+                              its,ite, jts,jte, kts,kte                )
+    endif
+
 
     ! Apply the diurnal cycle coefficient to frp_out ()
     do j=jts,jte
@@ -459,21 +482,6 @@ contains
     ! plumerise frequency in minutes set up by the namelist input
     call_plume       = (do_plumerise .and. (plumerisefire_frq > 0))
     if (call_plume) call_plume = (mod(int(curr_secs), max(1, 60*plumerisefire_frq)) == 0) .or. (ktau == 2)
-
-    if ( ebb_dcycle .eq. 2 ) then
-       call  diurnal_cycle (  dt,dz8w,rho_phy,pi,ebb_min,            &
-                              chem,num_chem,julday,gmt,xlat,xlong,     &
-                              fire_end_hr,peak_hr,curr_secs,coef_bb_dc, &
-                              fire_hist,hwp,hwp_avg,hwp_day_avg,       &  !I think fire_hist replaced sc_factor
-                              vegfrac, eco_id, nblocks,                &
-                              lu_nofire, lu_qfire, lu_sfire,           &
-                              swdown,ebb_dcycle,ebu,fire_type,         &
-                              qv, add_fire_moist_flux,                 &
-                              bb_qv_scale_factor, hwp_alpha,                &
-                              ids,ide, jds,jde, kds,kde,               &
-                              ims,ime, jms,jme, kms,kme,               &
-                              its,ite, jts,jte, kts,kte                )
-    endif
 
     ! compute wild-fire plumes
     if (call_plume) then
@@ -691,6 +699,7 @@ contains
        endif
     enddo
     enddo
+    ! Assign the coef to the emissions on the way out
     do j=jts,jte
     do k=kts,kte
     do i=its,ite
@@ -882,7 +891,9 @@ contains
          end do
          end do
        endif ! ebb_dycycle == 2
-   
+  
+
+! TODO - JLS add HWP options 
        !>-- HWP: Pre-release of RRFSv1 method - using wind gust calculated via UPP Method
        do i=its, ite
        do j=jts, jte

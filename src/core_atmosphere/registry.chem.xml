@@ -237,7 +237,7 @@
 
       <stream name="smoke_retro_input"
          type="input"
-         filename_template="smoke.init.retro.$Y-$M-$D_$h.$m.$s.nc"
+         filename_template="x1.40962.bb.init.retro.$Y-$M-$D_$h.$m.$s.nc"
          filename_interval="input_interval"
          input_interval="1:00:00"
          immutable="true"                        

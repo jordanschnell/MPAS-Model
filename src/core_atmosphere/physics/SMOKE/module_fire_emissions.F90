@@ -215,12 +215,12 @@ module module_wildfire_smoke_emissions
        ! Timestep, day, constants
       REAL(RKIND), INTENT(IN) :: dt
       integer,intent(in):: ktau
-      INTEGER, INTENT(IN) :: ebb_dcycle, nblocks,bb_input_prevh
+      INTEGER, INTENT(IN) :: ebb_dcycle, nblocks, bb_input_prevh
 
-      REAL(RKIND), INTENT(IN),dimension(ims:ime, jms:jme, nblocks) :: fre_avg
-      REAL(RKIND), INTENT(IN),dimension(ims:ime, jms:jme) :: EFs_map
-      REAL(RKIND),intent(in), dimension(ims:ime, jms:jme) :: area !we need it for first v level 
-      REAL(RKIND), INTENT(INOUT),dimension(ims:ime, kms:kme, jms:jme) :: ebu
+      REAL(RKIND), INTENT(IN),   DIMENSION(ims:ime, jms:jme, nblocks)   :: fre_avg
+      REAL(RKIND), INTENT(IN),   DIMENSION(ims:ime, jms:jme)            :: EFs_map
+      REAL(RKIND), INTENT(IN),   DIMENSION(ims:ime, jms:jme)            :: area !we need it for first v level 
+      REAL(RKIND), INTENT(INOUT),DIMENSION(ims:ime, kms:kme, jms:jme)   :: ebu
 
       !Local variables
       INTEGER :: i, j, blk, hour_int
@@ -228,16 +228,21 @@ module module_wildfire_smoke_emissions
       REAL(RKIND), PARAMETER :: fg_to_ug = 1.0e6
       REAL(RKIND), PARAMETER :: to_s = 3600.0
        
-      ! Current integration hour
-      hour_int = FLOOR(ktau*dt/3600.)
-      ! Reset if > 24 and determine how many bb_input_prevh(s) have passed
-      hour_tmp = MOD(hour_int, 24) / bb_input_prevh
-      ! Make it an integer + 1
-      blk = FLOOR(hour_tmp) + 1
-      IF (blk < 1) blk = 1
-      IF (blk > 24 / bb_input_prevh) blk = 24 / bb_input_prevh
-
-      PRINT *, "Starting smoke emissions calculations..."
+     ! for EBB = 2, blk > 1
+      IF ( ebb_dcycle .eq. 2 ) then
+         ! Current integration hour
+         hour_int = FLOOR(ktau*dt/3600.)
+         ! Reset if > 24 and determine how many bb_input_prevh(s) have passed
+         hour_tmp = MOD(hour_int, 24) / bb_input_prevh
+         ! Make it an integer + 1
+         blk = FLOOR(hour_tmp) + 1
+         IF (blk < 1) blk = 1
+         IF (blk > 24 / bb_input_prevh) blk = 24 / bb_input_prevh
+      ELSE
+         ! EBB = 1 has only one time
+         blk = 1
+      ENDIF
+    
       !if ebb_dcycle == 2 then ebb_dc1 do not use blocks? should be 24
       DO j = jts, jte
         DO i = its, ite
@@ -249,7 +254,6 @@ module module_wildfire_smoke_emissions
         END DO
       END DO
   
-      PRINT *, "Smoke emissions calculations completed successfully."
     end subroutine calculate_smoke_emissions
   
   !peak_hr only needed at first time step -> from wrapper?
