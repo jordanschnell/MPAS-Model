@@ -420,6 +420,7 @@
                         input_interval="initial_only"
                         immutable="true">
 
+                        <var name="MASSDEN"/>
                         <var name="latCell"/>
                         <var name="lonCell"/>
                         <var name="xCell"/>
@@ -720,6 +721,7 @@
 
 			<var name="xtime"/>
 			<var name="Time"/>
+                        <var name="MASSDEN"/>
 			<var_struct name="lbc_state"/>
 		</stream>
 
@@ -1242,6 +1244,8 @@
                         <var name="nwfa" array_group="number" units="nb kg^{-1}"
                              description="Gocart water-friendly aerosol number concentration"
                              packages="mp_thompson_aers_in;tempo_aerosolaware_in"/>
+                        <var name="MASSDEN" array_group="chemistry" units="kg kg^{-1}"
+                             description="fine smoke mixing ratio"/>
                 </var_array>
 
                 <!-- Climatology for ocean mixed-layer depth -->
@@ -1323,6 +1327,8 @@
                         <var name="lbc_nwfa" array_group="number" units="nb kg^{-1}"
                              description="Gocart water-friendly aerosol number concentration on lateral boundary cells"
                              packages="mp_thompson_aers_in;tempo_aerosolaware_in"/>
+                        <var name="lbc_MASSDEN" array_group="chemistry" units="kg kg^{-1} s^{-1}"
+                             description="Lateral boundary tendency of fine smoke mixing ratio"/>
                 </var_array>
 
         </var_struct>
@@ -1360,6 +1366,9 @@
 
 	        <var name="qnwfa_fg" name_in_code="qnwfa" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
 		     description="First guess water-friendly aerosols"/>
+	        
+                <var name="MASSDEN_fg" name_in_code="MASSDEN" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     description="First guess smoke aerosols"/>
 
 		<var name="qnifa_fg" name_in_code="qnifa" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
 		     description="First guess ice-friendly aerosols"/>
