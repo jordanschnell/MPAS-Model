@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<registry model="mpas" core="init_atmosphere" core_abbrev="init_atm" version="8.2.2-1.2">
+<registry model="mpas" core="init_atmosphere" core_abbrev="init_atm" version="8.2.2-2.9">
 
 <!-- **************************************************************************************** -->
 <!-- ************************************** Dimensions ************************************** -->
@@ -87,8 +87,9 @@
 <!-- **************************************************************************************** -->
         <packages>
          <package name="mpas_smoke_in"  description="parameterization of smoke."/>
-         <package name="mpas_pollen_in" description="parameterization of pollen"/>
          <package name="speciated_pollen_rupture" description="parameterization of speciated rupture for pollen"/>
+         <package name="speciated_pollen_primary" description="parameterization of speciated primary pollen"/>
+         <package name="simple_pollen" description="parameterization of speciated primary pollen"/>
          <package name="mpas_dust_in"   description="parameterization of dust"/>
          <package name="mpas_ssalt_in"  description="parameterization of sea salt"/>
          <package name="mpas_anthro_in" description="parameterization of anthropogenic emissions for mpas-smoke"/>
@@ -110,6 +111,7 @@
                         immutable="true">
 
                         <var_array name="scalars"/>
+                        <var name="MASSDEN"/>
 
 		</stream>
 
@@ -133,6 +135,7 @@
 
 			<var name="xtime"/>
 			<var name="Time"/>
+                        <var name="MASSDEN"/>
 			<var_struct name="lbc_state"/>
 		</stream>
 
@@ -149,38 +152,38 @@
 
         <var_struct name="state" time_levs="1">
                 <var_array name="scalars" type="real" dimensions="nVertLevels nCells Time" packages="met_stage_out">
-                      <var name="smoke_fine" array_group="chemistry" units="kg kg^{-1}"
-                           description="fine smoke mixing ratio"
-                           packages="mpas_smoke_in;mpas_anthro_in"/>
 
-                      <var name="smoke_coarse" array_group="chemistry" units="kg kg^{-1}"
-                           description="coarse smoke mixing ratio"
-                           packages="mpas_smoke_in;mpas_anthro_in"/>
+                      <var name="MASSDEN" array_group="chemistry" units="kg kg^{-1}"
+                           description="fine smoke mixing ratio"/>
 
                       <var name="polp_tree" array_group="chemistry" units="kg kg^{-1}"
                            description="coarse tree pollen mixing ratio"
-                           packages="mpas_pollen_in"/>
- 
+                           packages="speciated_pollen_primary;speciated_pollen_rupture"/>
+       
                       <var name="polp_grass" array_group="chemistry" units="kg kg^{-1}"
                            description="coarse grass pollen mixing ratio"
-                           packages="mpas_pollen_in"/>
- 
+                           packages="speciated_pollen_primary;speciated_pollen_rupture"/>
+       
                       <var name="polp_weed" array_group="chemistry" units="kg kg^{-1}"
                            description="coarse weed pollen mixing ratio"
-                           packages="mpas_pollen_in"/>
-
+                           packages="speciated_pollen_primary;speciated_pollen_rupture"/>
+                      
+                      <var name="polp_all" array_group="chemistry" units="kg kg^{-1}"
+                           description="combined primary pollen mixing ratio"
+                           packages="simple_pollen"/>
+      
                       <var name="pols_all" array_group="chemistry" units="kg kg^{-1}"
                            description="combined ruptured pollen mixing ratio"
-                           packages="mpas_pollen_in"/>
- 
+                           packages="simple_pollen;speciated_pollen_primary"/>
+       
                       <var name="pols_tree" array_group="chemistry" units="kg kg^{-1}"
                            description="fine tree pollen mixing ratio"
                            packages="speciated_pollen_rupture"/>
- 
+       
                       <var name="pols_grass" array_group="chemistry" units="kg kg^{-1}"
                            description="fine grass pollen mixing ratio"
                            packages="speciated_pollen_rupture"/>
- 
+       
                       <var name="pols_weed" array_group="chemistry" units="kg kg^{-1}"
                            description="fine weed pollen mixing ratio"
                            packages="speciated_pollen_rupture"/>
@@ -241,59 +244,99 @@
 
         <var_struct name="lbc_state" time_levs="1">
                 <var_array name="lbc_scalars" type="real" dimensions="nVertLevels nCells Time" packages="lbcs">
-                        <var name="lbc_smoke_fine" name_in_code="smoke_fine" array_group="chemistry"  packages="mpas_smoke_in" units="kg kg^{-1} s^{-1}"
+                        <var name="lbc_smoke_fine" array_group="chemistry"  packages="mpas_smoke_in" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of fine smoke mixing ratio"/>
 
-                        <var name="lbc_smoke_coarse" name_in_code="smoke_coarse" array_group="chemistry"  packages="mpas_smoke_in" units="kg kg^{-1} s^{-1}"
+                        <var name="lbc_smoke_coarse" array_group="chemistry"  packages="mpas_smoke_in" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of coarse smoke mixing ratio"/>
-  
-                        <var name="lbc_polp_tree" name_in_code="polp_tree" array_group="chemistry"  packages="mpas_pollen_in" units="kg kg^{-1} s^{-1}"
+                        
+                        <var name="lbc_polp_tree" array_group="chemistry"  packages="speciated_pollen_primary;speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of coarse tree pollen mixing ratio"/>
   
-                        <var name="lbc_polp_grass" name_in_code="polp_grass" array_group="chemistry"  packages="mpas_pollen_in" units="kg kg^{-1} s^{-1}"
+                        <var name="lbc_polp_grass" array_group="chemistry"  packages="speciated_pollen_primary;speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of coarse grass pollen mixing ratio"/>
   
-                        <var name="lbc_polp_weed" name_in_code="polp_weed" array_group="chemistry"  packages="mpas_pollen_in" units="kg kg^{-1} s^{-1}"
+                        <var name="lbc_polp_weed" array_group="chemistry"  packages="speciated_pollen_primary;speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of coarse weed pollen mixing ratio"/>
+
+                        <var name="lbc_polp_all" array_group="chemistry"  packages="simple_pollen" units="kg kg^{-1} s^{-1}"
+                             description="Lateral boundary tendency of total primary pollen mixing ratio"/>
                         
-                        <var name="lbc_pols_all" name_in_code="pols_all" array_group="chemistry"  packages="mpas_pollen_in" units="kg kg^{-1} s^{-1}"
+                        <var name="lbc_pols_all" array_group="chemistry"  packages="simple_pollen;speciated_pollen_primary" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of total fine pollen mixing ratio"/>
   
-                        <var name="lbc_pols_tree" name_in_code="pols_tree" array_group="chemistry"  packages="speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
+                        <var name="lbc_pols_tree" array_group="chemistry"  packages="speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of fine tree pollen mixing ratio"/>
   
-                        <var name="lbc_pols_grass" name_in_code="pols_grass" array_group="chemistry"  packages="speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
+                        <var name="lbc_pols_grass" array_group="chemistry"  packages="speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of fine grass pollen mixing ratio"/>
   
-                        <var name="lbc_pols_weed" name_in_code="pols_weed" array_group="chemistry"  packages="speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
+                        <var name="lbc_pols_weed" array_group="chemistry"  packages="speciated_pollen_rupture" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of fine weed pollen mixing ratio"/>
   
-                        <var name="lbc_dust_fine" name_in_code="dust_fine" array_group="chemistry"  packages="mpas_dust_in" units="kg kg^{-1} s^{-1}"
+                        <var name="lbc_dust_fine" array_group="chemistry"  packages="mpas_dust_in" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of fine dust mixing ratio"/>
   
-                        <var name="lbc_dust_coarse" name_in_code="dust_coarse" array_group="chemistry"  packages="mpas_dust_in" units="kg kg^{-1} s^{-1}"
+                        <var name="lbc_dust_coarse" array_group="chemistry"  packages="mpas_dust_in" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of coarse dust mixing ratio"/>
   
-                        <var name="lbc_ssalt_fine" name_in_code="ssalt_fine" array_group="chemistry"  packages="mpas_ssalt_in" units="kg kg^{-1} s^{-1}"
+                        <var name="lbc_ssalt_fine" array_group="chemistry"  packages="mpas_ssalt_in" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of fine dust mixing ratio"/>
   
-                        <var name="lbc_ssalt_coarse" name_in_code="ssalt_coarse" array_group="chemistry"  packages="mpas_ssalt_in" units="kg kg^{-1} s^{-1}"
+                        <var name="lbc_ssalt_coarse" array_group="chemistry"  packages="mpas_ssalt_in" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of coarse dust mixing ratio"/>
   
-                        <var name="lbc_unspc_fine" name_in_code="unspc_fine" array_group="chemistry"  packages="mpas_anthro_in" units="kg kg^{-1} s^{-1}"
+                        <var name="lbc_unspc_fine" array_group="chemistry"  packages="mpas_anthro_in" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of fine primary aerosol mixing ratio"/>
   
-                        <var name="lbc_unspc_coarse" name_in_code="unspc_coarse" array_group="chemistry"  packages="mpas_anthro_in" units="kg kg^{-1} s^{-1}"
+                        <var name="lbc_unspc_coarse" array_group="chemistry"  packages="mpas_anthro_in" units="kg kg^{-1} s^{-1}"
                              description="Lateral boundary tendency of coarse primary aerosol mixing ratio"/>
+
+                        <var name="lbc_MASSDEN" array_group="chemistry" units="kg kg^{-1} s^{-1}"
+                             description="Lateral boundary tendency of fine smoke mixing ratio"/>
                 </var_array>
 
         </var_struct>
 
+        <var_struct name="fg" time_levs="1">
+                <var name="MASSDEN_fg" name_in_code="MASSDEN" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     description="First guess smoke aerosols"/>
+                <var name="smoke_fine_fg" name_in_code="smoke_fine" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="mpas_smoke_in;mpas_anthro_in" description="First guess fine smoke aerosols"/>
+                <var name="smoke_coarse_fg" name_in_code="smoke_coarse" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="mpas_smoke_in;mpas_anthro_in" description="First guess coarse smoke aerosols"/>
+                <var name="dust_fine_fg" name_in_code="dust_fine" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="mpas_dust_in;mpas_anthro_in" description="First guess fine dust aerosols"/>
+                <var name="dust_coarse_fg" name_in_code="dust_coarse" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="mpas_dust_in;mpas_anthro_in" description="First guess coarse dust aerosols"/>
+                <var name="unspc_fine_fg" name_in_code="unspc_fine" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="mpas_anthro_in" description="First guess fine unspeciated aerosols"/>
+                <var name="unspc_coarse_fg" name_in_code="unspc_coarse" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="mpas_anthro_in" description="First guess coarse unspeciaated aerosols"/>
+                <var name="ssalt_fine_fg" name_in_code="ssalt_fine" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="mpas_ssalt_in" description="First guess fine sea salt aerosols"/>
+                <var name="ssalt_coarse_fg" name_in_code="ssalt_coarse" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="mpas_ssalt_in" description="First guess coarse sea salt aerosols"/>
+                <var name="polp_all_fg" name_in_code="polp_all" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="simple_pollen" description="First guess coarse pollen"/>
+                <var name="pols_all_fg" name_in_code="polp_all" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="simple_pollen;speciated_pollen_rupture" description="First guess ruptured pollen"/>
+                <var name="polp_tree_fg" name_in_code="polp_tree" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="speciated_pollen_primary;speciated_pollen_rupture" description="First guess coarse tree pollen"/>
+                <var name="polp_grass_fg" name_in_code="polp_grass" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="speciated_pollen_primary;speciated_pollen_rupture" description="First guess coarse grass pollen"/>
+                <var name="polp_weed_fg" name_in_code="polp_weed" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="speciated_pollen_primary;speciated_pollen_rupture" description="First guess coarse weed pollen"/>
+                <var name="pols_tree_fg" name_in_code="pols_tree" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="speciated_pollen_rupture" description="First guess fine tree pollen"/>
+                <var name="pols_grass_fg" name_in_code="pols_grass" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="speciated_pollen_rupture" description="First guess fine grass pollen"/>
+                <var name="pols_weed_fg" name_in_code="pols_weed" type="real" dimensions="nFGLevels nCells Time" units="kg^{-1}"
+		     packages="speciated_pollen_rupture" description="First guess fine weed pollen"/>
 
-        <var_struct name="diag" time_levs="1">
         </var_struct>
 
-        <var_struct name="diag_physics" time_levs="1">
-        </var_struct>
-
+#ifdef DO_PHYSICS
+#include "registry.chem.xml"
+#endif
 </registry>
