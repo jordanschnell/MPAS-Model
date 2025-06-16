@@ -353,6 +353,13 @@ contains
                                 erod, R, airden, ustar, uthres, alpha, gamma, kvhmax, &
                                 g0, RHOSOIL
     endif
+    if ( emit == 0 ) then
+       write(*,*),'emit was 0, inputs: smois,massfrac(1),massfrac(3), massfrac(2), &
+                                erod, R, airden, ustar, uthres, alpha, gamma, kvhmax, &
+                                g0, RHOSOIL',smois,massfrac(1),massfrac(3), massfrac(2), &
+                                erod, R, airden, ustar, uthres, alpha, gamma, kvhmax, &
+                                g0, RHOSOIL
+    endif
 
     ! Now that we have the total dust emission, distribute into dust bins using
     ! lognormal distribution (Dr. Jasper Kok, in press), and

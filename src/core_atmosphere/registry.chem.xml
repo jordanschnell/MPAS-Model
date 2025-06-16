@@ -39,6 +39,7 @@
          <package name="mpas_bact_in"   description="parameterization of bacteria"/>
          <package name="mpas_dms_in"   description="parameterization of DMS"/>
          <package name="mpas_plastic_in"   description="parameterization of microplastics"/>
+         <package name="mpas_methane_in"   description="parameterization of methane"/>
    </packages>
 
 
@@ -395,10 +396,14 @@
               description="coarse sea salt mixing ratio"
               packages="mpas_ssalt_in"/>
  
+         <var name="unspc_ultrafine" array_group="chemistry" units="kg kg^{-1}"
+              description="ultrafine anthropogenic primary aerosol mixing ration"
+              packages="mpas_anthro_in"/>
+ 
          <var name="unspc_fine" array_group="chemistry" units="kg kg^{-1}"
               description="fine anthropogenic primary aerosol mixing ration"
               packages="mpas_anthro_in"/>
- 
+
          <var name="unspc_coarse" array_group="chemistry" units="kg kg^{-1}"
               description="coarse anthropogenic primary aerosol"
               packages="mpas_anthro_in"/>
@@ -438,6 +443,10 @@
          <var name="no2" array_group="chemistry" units="mol mol^{-1}"
               description="nitrogen dioxide"
               packages="mpas_aerosols_in"/> 
+
+         <var name="ch4" array_group="chemistry" units="mol mol^{-1}"
+              description="methane"
+              packages="mpas_methane_in"/> 
       </var_array>
    </var_struct>
 

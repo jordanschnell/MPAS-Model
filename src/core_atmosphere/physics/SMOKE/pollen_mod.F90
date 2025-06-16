@@ -191,8 +191,9 @@ contains
           fh = (rh_high - (relhum(i,kts,j) * 100._RKIND )) / (rh_high - rh_low)
        end if
  
-     ! Combine the factors  
-       fa = fh * fw * fr / sph
+     ! Combine the factors
+     ! Emissions are described / day, convert to /sec 
+       fa = fh * fw * fr / sph / 24._RKIND
   
      ! Compute the number emissions
        ppemfact_numb_tree  = e_bio_in(i,1,j,index_e_bio_in_polp_tree)  * fa !, 0._RKIND)
