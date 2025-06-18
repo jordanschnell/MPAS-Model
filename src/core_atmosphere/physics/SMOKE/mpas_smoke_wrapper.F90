@@ -358,6 +358,10 @@ contains
         ids,ide, jds,jde, kds,kde,                                          &
         ims,ime, jms,jme, kms,kme,                                          &
         its,ite, jts,jte, kts,kte)
+     
+   if (ktau == 1) then
+      call aero_dry_dep_init()
+   endif
         
    if ( do_mpas_smoke ) then
 ! Are we calculating emissions online?
@@ -627,9 +631,6 @@ contains
     !>-- compute dry deposition, based on Emerson et al., (2020)
     if (drydep_opt == 1) then
      ! Set up the arrays if this is the first time through
-     if (ktau == 1) then
-       call aero_dry_dep_init()
-     endif
      call mpas_log_write( ' Calling dry_dep_driver_emerson')
      call dry_dep_driver_emerson(rmol,ust,znt,num_chem,ddvel,         &
         vgrav,chem,dz8w,snowh,t_phy,p_phy,rho_phy,ivgtyp,g,dt,        &
