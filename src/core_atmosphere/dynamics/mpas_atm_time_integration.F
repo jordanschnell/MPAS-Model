@@ -509,12 +509,15 @@ module atm_time_integration
       character (len=StrKIND), pointer :: config_anthro_scheme
       character (len=StrKIND), pointer :: config_ssalt_scheme
       character (len=StrKIND), pointer :: config_volc_scheme
+      character (len=StrKIND), pointer :: config_methane_scheme
+
       integer, pointer :: index_smoke_fine, index_smoke_coarse
       integer, pointer :: index_polp_tree, index_polp_grass, index_polp_weed, index_polp_all, &
                           index_pols_tree, index_pols_grass, index_pols_weed, index_pols_all
       integer, pointer :: index_dust_fine, index_dust_coarse
       integer, pointer :: index_unspc_fine, index_unspc_coarse
       integer, pointer :: index_ssalt_fine, index_ssalt_coarse
+      integer, pointer :: index_ch4
 
       character(len=StrKIND), pointer :: config_IAU_option
 
@@ -561,6 +564,7 @@ module atm_time_integration
       call mpas_pool_get_config(block % configs, 'config_dust_scheme', config_dust_scheme)
       call mpas_pool_get_config(block % configs, 'config_anthro_scheme', config_anthro_scheme)
       call mpas_pool_get_config(block % configs, 'config_ssalt_scheme', config_ssalt_scheme)
+      call mpas_pool_get_config(block % configs, 'config_methane_scheme', config_methane_scheme)
       !  config variables for cloud microphysics
 #ifdef DO_PHYSICS
       call mpas_pool_get_config(block % configs, 'config_microp_scheme', config_microp_scheme)
@@ -653,6 +657,7 @@ module atm_time_integration
          call mpas_pool_get_dimension(state, 'index_unspc_coarse', index_unspc_coarse)
          call mpas_pool_get_dimension(state, 'index_ssalt_fine', index_ssalt_fine)
          call mpas_pool_get_dimension(state, 'index_ssalt_coarse', index_ssalt_coarse)
+          call mpas_pool_get_dimension(state, 'index_ch4',index_ch4)
       endif
 
       !
@@ -1197,6 +1202,9 @@ module atm_time_integration
                   if (index_ssalt_coarse > 0) then
                      scalars_driving(index_ssalt_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'ssalt_coarse', rk_timestep(rk_step) )
                   end if
+                  if (index_ch4 > 0) then
+                     scalars_driving(index_ch4,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'ch4', rk_timestep(rk_step) )
+                  end if
                   
                   !$OMP PARALLEL DO
                   do thread=1,nThreads
@@ -1452,6 +1460,9 @@ module atm_time_integration
                if (index_ssalt_coarse > 0) then
                   scalars_driving(index_ssalt_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'ssalt_coarse', rk_timestep(rk_step) )
                end if
+               if (index_ch4 > 0) then
+                  scalars_driving(index_ch4,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'ch4', rk_timestep(rk_step) )
+               end if
                
 !$OMP PARALLEL DO
                do thread=1,nThreads
@@ -1699,6 +1710,9 @@ module atm_time_integration
          end if
          if (index_ssalt_coarse > 0) then
             scalars_driving(index_ssalt_coarse,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'ssalt_coarse', dt )
+         end if
+         if (index_ch4 > 0) then
+            scalars_driving(index_ch4,1:nVertLevels,1:nCells+1) = mpas_atm_get_bdy_state( clock, block, nVertLevels, nCells, 'ch4', dt )
          end if
 
       

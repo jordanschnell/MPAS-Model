@@ -39,7 +39,7 @@
          <package name="mpas_bact_in"   description="parameterization of bacteria"/>
          <package name="mpas_dms_in"   description="parameterization of DMS"/>
          <package name="mpas_plastic_in"   description="parameterization of microplastics"/>
-         <package name="mpas_methane_in"   description="parameterization of methane"/>
+         <package name="mpas_methane_in"   description="parameterization for methane forecast"/>
    </packages>
 
 
@@ -398,7 +398,7 @@
  
          <var name="unspc_ultrafine" array_group="chemistry" units="kg kg^{-1}"
               description="ultrafine anthropogenic primary aerosol mixing ration"
-              packages="mpas_anthro_in"/>
+              packages="mpas_aerosols_in"/>
  
          <var name="unspc_fine" array_group="chemistry" units="kg kg^{-1}"
               description="fine anthropogenic primary aerosol mixing ration"
@@ -460,6 +460,9 @@
          <var name="e_bb_in_smoke_coarse" name_in_code="e_bb_in_smoke_coarse" array_group="bb_in_aerosols" units="ug m^{-2} s^{-1}"
               description="input biomass burning coarse smoke emissions"
               packages="mpas_smoke_in"/>
+         <var name="e_bb_in_ch4" name_in_code="e_bb_in_ch4" array_group="bb_in_tracers" units="mol m^{-2} s^{-1}"
+              description="input biomass burning ch4 emissions"
+              packages="mpas_methane_in"/>
       </var_array>
      <!-- Anthropogenic -->
       <var_array name="e_ant_in" type="real" dimensions="nkemit nCells Time">
@@ -497,6 +500,9 @@
          <var name="e_ant_in_smoke_coarse" name_in_code="e_ant_in_smoke_coarse" array_group="ant_in_aerosols" units="ug m^{-2} s^{-1}"
               description="input anthropogenic coarse smoke emissions"
               packages="mpas_anthro_in"/>
+         <var name="e_ant_in_ch4" name_in_code="e_ant_in_ch4" array_group="ant_in_gases" units="mol m^{-2} hr^{-1}"
+              description="input anthropogenic methane (CH4) emissions"
+              packages="mpas_methane_in"/>
       </var_array>
      <!-- Biogenic -->
       <var_array name="e_bio_in" type="real" dimensions="nkbio nCells Time">
@@ -530,6 +536,9 @@
          <var name="e_bb_out_smoke_coarse" name_in_code="e_bb_out_smoke_coarse" array_group="bb_out_aerosols" units="ug m^{-2} s^{-1}"
               description="output biomass burning coarse smoke emissions"
               packages="mpas_smoke_in"/>
+         <var name="e_bb_out_ch4" name_in_code="e_bb_out_ch4" array_group="bb_out_tracers" units="mol m^{-2} s^{-1}"
+              description="output biomass burning ch4 emissions"
+              packages="mpas_methane_in"/>
       </var_array>
 
       <var_array name="e_vol_out" type="real" dimensions="nVertLevels nCells Time">
@@ -575,6 +584,9 @@
          <var name="e_ant_out_so2" name_in_code="e_ant_out_so2" array_group="ant_out_gases" units="ug m^{-2} s^{-1}"
               description="ouput anthropogenic fine nitrate (NO3) emissions"
               packages="mpas_sna_in"/>
+         <var name="e_ant_out_ch4" name_in_code="e_ant_out_ch4" array_group="ant_out_gases" units="ug m^{-2} s^{-1}"
+              description="ouput anthropogenic methane (CH4) emissions"
+              packages="mpas_methane_in"/>
       </var_array>
 
       <var_array name="e_bio_out" type="real" dimensions="nVertLevels nCells Time">
@@ -794,6 +806,9 @@
           <var name="tend_unspc_coarse" name_in_code="unspc_coarse" array_group="chemistry" units="kg m^{-3} s^{-1}"
                description="Tendency of coarse unspeciated aerosol mass per unit volume divided by d(zeta)/dz"
                packages="mpas_anthro_in"/>
+          <var name="tend_ch4" name_in_code="ch4" array_group="chemistry" units="mol m^{-3} s^{-1}"
+               description="Tendency of methane mass per unit volume divided by d(zeta)/dz"
+               packages="mpas_methane_in"/>
             </var_array>
 #endif
         </var_struct>
@@ -850,6 +865,9 @@
   
          <var name="lbc_unspc_coarse" name_in_code="unspc_coarse" array_group="chemistry"  packages="mpas_anthro_in" units="kg kg^{-1} s^{-1}"
               description="Lateral boundary tendency of coarse primary aerosol mixing ratio"/>
+
+         <var name="lbc_ch4" name_in_code="ch4" array_group="chemistry"  packages="mpas_methane_in" units="mol mol^{-1} s^{-1}"
+              description="Lateral boundary tendency of ch4 mixing ratio"/>
       </var_array>
    </var_struct>
 

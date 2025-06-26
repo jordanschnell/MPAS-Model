@@ -48,7 +48,7 @@ contains
     REAL(RKIND), DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: sep     ! Sediment supply map
     REAL(RKIND), DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: snowh   ! snow height (m)
     REAL(RKIND), DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: xland   ! dominant land use type
-    REAL(RKIND), DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: area    ! area of grid cell
+    REAL(RKIND), DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: area    ! area of grid cell [m2]
     REAL(RKIND), DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: ust     ! friction velocity
     REAL(RKIND), DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: znt     ! Surface Roughness length (m)
     REAL(RKIND), DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: clay    ! Clay Fraction (-)
@@ -545,9 +545,6 @@ contains
    
    ! Distribute emissions to bins and convert to mass flux (kg s-1)
    reason = rustar - u_thresh
-   if (q .gt. 0._RKIND .and. emissions .gt. 0._RKIND ) then
-      write(*,*),'JLS  - emitting dust!'
-   endif
    ! --------------------------------------------------------------
    emissions = emissions * q
 

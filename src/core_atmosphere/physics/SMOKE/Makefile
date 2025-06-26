@@ -74,7 +74,8 @@ module_wetdep_ls.o: \
 	mpas_smoke_init.o
 
 module_add_emiss_burn.o: \
-	mpas_smoke_config.o
+	mpas_smoke_config.o \
+	mpas_smoke_init.o
 
 module_smoke_plumerise.o:  \
 	module_zero_plumegen_coms.o

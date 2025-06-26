@@ -112,8 +112,9 @@ contains
     REAL(RKIND), PARAMETER :: rh_rupt   = 80._RKIND    ! [%} Rupture humidity
     REAL(RKIND), PARAMETER :: converi   = 1.e-9_RKIND  ! Conversion factor
     REAL(RKIND), PARAMETER :: sph       = 3600._RKIND  ! Conversion from hours to seconds
+    REAL(RKIND), PARAMETER :: hpd       = 24._RKIND    ! Conversion from days to hours
     REAL(RKIND), PARAMETER :: rho_polp  = 1200._RKIND  ! Pollen (coarse) density (kg/m3)
-    REAL(RKIND), PARAMETER :: diam_polp = 20._RKIND    ! Diameter (coarse) pollen (um)
+    REAL(RKIND), PARAMETER :: diam_polp = 25._RKIND    ! Diameter (coarse) pollen (um)
     REAL(RKIND), PARAMETER :: rho_pols  = 1425._RKIND  ! Pollen (coarse)density (kg/m3)
     REAL(RKIND), PARAMETER :: diam_pols = 0.15_RKIND   ! Diameter(coarse) pollen (um)
     REAL(RKIND), PARAMETER :: pols_to_polp_frac_rh = 0.7_RKIND  ! Fraction of polp to pols for humidity rupture
@@ -132,6 +133,7 @@ contains
     LOGICAL, PARAMETER :: do_pollen_lightning_rupture = .false.
     LOGICAL, PARAMETER :: do_pollen_rh_rupture = .true.
 
+  !TODO -- ADJUST THESE? 
 
   ! Set the densities / diameters based on what is available
   if ( p_polp_tree > 0 ) then
@@ -157,8 +159,6 @@ contains
      diam_polp_weed = diam_polp
      rho_polp_weed  = rho_polp
   endif
-
-  write(*,*) 'JLS, diam_polp_weed, rho_polp_weed', diam_polp_weed, rho_polp_weed
 
   ! Loop over the grid cells to calculate and add the emissions
     do j = jts, jte
@@ -193,7 +193,7 @@ contains
  
      ! Combine the factors
      ! Emissions are described / day, convert to /sec 
-       fa = fh * fw * fr / sph / 24._RKIND
+       fa = fh * fw * fr / sph / hpd
   
      ! Compute the number emissions
        ppemfact_numb_tree  = e_bio_in(i,1,j,index_e_bio_in_polp_tree)  * fa !, 0._RKIND)

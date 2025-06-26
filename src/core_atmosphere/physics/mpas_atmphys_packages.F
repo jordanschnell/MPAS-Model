@@ -46,6 +46,8 @@
  character(len=StrKIND),pointer:: config_ssalt_scheme
  character(len=StrKIND),pointer:: config_volc_scheme
  character(len=StrKIND),pointer:: config_sna_scheme
+ character(len=StrKIND),pointer:: config_methane_scheme
+
  logical,pointer:: config_tempo_hailaware, config_tempo_aerosolaware
  logical,pointer:: mp_kessler_in,mp_thompson_in,mp_thompson_aers_in,mp_wsm6_in,mp_nssl2m_in,nssl3m_in
  logical,pointer:: mp_tempo_in, tempo_hailaware_in, tempo_aerosolaware_in
@@ -55,7 +57,8 @@
  logical,pointer:: sf_noahmp_in
  logical,pointer:: mpas_smoke_in, mpas_pollen_in, mpas_dust_in, &
                    mpas_anthro_in, mpas_ssalt_in, mpas_volc_in, &
-                   mpas_sna_in, speciated_pollen_rupture, speciated_pollen_primary, simple_pollen
+                   mpas_sna_in, mpas_methane_in,                &
+                   speciated_pollen_rupture, speciated_pollen_primary, simple_pollen
 
  integer :: ierr
 
@@ -509,6 +512,31 @@
 
  if(config_sna_scheme.ne.'off') then
    mpas_sna_in = .true.
+ endif
+
+ call mpas_log_write('    mpas_sna_in              = $l', logicArgs=(/mpas_sna_in/))
+ call mpas_log_write('')
+
+
+!--- initialization of packages for parameterizations of methane:
+
+  call mpas_pool_get_config(configs,'config_methane_scheme', config_methane_scheme)
+
+  nullify(mpas_methane_in)
+  call mpas_pool_get_package(packages,'mpas_methane_inActive', mpas_methane_in)
+
+   if(.not.associated(mpas_methane_in)) then
+    call mpas_log_write('================================================================================',messageType=MPAS_LOG_ERR)
+    call mpas_log_write('* Error while setting up packages for methane options options in atmosphere core.',  messageType=MPAS_LOG_ERR)
+    call mpas_log_write('================================================================================',messageType=MPAS_LOG_ERR)
+    ierr = 1
+    return
+ endif
+
+ mpas_methane_in = .false.
+
+ if(config_methane_scheme.ne.'off') then
+   mpas_methane_in = .true.
  endif
 
  call mpas_log_write('    mpas_sna_in              = $l', logicArgs=(/mpas_sna_in/))

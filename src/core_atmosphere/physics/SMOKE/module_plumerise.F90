@@ -16,6 +16,7 @@
 CONTAINS
 subroutine ebu_driver (      flam_frac,kfire,ebu_in,ebu,             &
                              ebu_in_coarse,ebu_coarse,               &
+                             ebu_in_ch4,ebu_ch4,                     &
                              theta_phy,q_vap,                        &   ! RAR: moist is replaced with q_vap, SRB: t_phy is repalced by theta_phy
                              rho_phy,vvel,u_phy,v_phy,pi_phy,        &   ! SRB: p_phy is replaced by pi_phy
                              wind_phy,                               &   ! SRB: added wind_phy
@@ -56,9 +57,9 @@ subroutine ebu_driver (      flam_frac,kfire,ebu_in,ebu,             &
    real(RKIND) :: curr_secs
    INTEGER,      INTENT(IN   ) :: wind_eff_opt
    REAL(RKIND), INTENT(IN)    :: alpha !  SRB: Enrainment constant for plumerise scheme
-   real(kind=RKIND), DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT(INOUT ) ::  ebu, ebu_coarse
+   real(kind=RKIND), DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT(INOUT ) ::  ebu, ebu_coarse, ebu_ch4
    real(kind=RKIND), INTENT(IN )  :: g, con_cp, con_rd
-   real(kind=RKIND), DIMENSION( ims:ime, 1:kfire, jms:jme ), INTENT(IN )  :: ebu_in, ebu_in_coarse
+   real(kind=RKIND), DIMENSION( ims:ime, 1:kfire, jms:jme ), INTENT(IN )  :: ebu_in, ebu_in_coarse, ebu_in_ch4
    real(kind=RKIND), DIMENSION( ims:ime, jms:jme ), INTENT(OUT ) :: flam_frac
    real(kind=RKIND), DIMENSION( ims:ime , kms:kme , jms:jme )         ,               &
           INTENT(IN   ) ::   z,z_at_w,vvel,u_phy,v_phy,rho_phy,pi_phy,q_vap,theta_phy,wind_phy                     ! RAR, SRB
@@ -87,6 +88,7 @@ subroutine ebu_driver (      flam_frac,kfire,ebu_in,ebu,             &
                do i=its,ite
                  ebu(i,k,j)=0._RKIND
                  ebu_coarse(i,k,j)=0._RKIND
+                 ebu_ch4(i,k,j)=0._RKIND
                enddo
             enddo
           enddo
@@ -152,9 +154,11 @@ check_pl:  IF (do_plumerise) THEN    ! if the namelist option is set for plumeri
                do k=kp1,kp2-1
                      ebu(i,k,j)=flam_frac(i,j)*ebu_in(i,kts,j)*(z_at_w(i,k+1,j)-z_at_w(i,k,j))/dz_plume
                      ebu_coarse(i,k,j)=flam_frac(i,j)*ebu_in_coarse(i,kts,j)*(z_at_w(i,k+1,j)-z_at_w(i,k,j))/dz_plume 
+                     ebu_ch4(i,k,j)=flam_frac(i,j)*ebu_in_ch4(i,kts,j)*(z_at_w(i,k+1,j)-z_at_w(i,k,j))/dz_plume 
                enddo
                ebu(i,kts,j)= (1._RKIND - flam_frac(i,j))* ebu_in(i,kts,j)
                ebu_coarse(i,kts,j)= (1._RKIND - flam_frac(i,j))* ebu_in_coarse(i,kts,j)
+               ebu_ch4(i,kts,j)= (1._RKIND - flam_frac(i,j))* ebu_in_ch4(i,kts,j)
             !   ebu(i,kts,j) = ebu_in(i,j)
 
                ! For output diagnostic

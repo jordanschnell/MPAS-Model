@@ -32,6 +32,7 @@ module mpas_smoke_init
    p_nh4_a_fine, &
    p_so2, &
    p_nh3, &
+   p_ch4, &
    p_mold_fine, &
    p_bact_fine, &
    p_plastic_fine, &
@@ -48,7 +49,7 @@ module mpas_smoke_init
                                  index_unspc_fine, index_unspc_coarse,                &
                                  index_ssalt_fine, index_ssalt_coarse,                &
                                  index_no3_a_fine, index_so4_a_fine, index_nh4_a_fine,&
-                                 index_so2, index_nh3                                 )
+                                 index_so2, index_nh3, index_ch4                      )
 
     implicit none
 
@@ -61,7 +62,7 @@ module mpas_smoke_init
                            index_unspc_fine, index_unspc_coarse,               &
                            index_ssalt_fine, index_ssalt_coarse,               &
                            index_no3_a_fine, index_so4_a_fine, index_nh4_a_fine,&
-                           index_so2, index_nh3
+                           index_so2, index_nh3, index_ch4
 
         p_smoke_fine    = index_smoke_fine - chemistry_start + 1
         p_smoke_coarse  = index_smoke_coarse - chemistry_start + 1
@@ -84,6 +85,7 @@ module mpas_smoke_init
         p_nh4_a_fine    = index_nh4_a_fine - chemistry_start + 1
         p_so2           = index_so2 - chemistry_start + 1
         p_nh3           = index_nh3 - chemistry_start + 1
+        p_ch4           = index_ch4 - chemistry_start + 1
  
    end subroutine set_scalar_indices
 

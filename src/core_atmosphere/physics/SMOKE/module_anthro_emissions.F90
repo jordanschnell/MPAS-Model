@@ -26,13 +26,15 @@ contains
                            index_e_ant_in_dust_fine,  index_e_ant_in_dust_coarse,    &
                            index_e_ant_in_no3_a_fine, index_e_ant_in_so4_a_fine,     &
                            index_e_ant_in_nh4_a_fine,                                &
-                           index_e_ant_in_so2, index_e_ant_in_nh3,                   & 
+                           index_e_ant_in_so2, index_e_ant_in_nh3,                   &
+                           index_e_ant_in_ch4,                                       & 
                            index_e_ant_out_unspc_fine, index_e_ant_out_unspc_coarse, &
                            index_e_ant_out_smoke_fine, index_e_ant_out_smoke_coarse, &
                            index_e_ant_out_dust_fine, index_e_ant_out_dust_coarse,   &
                            index_e_ant_out_no3_a_fine, index_e_ant_out_so4_a_fine,   &
                            index_e_ant_out_nh4_a_fine,                               &
                            index_e_ant_out_so2, index_e_ant_out_nh3,                 &
+                           index_e_ant_out_ch4,                                      &
                            ids,ide, jds,jde, kds,kde,                                &
                            ims,ime, jms,jme, kms,kme,                                &
                            its,ite, jts,jte, kts,kte                                 )
@@ -50,12 +52,14 @@ contains
            index_e_ant_in_no3_a_fine, index_e_ant_in_so4_a_fine,     &
            index_e_ant_in_nh4_a_fine,                                &
            index_e_ant_in_so2, index_e_ant_in_nh3,                   &
+           index_e_ant_in_ch4,                                       &
            index_e_ant_out_unspc_fine, index_e_ant_out_unspc_coarse, &
            index_e_ant_out_smoke_fine, index_e_ant_out_smoke_coarse, &
            index_e_ant_out_dust_fine, index_e_ant_out_dust_coarse,   &
            index_e_ant_out_no3_a_fine, index_e_ant_out_so4_a_fine,   &
-                           index_e_ant_out_nh4_a_fine,                               &
-                           index_e_ant_out_so2, index_e_ant_out_nh3
+           index_e_ant_out_nh4_a_fine,                               &
+           index_e_ant_out_so2, index_e_ant_out_nh3,                 &
+           index_e_ant_out_ch4
 
    REAL(RKIND), INTENT(IN    ) :: dt,gmt
 
@@ -76,12 +80,10 @@ contains
    do k = kts, kemit
    do i = its,ite
 !  
-!     NEMO emissions are in g/s (per grid cell) == 1 grid cell / 1e6 m2
-!     Want to convert to ug/m2/s
-!     scaling factor of 1e-6 for /m2
-!     scaling factor of 1e6  for g -> ug
+!     Conversion factor for aerosol emissions (ug/m2/s) --> ug/kg
       conv_aer = dt / (rho_phy(i,k,j) *  dz8w(i,k,j))
-      conv_gas = 4.828e-4_RKIND/rho_phy(i,k,j)*dt/(dz8w(i,k,j) * 60._RKIND)
+!     Conversion factor for gas phase emissions (mol/m2/s) --> ppm/ppm
+      conv_gas = dt * 0.02897 / ( rho_phy(i,k,j) * dz8w(i,k,j) )
 !
       if (p_unspc_fine .gt. 0 .and. index_e_ant_in_unspc_fine .gt. 0 ) then
          emis = conv_aer*e_ant_in(i,k,j,index_e_ant_in_unspc_fine)
@@ -112,6 +114,11 @@ contains
          emis = conv_aer*e_ant_in(i,k,j,index_e_ant_in_smoke_coarse)
          chem(i,k,j,p_smoke_coarse)   = chem(i,k,j,p_smoke_coarse) + emis
          e_ant_out(i,k,j,index_e_ant_out_smoke_coarse) = e_ant_out(i,k,j,index_e_ant_out_smoke_coarse) + emis
+      endif
+      if (p_ch4 .gt. 0 .and. index_e_ant_in_ch4 .gt. 0 ) then
+        emis = conv_gas*e_ant_in(i,k,j,index_e_ant_in_ch4)
+        chem(i,k,j,p_ch4) = chem(i,k,j,p_ch4) + emis
+        e_ant_out(i,k,j,index_e_ant_out_ch4) = e_ant_out(i,k,j,index_e_ant_out_ch4) + emis
       endif
 
       if (p_no3_a_fine   .gt. 0) chem(i,k,j,p_no3_a_fine)   = chem(i,k,j,p_no3_a_fine)   + conv_aer*e_ant_in(i,k,j,index_e_ant_in_no3_a_fine)

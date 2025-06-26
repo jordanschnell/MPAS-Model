@@ -85,10 +85,10 @@ module dep_data_mod
       if (p_unspc_coarse>0)  aero_diam(p_unspc_coarse)           = 4.5E-6_RKIND
       if (p_ssalt_fine>0)    aero_diam(p_ssalt_fine)             = 6.32E-7_RKIND
       if (p_ssalt_coarse>0)  aero_diam(p_ssalt_coarse)           = 5.632E-6_RKIND
-      if (p_polp_all>0)      aero_diam(p_polp_all)               = 20E-6_RKIND
-      if (p_polp_tree>0)     aero_diam(p_polp_tree)              = 20E-6_RKIND
-      if (p_polp_grass>0)    aero_diam(p_polp_grass)             = 20E-6_RKIND
-      if (p_polp_weed>0)     aero_diam(p_polp_weed)              = 20E-6_RKIND
+      if (p_polp_all>0)      aero_diam(p_polp_all)               = 25E-6_RKIND
+      if (p_polp_tree>0)     aero_diam(p_polp_tree)              = 25E-6_RKIND
+      if (p_polp_grass>0)    aero_diam(p_polp_grass)             = 25E-6_RKIND
+      if (p_polp_weed>0)     aero_diam(p_polp_weed)              = 25E-6_RKIND
       if (p_pols_all>0)      aero_diam(p_pols_all)               = 1.5E-7_RKIND
       if (p_pols_tree>0)     aero_diam(p_pols_tree)              = 1.5E-7_RKIND
       if (p_pols_grass>0)    aero_diam(p_pols_grass)             = 1.5E-7_RKIND

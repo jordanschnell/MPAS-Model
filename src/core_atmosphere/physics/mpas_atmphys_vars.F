@@ -367,11 +367,12 @@
     f_unspc_coarse,   &
     f_ssalt_fine,     &
     f_ssalt_coarse,   &
-    f_so4_a_fine,      &
-    f_no3_a_fine,      &
-    f_nh4_a_fine,      &
+    f_so4_a_fine,     &
+    f_no3_a_fine,     &
+    f_nh4_a_fine,     &
     f_nh3,            &
-    f_so2
+    f_so2,            &
+    f_ch4 
 
 
  real(kind=RKIND),dimension(:,:),allocatable:: &

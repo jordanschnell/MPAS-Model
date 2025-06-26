@@ -42,23 +42,24 @@ contains
            index_pols_tree       , index_pols_grass            , index_pols_weed,            &
            index_unspc_fine      , index_unspc_coarse          ,                             &
            index_no3_a_fine      , index_so4_a_fine            , index_nh4_a_fine,           &
-           index_nh3             , index_so2                   ,                             &
+           index_nh3             , index_so2                   , index_ch4,                  &
            index_e_bb_in_smoke_fine, index_e_bb_in_smoke_coarse,                             &
+           index_e_bb_in_ch4,                                                                &
            index_e_ant_in_dust_fine, index_e_ant_in_dust_coarse,                             &
            index_e_ant_in_unspc_fine, index_e_ant_in_unspc_coarse,                           &
            index_e_ant_in_smoke_fine, index_e_ant_in_smoke_coarse,                           &
            index_e_ant_in_no3_a_fine, index_e_ant_in_so4_a_fine, &
            index_e_ant_in_nh4_a_fine, index_e_ant_in_so2, &
-           index_e_ant_in_nh3, &
+           index_e_ant_in_nh3, index_e_ant_in_ch4,                                           &
            index_e_bio_in_polp_tree, index_e_bio_in_polp_grass, index_e_bio_in_polp_weed,    &
            index_e_vol_in_vash_fine, index_e_vol_in_vash_coarse,                             &
-           index_e_bb_out_smoke_fine, index_e_bb_out_smoke_coarse,                           &
+           index_e_bb_out_smoke_fine, index_e_bb_out_smoke_coarse, index_e_bb_out_ch4,       &
            index_e_ant_out_dust_fine, index_e_ant_out_dust_coarse,                           &
            index_e_ant_out_unspc_fine, index_e_ant_out_unspc_coarse,                         &
            index_e_ant_out_smoke_fine, index_e_ant_out_smoke_coarse,                         &
            index_e_ant_out_no3_a_fine, index_e_ant_out_so4_a_fine, &
            index_e_ant_out_nh4_a_fine, index_e_ant_out_so2, &
-           index_e_ant_out_nh3, &
+           index_e_ant_out_nh3, index_e_ant_out_ch4, &
            index_e_bio_out_polp_tree, index_e_bio_out_polp_grass, index_e_bio_out_polp_weed, &
            index_e_vol_out_vash_fine,  index_e_vol_out_vash_coarse,                          &
            index_e_dust_out_dust_fine, index_e_dust_out_dust_coarse,                         &
@@ -80,7 +81,8 @@ contains
            ddvel                 , wetdep_resolved       , tend_chem_settle      ,           & 
            do_mpas_smoke         , do_mpas_dust          , do_mpas_pollen        ,           &
            do_mpas_anthro        , do_mpas_ssalt         , do_mpas_volc          ,           &
-           do_mpas_sna           , calc_bb_emis_online   , bb_beta               ,           &
+           do_mpas_sna           , do_mpas_methane       ,                                   &
+           calc_bb_emis_online   , bb_beta               ,           &
            hwp_method            , hwp_alpha             , wetdep_ls_opt         ,           &
            wetdep_ls_alpha       , plumerise_opt         , plume_wind_eff       ,            &
            plume_alpha           , bb_emis_scale_factor, ebb_dcycle             ,            &
@@ -185,23 +187,25 @@ contains
                            index_unspc_fine, index_unspc_coarse,                    &
                            index_ssalt_fine, index_ssalt_coarse,                    &
                            index_so4_a_fine, index_no3_a_fine, index_nh4_a_fine,    &
-                           index_so2, index_nh3
+                           index_so2, index_nh3, index_ch4
     integer, intent(in) :: index_e_bb_in_smoke_fine, index_e_bb_in_smoke_coarse, &
+                           index_e_bb_in_ch4, &
                            index_e_ant_in_dust_fine, index_e_ant_in_dust_coarse, &
                            index_e_ant_in_unspc_fine, index_e_ant_in_unspc_coarse, &
                            index_e_ant_in_smoke_fine, index_e_ant_in_smoke_coarse, &
                            index_e_ant_in_no3_a_fine, index_e_ant_in_so4_a_fine, &
                            index_e_ant_in_nh4_a_fine, index_e_ant_in_so2, &
-                           index_e_ant_in_nh3,     &
+                           index_e_ant_in_nh3, index_e_ant_in_ch4,    &
                            index_e_bio_in_polp_tree, index_e_bio_in_polp_grass, index_e_bio_in_polp_weed, &
                            index_e_vol_in_vash_fine,  index_e_vol_in_vash_coarse
     integer, intent(in) :: index_e_bb_out_smoke_fine, index_e_bb_out_smoke_coarse, &
+                           index_e_bb_out_ch4, &
                            index_e_ant_out_dust_fine, index_e_ant_out_dust_coarse, &
                            index_e_ant_out_unspc_fine, index_e_ant_out_unspc_coarse, &
                            index_e_ant_out_smoke_fine, index_e_ant_out_smoke_coarse, &
                            index_e_ant_out_no3_a_fine, index_e_ant_out_so4_a_fine, &
                            index_e_ant_out_nh4_a_fine, index_e_ant_out_so2, &
-                           index_e_ant_out_nh3, &
+                           index_e_ant_out_nh3, index_e_ant_out_ch4, &
                            index_e_bio_out_polp_tree, index_e_bio_out_polp_grass, index_e_bio_out_polp_weed, &
                            index_e_vol_out_vash_fine,  index_e_vol_out_vash_coarse, &
                            index_e_dust_out_dust_fine, index_e_dust_out_dust_coarse, &
@@ -249,6 +253,7 @@ contains
      logical,intent(in)                :: do_mpas_ssalt
      logical,intent(in)                :: do_mpas_volc
      logical,intent(in)                :: do_mpas_sna
+     logical,intent(in)                :: do_mpas_methane
      logical,intent(in)                :: calc_bb_emis_online
      integer,intent(in)                :: hwp_method
      real(RKIND),intent(in)            :: hwp_alpha
@@ -272,7 +277,7 @@ contains
      integer,intent(in)                :: online_rwc_emis
 !>- plume variables
     ! -- buffers
-    real(RKIND), dimension(ims:ime, kms:kme, jms:jme) :: ebu,ebu_coarse
+    real(RKIND), dimension(ims:ime, kms:kme, jms:jme) :: ebu,ebu_coarse,ebu_ch4
     real(RKIND), dimension(ims:ime, jms:jme)          :: flam_frac,                               &
                                                          fire_hist, peak_hr,                      &
                                                          hwp_day_avg,                             &
@@ -284,7 +289,7 @@ contains
     real(RKIND), parameter                            :: conv_frpi   = 1.e-06_RKIND  ! FRP conversion factor, MW to W
     real(RKIND), parameter                            :: conv_frei   = 1.e-06_RKIND  ! FRE conversion factor, MW-s to W-s
 !>- Dry deposition - temporary - move to output 
-    real(RKIND), dimension(ims:ime, jms:jme, 1:num_chem)          ::  drydep_flux_local
+    real(RKIND), dimension(ims:ime, jms:jme, 1:num_chem)          :: drydep_flux_local
     real(RKIND), dimension(ims:ime, kms:kme, jms:jme, 1:num_chem) :: vgrav     ! gravitational settling velocit
     real(RKIND), dimension(ims:ime, kms:kme, jms:jme)             :: thetav
 !> -- other
@@ -312,7 +317,8 @@ contains
   ! If not simulating smoke or pollen, get outta here...
     if ( (.not. do_mpas_smoke) .and. (.not. do_mpas_pollen) .and. &
          (.not. do_mpas_dust ) .and. (.not. do_mpas_anthro) .and. &
-         (.not. do_mpas_ssalt) .and. (.not. do_mpas_sna))  return
+         (.not. do_mpas_ssalt) .and. (.not. do_mpas_sna)    .and. &
+         (.not. do_mpas_methane))  return
 
 ! 
 !   Reorder chemistry indices
@@ -326,7 +332,7 @@ contains
                     index_unspc_fine, index_unspc_coarse,                &
                     index_ssalt_fine, index_ssalt_coarse,                &
                     index_no3_a_fine, index_so4_a_fine, index_nh4_a_fine,&
-                    index_so2, index_nh3                                 )
+                    index_so2, index_nh3, index_ch4                      )
 !   endif
 !
 !
@@ -400,9 +406,13 @@ contains
              if (p_smoke_coarse > 0 ) then 
                 ebu_coarse(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_smoke_coarse)
              endif
+             if (p_ch4 > 0 ) then
+                ebu_ch4(i,kts,j) = e_bb_in(i,kts,j,index_e_bb_in_ch4)
+             endif
              do k=kts+1,kte
               ebu(i,k,j)= 0._RKIND
               ebu_coarse(i,k,j)= 0._RKIND
+              ebu_ch4(i,k,j) = 0._RKIND
              enddo
            enddo
            enddo
@@ -415,6 +425,10 @@ contains
                           MAX(1.E-4_RKIND,coef_bb_dc(i,j))
             if (p_smoke_coarse > 0 ) then
                 ebu_coarse(i,k,j) = e_bb_out(i,k,j,index_e_bb_out_smoke_coarse) / &
+                          MAX(1.E-4_RKIND,coef_bb_dc(i,j))
+            endif
+            if (p_ch4 > 0 ) then
+                ebu_ch4(i,k,j) = e_bb_out(i,k,j,index_e_bb_out_ch4) / &
                           MAX(1.E-4_RKIND,coef_bb_dc(i,j))
             endif
            enddo
@@ -496,6 +510,8 @@ contains
                  ebu,                                                 &
                  e_bb_in(:,:,:,index_e_bb_in_smoke_coarse),           &
                  ebu_coarse,                                          &
+                 e_bb_in(:,:,:,index_e_bb_in_ch4),                    &
+                 ebu_ch4,                                             &
                  theta_phy,qv,                                        &
                  rho_phy,vvel,u_phy,v_phy,pi_phy,wind_phy,            &
                  z_at_w,zmid,g,cp,rd,                                 &
@@ -519,10 +535,12 @@ contains
 ! Pass whole chem array
                         chem(:,:,:,p_smoke_fine),                     &
                         chem(:,:,:,p_smoke_coarse),                   &
+                        chem(:,:,:,p_ch4),                            &
                         julday,gmt,xlat,xlong,                        &
                         fire_end_hr, peak_hr,curr_secs,               &
                         coef_bb_dc,fire_hist,hwp,hwp_day_avg,         &
-                        swdown,ebb_dcycle,ebu,ebu_coarse,fire_type,   &
+                        swdown,ebb_dcycle,ebu,ebu_coarse,ebu_ch4,     &
+                        fire_type,   &
                         qv, add_fire_moist_flux,                      &
                         bb_emis_scale_factor,                         &   
                         ids,ide, jds,jde, kds,kde,                    &
@@ -555,6 +573,7 @@ contains
 
     ! -- add sea salt emissions
     if (do_mpas_ssalt) then
+     call mpas_log_write( ' Calling seasalt driver')
      call gocart_seasalt_driver (                                     &
              dt,rri,t_phy,u_phy,v_phy,                                &
              num_chem,chem,rho_phy,dz8w,u10,v10,                      &
@@ -569,6 +588,7 @@ contains
     endif
 
     if ( do_mpas_dust ) then
+    call mpas_log_write( ' Calling dust driver')
 !    if ( dust_opt .eq. 5 ) then
     !-- compute dust (FENGSHA)
        call gocart_dust_fengsha_driver(dt,chem,rho_phy,               &
@@ -591,6 +611,7 @@ contains
     end if
 
     if ( do_mpas_anthro ) then
+       call mpas_log_write( ' Calling anthro emis driver')
        call mpas_smoke_anthro_emis_driver(dt,gmt,julday,kemit,        &
             xlat,xlong, chem,num_chem,dz8w,t_phy,rho_phy,             &
             e_ant_in, e_ant_out, num_e_ant_in, num_e_ant_out,         &
@@ -599,19 +620,21 @@ contains
             index_e_ant_in_dust_fine,  index_e_ant_in_dust_coarse,    &
             index_e_ant_in_no3_a_fine, index_e_ant_in_so4_a_fine,     &
             index_e_ant_in_nh4_a_fine,                                &
-            index_e_ant_in_so2, index_e_ant_in_nh3,                   &
+            index_e_ant_in_so2, index_e_ant_in_nh3,index_e_ant_in_ch4,&
             index_e_ant_out_unspc_fine, index_e_ant_out_unspc_coarse, &
             index_e_ant_out_smoke_fine, index_e_ant_out_smoke_coarse, &
             index_e_ant_out_dust_fine, index_e_ant_out_dust_coarse,   &
             index_e_ant_out_no3_a_fine, index_e_ant_out_so4_a_fine,   &
             index_e_ant_out_nh4_a_fine,                               &
             index_e_ant_out_so2, index_e_ant_out_nh3,                 &
+            index_e_ant_out_ch4, &
             ids,ide, jds,jde, kds,kde,                                &
             ims,ime, jms,jme, kms,kme,                                &
             its,ite, jts,jte, kts,kte                                 )
     endif
 
     if ( online_rwc_emis .gt. 0 ) then 
+       call mpas_log_write( ' Calling online residential wood combustion  driver')
        call mpas_smoke_rwc_emis_driver(dt,gmt,julday,kemit,           &
             xlat,xlong, chem,num_chem,dz8w,t_phy,rho_phy,             &
             rwc_emis_scale_factor,                                    &
@@ -670,6 +693,7 @@ contains
     enddo
     enddo
     !   call mpas_smoke_tactic_sna_driver (                            &
+    !   call mpas_log_write( ' Calling SNA driver')
     !                       dt, chem, num_chem,                        &
     !                       relhum, t_phy, dz8w, rho_phy,              &
     !                       nifa, nwfa, hno3_bkgd,                     &
