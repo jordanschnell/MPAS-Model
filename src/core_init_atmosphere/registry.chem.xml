@@ -1,6 +1,3 @@
-<?xml version="1.0"?>
-<registry model="mpas" core="init_atmosphere" core_abbrev="init_atm" version="8.2.2-2.9">
-
 <!-- **************************************************************************************** -->
 <!-- ************************************** Dimensions ************************************** -->
 <!-- **************************************************************************************** -->
@@ -104,14 +101,12 @@
 <!-- **************************************************************************************** -->
 
 	<streams>
+<!--
 		<stream name="input"
                         type="input"
                         filename_template="x1.40962.grid.nc"
                         input_interval="initial_only"
                         immutable="true">
-
-                        <var_array name="scalars"/>
-                        <var name="MASSDEN"/>
 
 		</stream>
 
@@ -121,10 +116,8 @@
                         output_interval="initial_only"
                         packages="initial_conds"
                         immutable="true">
-
-                        <var_array name="scalars"/>
 		</stream>
-
+-->
 		<stream name="lbc"
                         type="output"
                         filename_template="lbc.$Y-$M-$D_$h.$m.$s.nc"
@@ -135,7 +128,6 @@
 
 			<var name="xtime"/>
 			<var name="Time"/>
-                        <var name="MASSDEN"/>
 			<var_struct name="lbc_state"/>
 		</stream>
 
@@ -145,10 +137,6 @@
 <!-- **************************************************************************************** -->
 <!-- ************************************** Variables *************************************** -->
 <!-- **************************************************************************************** -->
-
-        <var_struct name="mesh" time_levs="1">
-
-        </var_struct>
 
         <var_struct name="state" time_levs="1">
                 <var_array name="scalars" type="real" dimensions="nVertLevels nCells Time" packages="met_stage_out">
@@ -335,8 +323,3 @@
 		     packages="speciated_pollen_rupture" description="First guess fine weed pollen"/>
 
         </var_struct>
-
-#ifdef DO_PHYSICS
-#include "registry.chem.xml"
-#endif
-</registry>

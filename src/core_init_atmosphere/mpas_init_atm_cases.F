@@ -3469,10 +3469,6 @@ module init_atm_cases
    
          real (kind=RKIND), dimension(nVertLevels, nCells) :: relhum, thi, tbi, cqwb
          real (kind=RKIND), dimension(nVertLevels, nCells) :: qc, qv, qt, es, rs
-         ! JLS
-         real (kind=RKIND), dimension(nVertLevels, nCells) :: MASSDEN
-         real (kind=RKIND), dimension(nVertLevels, nCells) :: smoke_fine, smoke_coarse, dust_fine, dust_coarse
-         real (kind=RKIND), dimension(nVertLevels, nCells) :: unspc_fine, unspc_coarse, ssalt_fine, ssalt_coarse
 
          real (kind=RKIND), dimension(nVertLevels, nCells) :: thetad, thetal, pressure, tempk, tempc
    
@@ -5006,6 +5002,8 @@ module init_atm_cases
          msgval = -1.e30
 
          mask_array => landmask
+
+!         write(*,*) 'JLS, working on field ',field%field
 
          if (trim(field % field) == 'UU' .or. &
              trim(field % field) == 'VV' .or. &
