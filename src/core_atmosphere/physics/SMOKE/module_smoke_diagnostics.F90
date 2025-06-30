@@ -13,9 +13,62 @@ module module_smoke_diagnostics
 
   private
 
-  public :: mpas_visibility_diag
+  public :: mpas_aod_diag, mpas_visibility_diag
 
 contains
+  subroutine mpas_aod_diag(chem,aod3d,rho_phy,dz8w,num_chem,        &
+                                  ids,ide, jds,jde, kds,kde,        &
+                                  ims,ime, jms,jme, kms,kme,        &
+                                  its,ite, jts,jte, kts,kte         )
+
+   IMPLICIT NONE
+
+   INTEGER,      INTENT(IN   ) :: ids,ide, jds,jde, kds,kde,         &
+                                  ims,ime, jms,jme, kms,kme,         &
+                                  its,ite, jts,jte, kts,kte,         &
+                                  num_chem
+
+  REAL(RKIND), DIMENSION(ims:ime,kms:kme,jms:jme), INTENT(IN) :: rho_phy, dz8w
+  REAL(RKIND), DIMENSION(ims:ime,kms:kme,jms:jme,1:num_chem), INTENT(IN) :: chem
+  REAL(RKIND), DIMENSION(ims:ime,kms:kme,jms:jme), INTENT(INOUT) :: aod3d
+
+  real(RKIND), PARAMETER :: sc_me_smoke= 4.0, ab_me_smoke=0.5     ! m2/g, scattering and absorption efficiency for smoke
+  real(RKIND), PARAMETER :: sc_me = 2.0, ab_me=0.01
+  
+  real(RKIND) :: ext2,ext3,ext
+  integer:: i,k,j,nv
+
+  ext2= sc_me_smoke + ab_me_smoke
+  ext3= sc_me + ab_me
+
+  do j = jts, jte
+  do k = kts, kte
+  do i = its, ite
+  aod3d(i,k,j) = 0._RKIND
+  enddo
+  enddo
+  enddo
+
+
+  do nv = 1, num_chem
+  do j = jts, jte
+  do k = kts, kte
+  do i = its, ite
+     ext = ext3
+     if ( nv .eq. p_smoke_fine ) ext = ext2
+     if ( nv .eq. p_smoke_coarse .or. nv .eq. p_unspc_coarse .or. &
+          nv .eq. p_polp_tree .or. nv .eq. p_polp_grass .or.       &
+          nv .eq. p_polp_weed .or. nv .eq. p_ssalt_coarse .or. nv .eq. p_ch4) cycle
+     
+     aod3d(i,k,j)= aod3d(i,k,j) +  1.e-6* ext2* chem(i,k,j,nv)*rho_phy(i,k,j)*dz8w(i,k,j)
+  enddo
+  enddo
+  enddo
+  enddo
+ 
+ 
+
+  end subroutine mpas_aod_diag
 
   subroutine mpas_visibility_diag(qcloud,qrain,qice,qsnow,qgrpl,    &
                                   blcldw,blcldi,                    &

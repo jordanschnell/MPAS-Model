@@ -14,7 +14,7 @@ CONTAINS
                            swdown,ebb_dcycle, ebu,ebu_coarse,ebu_ch4, &
                            fire_type,&
                            q_vap, add_fire_moist_flux,              &
-                           sc_factor,                               &
+                           sc_factor, aod3d,                        &
                            ids,ide, jds,jde, kds,kde,               &
                            ims,ime, jms,jme, kms,kme,               &
                            its,ite, jts,jte, kts,kte                )
@@ -43,13 +43,15 @@ CONTAINS
    INTEGER, DIMENSION(ims:ime,jms:jme), INTENT(IN) :: fire_type
    integer, INTENT(IN) ::  ebb_dcycle     ! RAR: this is going to be namelist dependent, ebb_dcycle=means 
    real(RKIND), DIMENSION(ims:ime,jms:jme), INTENT(INOUT) :: fire_hist
+   real, DIMENSION(ims:ime,kms:kme,jms:jme), INTENT(OUT) ::  aod3d
 !>--local 
    logical, intent(in)  :: add_fire_moist_flux
    integer :: i,j,k,n,m
    integer :: icall=0
-   real(RKIND) :: conv_gas, conv_rho, conv, dm_smoke, dm_smoke_coarse, dm_ch4, dc_hwp, dc_gp, dc_fn !daero_num_wfa, daero_num_ifa !, lu_sum1_5, lu_sum12_14
+   real(RKIND) :: conv_gas, conv_rho, conv, dm_smoke, dm_smoke_coarse, dm_ch4, dc_hwp, dc_gp, dc_fn, ext2 !daero_num_wfa, daero_num_ifa !, lu_sum1_5, lu_sum12_14
    INTEGER, PARAMETER :: kfire_max=51    ! max vertical level for BB plume rise
    real(RKIND), PARAMETER :: ef_h2o=324.22  ! Emission factor for water vapor ! TODO, REFERENCE
+   real(RKIND), PARAMETER :: sc_me= 4.0, ab_me=0.5     ! m2/g, scattering and absorption efficiency for smoke
 
 ! For Gaussian diurnal cycle
 
@@ -57,6 +59,7 @@ CONTAINS
         icall = 0
      endif
 
+     ext2= sc_me + ab_me
      do j=jts,jte
       do i=its,ite
        do k=kts,kfire_max
@@ -73,6 +76,7 @@ CONTAINS
  
            smoke(i,k,j) = smoke(i,k,j) + dm_smoke
            smoke(i,k,j) = MIN(MAX(smoke(i,k,j),epsilc),5.e+3_RKIND)        
+           aod3d(i,k,j)= 1.e-6* ext2* smoke(i,k,j)*rho_phy(i,k,j)*dz8w(i,k,j)
 
            if ( p_smoke_coarse > 0 ) then 
               dm_smoke_coarse= conv*ebu_coarse(i,k,j)

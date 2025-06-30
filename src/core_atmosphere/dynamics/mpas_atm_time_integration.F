@@ -657,7 +657,7 @@ module atm_time_integration
          call mpas_pool_get_dimension(state, 'index_unspc_coarse', index_unspc_coarse)
          call mpas_pool_get_dimension(state, 'index_ssalt_fine', index_ssalt_fine)
          call mpas_pool_get_dimension(state, 'index_ssalt_coarse', index_ssalt_coarse)
-          call mpas_pool_get_dimension(state, 'index_ch4',index_ch4)
+         call mpas_pool_get_dimension(state, 'index_ch4',index_ch4)
       endif
 
       !

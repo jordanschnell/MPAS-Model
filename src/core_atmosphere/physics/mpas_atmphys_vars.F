@@ -243,6 +243,8 @@
     vis_p
  real(kind=RKIND),dimension(:,:,:),allocatable:: &
     PM1_p, PM2_5_p, PM10_p
+ real(kind=RKIND),dimension(:,:,:),allocatable:: &
+    aod3d_smoke_p, aod3d_p
 ! Input/output smoke 2D fields - JLS
  real(kind=RKIND),dimension(:,:),allocatable::  &
     frp_in_p,          &!

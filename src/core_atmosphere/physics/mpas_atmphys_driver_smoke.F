@@ -116,6 +116,7 @@
  if(.not.allocated(zgrid_p)     ) allocate(zgrid_p(ims:ime,kms:kme,jms:jme)      )
 
  if(.not.allocated(vis_p)       ) allocate(vis_p(ims:ime,jms:jme)                )
+ if(.not.allocated(aod3d_p))      allocate(aod3d_p(ims:ime,kms:kme,jms:jme))
 
  if (config_sna_scheme .ne. 'off' ) then
     if(.not.allocated(nifa_p))    allocate(nifa_p(ims:ime,kms:kme,jms:jme))
@@ -128,6 +129,7 @@
     if(.not.allocated(fre_out_p)   )         allocate(fre_out_p(ims:ime,jms:jme))
     if(.not.allocated(hwp_p)       )         allocate(hwp_p(ims:ime,jms:jme))
     if(.not.allocated(coef_bb_dc_p))         allocate(coef_bb_dc_p(ims:ime,jms:jme))
+    if(.not.allocated(aod3d_smoke_p))        allocate(aod3d_smoke_p(ims:ime,kms:kme,jms:jme))
     if (ebb_dcycle .eq. 1 ) then
        if(.not.allocated(frp_in_p)    )         allocate(frp_in_p(ims:ime,jms:jme))
        if(.not.allocated(fre_in_p)            )  allocate(fre_in_p(ims:ime,jms:jme))
@@ -310,6 +312,8 @@
  if(allocated(chem_p)     )           deallocate(chem_p)
  if(allocated(PM2_5_p)    )           deallocate(PM2_5_p)
  if(allocated(PM10_p)     )           deallocate(PM10_p)
+ if(allocated(aod3d_smoke_p))         deallocate(aod3d_smoke_p)
+ if(allocated(aod3d_p))               deallocate(aod3d_p)
 
  if(allocated(e_ant_in_p))            deallocate(e_ant_in_p)
  if(allocated(e_bb_in_p))             deallocate(e_bb_in_p)
@@ -870,6 +874,7 @@
  real(kind=RKIND),dimension(:),    pointer:: frp_out, fre_out, hwp, coef_bb_dc, fire_ef_out
  real(kind=RKIND),dimension(:),    pointer:: hfx_bb, qfx_bb, frac_grid_burned
  real(kind=RKIND),dimension(:,:)  ,pointer:: PM2_5, PM10
+ real(kind=RKIND),dimension(:,:)  ,pointer:: aod3d_smoke, aod3d
  real(kind=RKIND),dimension(:,:,:),pointer:: e_ant_out, e_bb_out, e_bio_out, &
                                              e_vol_out, e_dust_out, e_ss_out
  integer,dimension(:),pointer:: min_bb_plume, max_bb_plume
@@ -896,6 +901,7 @@
 
  call mpas_pool_get_array(diag_physics,'PM2_5',PM2_5)
  call mpas_pool_get_array(diag_physics,'PM10',PM10)
+ call mpas_pool_get_array(diag_physics,'aod3d',aod3d)
 
  call mpas_pool_get_array(diag_physics,'ddvel',ddvel)
  call mpas_pool_get_array(diag_physics,'wetdep_resolved',wetdep_resolved)
@@ -947,6 +953,7 @@
     call mpas_pool_get_array(diag_physics, 'e_vol_out',e_vol_out)
  endif
  if (config_smoke_scheme .ne. 'off' ) then
+    call mpas_pool_get_array(diag_physics,'aod3d_smoke',aod3d_smoke)
     call mpas_pool_get_array(diag_physics,'frp_out',frp_out)
     call mpas_pool_get_array(diag_physics,'fre_out',fre_out)
     call mpas_pool_get_array(diag_physics,'hwp',hwp)
@@ -975,7 +982,12 @@
 !
    PM2_5(k,i)     = PM2_5_p(i,k,j)
    PM10(k,i)      = PM10_p(i,k,j)
+
+   aod3d(k,i) = aod3d_p(i,k,j)
 !
+   if ( config_smoke_scheme .ne. 'off' ) then 
+      aod3d_smoke(k,i) = aod3d_smoke_p(i,k,j)
+   endif
    if ( config_sna_scheme .ne. 'off' ) then
       hno3_bkgd(k,i) = hno3_bkgd_p(i,k,j)
       nifa(k,i)      = nifa_p(i,k,j)
@@ -1473,6 +1485,7 @@
            blcldw_vis = qcbl_p, & !(:,1:3,:), &
            blcldi_vis = qibl_p, & !(:,1:3,:), &
            coszen = coszr_p, &
+           aod3d_smoke = aod3d_smoke_p, aod3d = aod3d_p, &
            pi_phy  = pi_p        , rho_phy  = rho_p      , kpbl     = kpbl_p     ,       &
            nsoil   = num_soils   , smois    = smois_p    , tslb     = tslb_p     ,       &
            ivgtyp  = ivgtyp_p    , isltyp   = isltyp_p   , nlcat    = num_landcat,       &

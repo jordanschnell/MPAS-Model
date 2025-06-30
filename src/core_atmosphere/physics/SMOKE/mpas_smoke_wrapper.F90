@@ -97,7 +97,7 @@ contains
            RWC_annual_sum_unspc_fine, RWC_annual_sum_unspc_coarse,                           &
            nwfa                  , nifa                 ,  vis                  ,            &
            qc_vis, qr_vis, qi_vis, qs_vis, qg_vis, blcldw_vis, blcldi_vis,                   &
-           hno3_bkgd             , coszen,                                                   &
+           hno3_bkgd             , coszen                , aod3d_smoke, aod3d   ,            &
            ktau                  , dt                    , dxcell               ,            &
            area                  ,                                                           & 
            xland                 , u10                   , v10                  ,            &
@@ -233,6 +233,7 @@ contains
 ! 3D + chem output arrays
     real(RKIND),intent(inout), dimension(ims:ime, kms:kme, jms:jme, 1:num_chem),optional       :: tend_chem_settle
     real(RKIND),intent(inout), dimension(ims:ime, kms:kme, jms:jme, 1:num_chem)                :: chem
+    real(RKIND),intent(inout), dimension(ims:ime, kms:kme, jms:jme)                            :: aod3d_smoke, aod3d
 !----------------------------------
 !>-- Local Variables
 !>-- 3D met
@@ -542,7 +543,7 @@ contains
                         swdown,ebb_dcycle,ebu,ebu_coarse,ebu_ch4,     &
                         fire_type,   &
                         qv, add_fire_moist_flux,                      &
-                        bb_emis_scale_factor,                         &   
+                        bb_emis_scale_factor, aod3d_smoke,            &   
                         ids,ide, jds,jde, kds,kde,                    &
                         ims,ime, jms,jme, kms,kme,                    &
                         its,ite, jts,jte, kts,kte                     )
@@ -709,6 +710,11 @@ contains
                                   rh2m,relhum,qv, &
                                   t2m,t_phy, &
                                   coszen,vis,                       &
+                                  ids,ide, jds,jde, kds,kde,        &
+                                  ims,ime, jms,jme, kms,kme,        &
+                                  its,ite, jts,jte, kts,kte         )
+
+    call mpas_aod_diag(           chem,aod3d,rho_phy,dz8w,num_chem,        &
                                   ids,ide, jds,jde, kds,kde,        &
                                   ims,ime, jms,jme, kms,kme,        &
                                   its,ite, jts,jte, kts,kte         )

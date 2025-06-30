@@ -3,6 +3,7 @@
 
 module module_wetdep_ls
   use mpas_kind_types
+  use mpas_smoke_init
 
 contains
 
@@ -34,6 +35,7 @@ subroutine wetdep_ls(dt,var,rain,moist,                                         
    integer :: nv,i,j,k,km,kb,kbeg
 
     do nv=1,nchem
+      if (nv.eq.p_ch4)cycle
       do i=its,ite
        do j=jts,jte
         var_sum_clw(i,j)=0.

@@ -75,6 +75,10 @@
            units="-"
            description="configuration for mpas sulfate nitrate ammonium model"
            possible_values="`on',`off'"/>
+      <nml_option name="config_methane_scheme" type="character" default_value="off" in_defaults="false"
+           units="-"
+           description="configuration for mpas methane model"
+           possible_values="`on',`off'"/>
       <nml_option name="num_chem" type="integer" default_value="0"
            units="-"
            description="Number of chemical tracers"
@@ -211,6 +215,8 @@
               filename_template="history.$Y-$M-$D_$h.$m.$s.nc"
               output_interval="6:00:00"
               runtime_format="separate_file">
+              <var name="aod3d_smoke"/>
+              <var name="aod3d"/>
               <var name="vis"/>
               <var name="ddvel"/>
               <var name="wetdep_resolved"/>
@@ -734,6 +740,10 @@
            description="Annual sum of residential wood burning coarse unspc emissions"/>
       <var name="RWC_denominator" type="real" dimensions="nCells" units="F"
            description="Annual Sum of (42.12 - 0.79*daily_minimum_temperature)"/>
+      <var name="aod3d_smoke"     type="real" dimensions="nVertLevels nCells Time" units="-"
+           description="aerosol optical depth from smoke"/>
+      <var name="aod3d"           type="real" dimensions="nVertLevels nCells Time" units="-"
+           description="aerosol optical depth from all aerosols"/>
   </var_struct>
 
 

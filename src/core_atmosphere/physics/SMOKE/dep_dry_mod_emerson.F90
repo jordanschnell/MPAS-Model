@@ -108,6 +108,7 @@ contains
                 delz_col(k) = delz(i,k,j)
                 rho_col(k)  = rho_phy(i,k,j)
                 do nv = 1, num_chem
+                   if ( nv .eq. p_ch4 ) cycle
                    cblk(nv) = chem(i,k,j,nv)
                    if ( k == kts ) then
                       ddvel(i,j,nv) = 0._RKIND
@@ -129,6 +130,8 @@ contains
                 freepath = 7.39758e-4 * airkinvisc / sqrt( t_phy(i,k,j) )
                 do nv = 1, num_chem
                    !
+                   if ( nv .eq. p_ch4 ) cycle
+
                    dp = aero_diam(nv)
                    aerodens = aero_dens(nv) 
                    ! Convert diameter to cm and aerodens to g/cm3
@@ -195,6 +198,7 @@ contains
              dzmin = minval(delz_col)
              ntdt=INT(dt)
              do nv = 1, num_chem
+               if ( nv .eq. p_ch4 ) cycle
                ! -- NOTE, diameters and densities are NOT converted to cm and g/cm3 like above
                ! -- dt_settl calculations (from original coarsepm_settling)
                dp = aero_diam(nv)
@@ -212,6 +216,7 @@ contains
                 call particle_settling(cblk_col,rho_col,delz_col,vg_col,dt_settl,ndt_settl,num_chem,kts,kte)
                 ! Calculate the tendency to send back to MYNN
                 do nv= 1, num_chem
+                   if ( nv .eq. p_ch4 ) cycle
                    do k = kts, kte
                       tend_chem_settle(i,k,j,nv) = cblk_col(k,nv) - chem(i,k,j,nv)
 !                      chem(i,k,j,nv)             = cblk_col(k,nv)
@@ -316,6 +321,7 @@ subroutine particle_settling(cblk,rho_phy,delz,vg,dt_settl,ndt_settl,num_chem,kt
      enddo
 
      do nv = 1, num_chem
+     if ( nv .eq. p_ch4 ) cycle
      do n = 1,ndt_settl(nv)
      transfer_to_below_level = 0.0
      do k = kte,kts,-1
