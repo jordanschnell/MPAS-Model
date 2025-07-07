@@ -10,6 +10,7 @@ OBJS = \
 	dep_dry_simple_mod.o \
 	dep_dry_mod_emerson.o \
 	dep_data_mod.o \
+	rad_data_mod.o \
 	module_wetdep_ls.o \
 	module_zero_plumegen_coms.o \
 	module_smoke_plumerise.o \
@@ -50,6 +51,9 @@ dep_dry_mod_emerson.o: \
 	mpas_smoke_config.o
         
 dep_data_mod.o: \
+	mpas_smoke_init.o
+
+rad_data_mod.o: \
 	mpas_smoke_init.o
 
 pollen_mod.o: \
@@ -96,7 +100,9 @@ mpas_smoke_wrapper.o:      \
         module_anthro_emissions.o \
         ssalt_mod.o \
 	module_tactic_sna.o \
-	module_smoke_diagnostics.o
+	module_smoke_diagnostics.o \
+	dep_data_mod.o \
+	rad_data_mod.o
 
 module_zero_plumegen_coms.o: \ \
         mpas_smoke_config.o

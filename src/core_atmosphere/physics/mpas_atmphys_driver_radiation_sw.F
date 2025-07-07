@@ -114,13 +114,13 @@
  character(len=StrKIND),pointer:: mp_scheme,     &
                                   radt_sw_scheme
  logical,pointer:: config_tempo_aerosolaware
- character(len=StrKIND),pointer:: config_smoke_scheme
+ logical,pointer:: aero_dir_rad_fdb
 !-----------------------------------------------------------------------------------------------------------------
 
  call mpas_pool_get_config(configs,'config_microp_scheme' ,mp_scheme     )
  call mpas_pool_get_config(configs,'config_radt_sw_scheme',radt_sw_scheme)
  call mpas_pool_get_config(configs,'config_tempo_aerosolaware',config_tempo_aerosolaware)
- call mpas_pool_get_config(configs,'config_smoke_scheme', config_smoke_scheme)
+ call mpas_pool_get_config(configs,'aero_dir_rad_fdb',aero_dir_rad_fdb)
       
  if(.not.allocated(f_ice)        ) allocate(f_ice(ims:ime,kms:kme,jms:jme)        )
  if(.not.allocated(f_rain)       ) allocate(f_rain(ims:ime,kms:kme,jms:jme)       )
@@ -148,8 +148,8 @@
  
  if(.not.allocated(rthratensw_p) ) allocate(rthratensw_p(ims:ime,kms:kme,jms:jme) )
 
- if ( config_smoke_scheme .ne. 'off' ) then
-   if(.not.allocated(aod3d_smoke_p)   )         allocate(aod3d_smoke_p(ims:ime,kms:kme,jms:jme))
+ if ( aero_dir_rad_fdb ) then
+   if(.not.allocated(aod3d_p)   )         allocate(aod3d_p(ims:ime,kms:kme,jms:jme))
  endif
 
  radiation_sw_select: select case (trim(radt_sw_scheme))
@@ -258,14 +258,14 @@
  character(len=StrKIND),pointer:: mp_scheme,     &
                                   radt_sw_scheme
  logical,pointer:: config_tempo_aerosolaware
- character(len=StrKIND),pointer:: config_smoke_scheme
+ logical,pointer:: aero_dir_rad_fdb
 
 !-----------------------------------------------------------------------------------------------------------------
 
  call mpas_pool_get_config(configs,'config_microp_scheme' ,mp_scheme     )
  call mpas_pool_get_config(configs,'config_radt_sw_scheme',radt_sw_scheme)
  call mpas_pool_get_config(configs,'config_tempo_aerosolaware',config_tempo_aerosolaware)     
- call mpas_pool_get_config(configs,'config_smoke_scheme', config_smoke_scheme)
+ call mpas_pool_get_config(configs,'aero_dir_rad_fdb',aero_dir_rad_fdb)
 
  if(allocated(f_ice)        ) deallocate(f_ice        )
  if(allocated(f_rain)       ) deallocate(f_rain       )
@@ -290,8 +290,8 @@
  
  if(allocated(rthratensw_p) ) deallocate(rthratensw_p )
 
- if ( config_smoke_scheme .ne. 'off' ) then
-   if(allocated(aod3d_smoke_p)) deallocate(aod3d_smoke_p)
+ if ( aero_dir_rad_fdb ) then
+   if(allocated(aod3d_p)) deallocate(aod3d_p)
  endif
 
  radiation_sw_select: select case (trim(radt_sw_scheme))
@@ -405,7 +405,7 @@
  logical,pointer:: config_tempo_aerosolaware
  character(len=StrKIND),pointer:: radt_sw_scheme
  character(len=StrKIND),pointer:: microp_scheme
- character(len=StrKIND),pointer:: config_smoke_scheme
+ logical,pointer:: aero_dir_rad_fdb
 
  real(kind=RKIND),dimension(:),pointer    :: latCell,lonCell
  real(kind=RKIND),dimension(:),pointer    :: skintemp,snow,xice,xland
@@ -416,6 +416,7 @@
  real(kind=RKIND),dimension(:,:),pointer  :: cldfrac,m_hybi,o3clim
  real(kind=RKIND),dimension(:,:),pointer  :: re_cloud,re_ice,re_snow
  real(kind=RKIND),dimension(:,:),pointer  :: taod5503d
+ real(kind=RKIND),dimension(:,:),pointer  :: aod3d
  real(kind=RKIND),dimension(:,:,:),pointer:: aerosols,ozmixm
 
 !-----------------------------------------------------------------------------------------------------------------
@@ -425,7 +426,10 @@
  call mpas_pool_get_config(configs,'config_radt_sw_scheme',radt_sw_scheme      )
  call mpas_pool_get_config(configs,'config_microp_scheme' ,microp_scheme       )
  call mpas_pool_get_config(configs,'config_tempo_aerosolaware',config_tempo_aerosolaware)
- call mpas_pool_get_config(configs,'config_smoke_scheme', config_smoke_scheme  )
+ call mpas_pool_get_config(configs,'aero_dir_rad_fdb',aero_dir_rad_fdb         )
+ if ( aero_dir_rad_fdb ) then
+    call mpas_pool_get_array(diag_physics,'aod3d',aod3d)
+ endif
       
  call mpas_pool_get_array(mesh,'latCell',latCell)
  call mpas_pool_get_array(mesh,'lonCell',lonCell)
@@ -466,6 +470,16 @@
  enddo
  enddo
  enddo
+
+ if (aero_dir_rad_fdb) then 
+ do j = jts,jte
+ do k = kts,kte
+ do i = its,ite
+    aod3d_p(i,k,j) = aod3d(k,i)
+ enddo
+ enddo
+ enddo
+ endif
 
 !initialization:
  do j = jts,jte
@@ -663,11 +677,13 @@
                      ims = ims , ime = ime , jms = jms , jme = jme , kms = kms , kme = kme ,        &
                      its = its , ite = ite , jts = jts , jte = jte , kts = kts , kte = kte          &
                         )
-                if ( config_smoke_scheme .ne. 'off' ) then
+
+                !--- add AOD550 contribution from chemistry (smoke, dust, pollen, ...):
+                if ( aero_dir_rad_fdb ) then
                    do j = jts,jte
                    do i = its,ite
                    do k = kts,kte
-                      taod5503d_p(i,k,j) = taod5503d_p(i,k,j)+MAX(MIN(3._RKIND,aod3d_smoke_p(i,k,j)),0._RKIND)
+                      taod5503d_p(i,k,j) = taod5503d_p(i,k,j)+MAX(MIN(3._RKIND,aod3d_p(i,k,j)),0._RKIND)
                    enddo
                    enddo
                    enddo

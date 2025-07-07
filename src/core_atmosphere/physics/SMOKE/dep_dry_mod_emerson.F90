@@ -108,7 +108,6 @@ contains
                 delz_col(k) = delz(i,k,j)
                 rho_col(k)  = rho_phy(i,k,j)
                 do nv = 1, num_chem
-                   if ( nv .eq. p_ch4 ) cycle
                    cblk(nv) = chem(i,k,j,nv)
                    if ( k == kts ) then
                       ddvel(i,j,nv) = 0._RKIND
@@ -130,8 +129,6 @@ contains
                 freepath = 7.39758e-4 * airkinvisc / sqrt( t_phy(i,k,j) )
                 do nv = 1, num_chem
                    !
-                   if ( nv .eq. p_ch4 ) cycle
-
                    dp = aero_diam(nv)
                    aerodens = aero_dens(nv) 
                    ! Convert diameter to cm and aerodens to g/cm3
@@ -179,8 +176,10 @@ contains
                       ! The /100. term converts from cm/s to m/s, required for MYNN.
                       if ( settling_opt .gt. 0 ) then
                          ddvel(i,j,nv) = max(min( ( vg + 1./(aer_res(i,j)+Rs) )/100., max_dep_vel),0._RKIND)
+                         if (nv .eq. p_ch4) ddvel(i,j,nv) = 0.0_RKIND
                       else
                          ddvel(i,j,nv) = max(min( ( 1./(aer_res(i,j)+Rs) )/100., max_dep_vel),0._RKIND)
+                         if (nv .eq. p_ch4) ddvel(i,j,nv) = 0.0_RKIND
                       endif
                       if ( dbg_opt .and. (icall .le. n_dbg_lines) ) then
                          icall = icall + 1
@@ -198,7 +197,6 @@ contains
              dzmin = minval(delz_col)
              ntdt=INT(dt)
              do nv = 1, num_chem
-               if ( nv .eq. p_ch4 ) cycle
                ! -- NOTE, diameters and densities are NOT converted to cm and g/cm3 like above
                ! -- dt_settl calculations (from original coarsepm_settling)
                dp = aero_diam(nv)
@@ -219,6 +217,7 @@ contains
                    if ( nv .eq. p_ch4 ) cycle
                    do k = kts, kte
                       tend_chem_settle(i,k,j,nv) = cblk_col(k,nv) - chem(i,k,j,nv)
+                      if (nv .eq. p_ch4) tend_chem_settle(i,k,j,nv) = 0.0_RKIND
 !                      chem(i,k,j,nv)             = cblk_col(k,nv)
                    enddo ! k
                 enddo ! nv

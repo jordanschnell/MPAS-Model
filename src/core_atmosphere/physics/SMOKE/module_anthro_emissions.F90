@@ -83,7 +83,7 @@ contains
 !     Conversion factor for aerosol emissions (ug/m2/s) --> ug/kg
       conv_aer = dt / (rho_phy(i,k,j) *  dz8w(i,k,j))
 !     Conversion factor for gas phase emissions (mol/m2/s) --> ppm/ppm
-      conv_gas = dt * 0.02897 / ( rho_phy(i,k,j) * dz8w(i,k,j) )
+      conv_gas = 60._RKIND * 1.E6_RKIND * 4.828E-4_RKIND * dt / ( rho_phy(i,k,j) * dz8w(i,k,j) )
 !
       if (p_unspc_fine .gt. 0 .and. index_e_ant_in_unspc_fine .gt. 0 ) then
          emis = conv_aer*e_ant_in(i,k,j,index_e_ant_in_unspc_fine)
@@ -119,6 +119,7 @@ contains
         emis = conv_gas*e_ant_in(i,k,j,index_e_ant_in_ch4)
         chem(i,k,j,p_ch4) = chem(i,k,j,p_ch4) + emis
         e_ant_out(i,k,j,index_e_ant_out_ch4) = e_ant_out(i,k,j,index_e_ant_out_ch4) + emis
+        !write(*,*) 'JLS, ch4 emissions, new val = ', emis, chem(i,k,j,p_ch4)
       endif
 
       if (p_no3_a_fine   .gt. 0) chem(i,k,j,p_no3_a_fine)   = chem(i,k,j,p_no3_a_fine)   + conv_aer*e_ant_in(i,k,j,index_e_ant_in_no3_a_fine)

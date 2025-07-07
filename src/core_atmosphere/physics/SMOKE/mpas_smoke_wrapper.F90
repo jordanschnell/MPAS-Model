@@ -15,6 +15,7 @@ module mpas_smoke_wrapper
    use dep_dry_simple_mod,    only : dry_dep_driver_simple
    use dep_dry_mod_emerson,   only : dry_dep_driver_emerson
    use dep_data_mod,          only : aero_dry_dep_init
+   use rad_data_mod,          only : aero_rad_init
    use module_wetdep_ls,      only : wetdep_ls
    use pollen_mod,            only : pollen_driver
    use dust_fengsha_mod,      only : gocart_dust_fengsha_driver
@@ -368,6 +369,7 @@ contains
      
    if (ktau == 1) then
       call aero_dry_dep_init()
+      call aero_rad_init()
    endif
         
    if ( do_mpas_smoke ) then

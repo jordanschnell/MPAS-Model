@@ -539,7 +539,7 @@
    mpas_methane_in = .true.
  endif
 
- call mpas_log_write('    mpas_sna_in              = $l', logicArgs=(/mpas_sna_in/))
+ call mpas_log_write('    mpas_methane_in              = $l', logicArgs=(/mpas_methane_in/))
  call mpas_log_write('')
 
 

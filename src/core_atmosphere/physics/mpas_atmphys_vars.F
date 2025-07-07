@@ -245,6 +245,8 @@
     PM1_p, PM2_5_p, PM10_p
  real(kind=RKIND),dimension(:,:,:),allocatable:: &
     aod3d_smoke_p, aod3d_p
+ real(kind=RKIND),dimension(:,:),allocatable:: &
+    aod550
 ! Input/output smoke 2D fields - JLS
  real(kind=RKIND),dimension(:,:),allocatable::  &
     frp_in_p,          &!

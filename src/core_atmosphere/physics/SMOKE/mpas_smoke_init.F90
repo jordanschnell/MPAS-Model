@@ -86,6 +86,7 @@ module mpas_smoke_init
         p_so2           = index_so2 - chemistry_start + 1
         p_nh3           = index_nh3 - chemistry_start + 1
         p_ch4           = index_ch4 - chemistry_start + 1
+        write(*,*) 'JLS, p_ch4 = ',p_ch4
  
    end subroutine set_scalar_indices
 

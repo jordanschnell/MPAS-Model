@@ -86,7 +86,6 @@ CONTAINS
            if ( p_ch4 > 0 ) then 
               dm_ch4= conv_gas*ebu_ch4(i,k,j)
               ch4(i,k,j) = ch4(i,k,j) + dm_ch4
-              ch4(i,k,j) = MIN(MAX(ch4(i,k,j),epsilc),5.e+3_RKIND)        
            endif
 
            ! SRB: Modifying Water Vapor content based on Emissions

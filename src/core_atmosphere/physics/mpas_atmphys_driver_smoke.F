@@ -116,6 +116,7 @@
  if(.not.allocated(zgrid_p)     ) allocate(zgrid_p(ims:ime,kms:kme,jms:jme)      )
 
  if(.not.allocated(vis_p)       ) allocate(vis_p(ims:ime,jms:jme)                )
+ if(.not.allocated(aod550_p)    ) allocate(aod550_p(ims:ime,jms:jme)                )
  if(.not.allocated(aod3d_p))      allocate(aod3d_p(ims:ime,kms:kme,jms:jme))
 
  if (config_sna_scheme .ne. 'off' ) then
@@ -312,6 +313,7 @@
  if(allocated(chem_p)     )           deallocate(chem_p)
  if(allocated(PM2_5_p)    )           deallocate(PM2_5_p)
  if(allocated(PM10_p)     )           deallocate(PM10_p)
+ if(allocated(aod550_p))              deallocate(aod550_p)
  if(allocated(aod3d_smoke_p))         deallocate(aod3d_smoke_p)
  if(allocated(aod3d_p))               deallocate(aod3d_p)
 
@@ -875,6 +877,7 @@
  real(kind=RKIND),dimension(:),    pointer:: hfx_bb, qfx_bb, frac_grid_burned
  real(kind=RKIND),dimension(:,:)  ,pointer:: PM2_5, PM10
  real(kind=RKIND),dimension(:,:)  ,pointer:: aod3d_smoke, aod3d
+ real(kind=RKIND),dimension(:),    pointer:: aod550
  real(kind=RKIND),dimension(:,:,:),pointer:: e_ant_out, e_bb_out, e_bio_out, &
                                              e_vol_out, e_dust_out, e_ss_out
  integer,dimension(:),pointer:: min_bb_plume, max_bb_plume
@@ -902,6 +905,7 @@
  call mpas_pool_get_array(diag_physics,'PM2_5',PM2_5)
  call mpas_pool_get_array(diag_physics,'PM10',PM10)
  call mpas_pool_get_array(diag_physics,'aod3d',aod3d)
+ call mpas_pool_get_array(diag_physics,'aod550',aod550)
 
  call mpas_pool_get_array(diag_physics,'ddvel',ddvel)
  call mpas_pool_get_array(diag_physics,'wetdep_resolved',wetdep_resolved)
@@ -976,6 +980,7 @@
 
  chem => scalars(chemistry_start:chemistry_end,:,:)
 
+ 
  do j = jts,jte
  do k = kts,kte
  do i = its,ite
@@ -1043,6 +1048,7 @@
  do j = jts,jte
  do i = its,ite
     vis(i)       = vis_p(i,j)
+  aod550(i)      = aod550_p(i,j)
     if (config_smoke_scheme .ne. 'off') then
        frp_out(i)          = frp_out_p(i,j)
        fre_out(i)          = fre_out_p(i,j)
@@ -1533,6 +1539,19 @@
  enddo
  enddo
 
+ do j = jts,jte
+ do i = its,ite
+    aod550_p(i,j) = 0.0_RKIND
+ enddo
+ enddo
+ 
+ do j = jts,jte
+ do k = kts,kte
+ do i = its,ite
+    aod550(i,j) = aod550(i,j) + aod3d_p(i,k,j) * dz_p(i,k,j) / 1000._RKIND
+ enddo
+ enddo
+ enddo
 
 
 !copy local arrays to MPAS grid:
