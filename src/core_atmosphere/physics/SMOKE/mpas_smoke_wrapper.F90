@@ -706,20 +706,21 @@ contains
     endif
 
     !>-- output of MPAS-Smoke
+    call mpas_aod_diag(           chem,aod3d,rho_phy,dz8w,num_chem,        &
+                                  ids,ide, jds,jde, kds,kde,        &
+                                  ims,ime, jms,jme, kms,kme,        &
+                                  its,ite, jts,jte, kts,kte         )
+
     call mpas_visibility_diag(    qc_vis,qr_vis,qi_vis,qs_vis,qg_vis,    &
                                   blcldw_vis,blcldi_vis,                 &
                                   rho_phy,wind10m,wind_phy,              &
                                   rh2m,relhum,qv, &
                                   t2m,t_phy, &
-                                  coszen,vis,                       &
+                                  coszen,aod3d,vis,                 &
                                   ids,ide, jds,jde, kds,kde,        &
                                   ims,ime, jms,jme, kms,kme,        &
                                   its,ite, jts,jte, kts,kte         )
 
-    call mpas_aod_diag(           chem,aod3d,rho_phy,dz8w,num_chem,        &
-                                  ids,ide, jds,jde, kds,kde,        &
-                                  ims,ime, jms,jme, kms,kme,        &
-                                  its,ite, jts,jte, kts,kte         )
 
 
     ! UPP/MPASSIT expects FRP in MW

@@ -8,6 +8,7 @@ module module_smoke_diagnostics
 !
   use mpas_kind_types
   use mpas_smoke_init
+  use rad_data_mod
 
   implicit none
 
@@ -31,15 +32,9 @@ contains
   REAL(RKIND), DIMENSION(ims:ime,kms:kme,jms:jme), INTENT(IN) :: rho_phy, dz8w
   REAL(RKIND), DIMENSION(ims:ime,kms:kme,jms:jme,1:num_chem), INTENT(IN) :: chem
   REAL(RKIND), DIMENSION(ims:ime,kms:kme,jms:jme), INTENT(INOUT) :: aod3d
-
-  real(RKIND), PARAMETER :: sc_me_smoke= 4.0, ab_me_smoke=0.5     ! m2/g, scattering and absorption efficiency for smoke
-  real(RKIND), PARAMETER :: sc_me = 2.0, ab_me=0.01
   
-  real(RKIND) :: ext2,ext3,ext
+  real(RKIND) :: ext
   integer:: i,k,j,nv
-
-  ext2= sc_me_smoke + ab_me_smoke
-  ext3= sc_me + ab_me
 
   do j = jts, jte
   do k = kts, kte
@@ -49,32 +44,24 @@ contains
   enddo
   enddo
 
-
   do nv = 1, num_chem
-  do j = jts, jte
-  do k = kts, kte
-  do i = its, ite
-     ext = ext3
-     if ( nv .eq. p_smoke_fine ) ext = ext2
-     if ( nv .eq. p_smoke_coarse .or. nv .eq. p_unspc_coarse .or. &
-          nv .eq. p_polp_tree .or. nv .eq. p_polp_grass .or.       &
-          nv .eq. p_polp_weed .or. nv .eq. p_ssalt_coarse .or. nv .eq. p_ch4) cycle
-     
-     aod3d(i,k,j)= aod3d(i,k,j) +  1.e-6* ext2* chem(i,k,j,nv)*rho_phy(i,k,j)*dz8w(i,k,j)
+   ext = sc_eff(nv) + ab_eff(nv)
+     do j = jts, jte
+     do k = kts, kte
+     do i = its, ite
+        aod3d(i,k,j)= aod3d(i,k,j) +  1.e-6 * ext * chem(i,k,j,nv)*rho_phy(i,k,j)*dz8w(i,k,j)
+     enddo
+     enddo
+     enddo
   enddo
-  enddo
-  enddo
-  enddo
- 
- 
 
   end subroutine mpas_aod_diag
 
   subroutine mpas_visibility_diag(qcloud,qrain,qice,qsnow,qgrpl,    &
                                   blcldw,blcldi,                    &
                                   rho_phy,wind10m,wind,             &
-                                  rh2m,rh,qv,t2m,t,            &
-                                  coszen,vis,                       &
+                                  rh2m,rh,qv,t2m,t,                 &
+                                  coszen,vis,extcoef55,             &
                                   ids,ide, jds,jde, kds,kde,        &
                                   ims,ime, jms,jme, kms,kme,        &
                                   its,ite, jts,jte, kts,kte         )
@@ -88,7 +75,7 @@ contains
    REAL(RKIND),DIMENSION(ims:ime,kms:kme,jms:jme),INTENT(IN)   :: qcloud,qrain,qice,qsnow,qgrpl
    REAL(RKIND),DIMENSION(ims:ime,kms:kme,jms:jme),INTENT(IN)   :: blcldi,blcldw
    REAL(RKIND),DIMENSION(ims:ime,kms:kme,jms:jme),INTENT(IN)   :: rho_phy,wind,rh,qv,t
-   REAL(RKIND),DIMENSION(ims:ime,jms:jme),INTENT(IN)     :: wind10m,rh2m,t2m,coszen
+   REAL(RKIND),DIMENSION(ims:ime,jms:jme),INTENT(IN)     :: wind10m,rh2m,t2m,coszen,extcoef55
    REAL(RKIND),DIMENSION(ims:ime,jms:jme), INTENT(OUT)   :: vis
                                                                                
   ! local
@@ -100,17 +87,7 @@ contains
    REAL :: bg,qcloud2,blcldw2,qrain2,qice2,blcldi2,qsnow2,qgrpl2,extcoeff552,vis_night,zen_fac
 
    REAL(RKIND), DIMENSION(its:ite,jts:jte) :: vis_alpha
-   REAL(RKIND), DIMENSION(its:ite,kts:kte,jts:jte) :: extcoeff55 ! TODO, SET TO ZERO FOR NOW
 
-   do j = jts,jte
-   do k = kts,kte
-   do i = its,ite
-     extcoeff55(i,k,j) = 1.E-16_RKIND
-   enddo
-   enddo
-   enddo
-
-  
    do j = jts,jte
    do i = its,ite
       !Initialize
@@ -132,7 +109,7 @@ contains
          blcldi2    = blcldi(i,k,j)*rho_phy(i,k,j)*1000._RKIND !max(blcldi2,blcldi(i,k,j)*rho_phy(i,k,j)*1000._RKIND)
          qsnow2     = qsnow(i,k,j)*rho_phy(i,k,j)*1000._RKIND !max(qsnow2,qsnow(i,k,j)*rho_phy(i,k,j)*1000._RKIND)
          qgrpl2     = qgrpl(i,k,j)*rho_phy(i,k,j)*1000._RKIND !max(qgrpl2,qgrpl(i,k,j)*rho_phy(i,k,j)*1000._RKIND)
-         extcoeff552= extcoeff55(i,k,j) !max(extcoeff552,extcoeff55(i,k,j))
+         extcoeff552= extcoef55(i,k,j) !max(extcoeff552,extcoeff55(i,k,j))
       enddo
 
       bc = 144.7_RKIND * (qcloud2+blcldw2)  ** 0.88

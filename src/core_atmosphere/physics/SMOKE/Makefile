@@ -71,7 +71,8 @@ dust_data_mod.o: \
 
 module_smoke_diagnostics.o: \
 	mpas_smoke_config.o \
-	mpas_smoke_init.o
+	mpas_smoke_init.o \
+	rad_data_mod.o
 
 module_wetdep_ls.o: \
 	mpas_smoke_config.o \
