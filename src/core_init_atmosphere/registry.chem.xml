@@ -144,6 +144,14 @@
                       <var name="MASSDEN" array_group="chemistry" units="kg kg^{-1}"
                            description="fine smoke mixing ratio"/>
 
+                      <var name="smoke_fine" array_group="chemistry" units="kg kg^{-1}"
+                           description="fine smoke mixing ratio"
+                           packages="mpas_smoke_in"/>
+
+                      <var name="smoke_coarse" array_group="chemistry" units="kg kg^{-1}"
+                           description="coarse smoke mixing ratio"
+                           packages="mpas_smoke_in"/>
+
                       <var name="polp_tree" array_group="chemistry" units="kg kg^{-1}"
                            description="coarse tree pollen mixing ratio"
                            packages="speciated_pollen_primary;speciated_pollen_rupture"/>

@@ -219,6 +219,8 @@
               filename_template="history.$Y-$M-$D_$h.$m.$s.nc"
               output_interval="6:00:00"
               runtime_format="separate_file">
+              <var name="swdnb"/>
+              <var name="swdnbc"/>
               <var name="aod3d_smoke"/>
               <var name="aod3d"/>
               <var name="aod550"/>

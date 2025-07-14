@@ -1548,7 +1548,7 @@
  do j = jts,jte
  do k = kts,kte
  do i = its,ite
-    aod550(i,j) = aod550(i,j) + aod3d_p(i,k,j) * dz_p(i,k,j) / 1000._RKIND
+    aod550_p(i,j) = aod550_p(i,j) + aod3d_p(i,k,j) * dz_p(i,k,j) / 1000._RKIND
  enddo
  enddo
  enddo

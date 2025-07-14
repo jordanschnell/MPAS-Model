@@ -104,6 +104,7 @@ module init_atm_core_interface
 
       use mpas_derived_types, only : mpas_pool_type, mpas_io_context_type, MPAS_streamInfo_type
       use mpas_pool_routines, only : mpas_pool_get_config, mpas_pool_get_package
+      use mpas_kind_types, only : StrKIND
 
       implicit none
 
@@ -124,8 +125,24 @@ module init_atm_core_interface
       logical, pointer :: tempo_aerosolaware_in
       integer, pointer :: config_init_case
 
+      logical, pointer :: mpas_smoke_in, mpas_dust_in, mpas_anthro_in
+      character(len=StrKIND),pointer:: config_smoke_scheme, config_dust_scheme, config_anthro_scheme
 
       ierr = 0
+
+      call mpas_pool_get_config(configs,'config_smoke_scheme', config_smoke_scheme)
+      call mpas_pool_get_config(configs,'config_dust_scheme', config_dust_scheme)
+      call mpas_pool_get_config(configs,'config_anthro_scheme', config_anthro_scheme)
+      nullify(mpas_smoke_in)
+      call  mpas_pool_get_package(packages,'mpas_smoke_inActive',mpas_smoke_in)
+      if(config_smoke_scheme.ne.'off')  mpas_smoke_in=.true.
+      nullify(mpas_dust_in)
+      call  mpas_pool_get_package(packages,'mpas_dust_inActive',mpas_dust_in)
+      if(config_dust_scheme.ne.'off')  mpas_dust_in=.true.
+      nullify(mpas_anthro_in)
+      call  mpas_pool_get_package(packages,'mpas_anthro_inActive',mpas_anthro_in)
+      if(config_anthro_scheme.ne.'off')  mpas_anthro_in=.true.
+      
 
       call mpas_pool_get_config(configs, 'config_init_case', config_init_case)
       call mpas_pool_get_config(configs, 'config_static_interp', config_static_interp)

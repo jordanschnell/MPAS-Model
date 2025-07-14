@@ -49,7 +49,7 @@ contains
      do j = jts, jte
      do k = kts, kte
      do i = its, ite
-        aod3d(i,k,j)= aod3d(i,k,j) +  1.e-6 * ext * chem(i,k,j,nv)*rho_phy(i,k,j)*dz8w(i,k,j)
+        aod3d(i,k,j)= aod3d(i,k,j) +  1.e-6_RKIND * ext * chem(i,k,j,nv)*rho_phy(i,k,j)*dz8w(i,k,j)
      enddo
      enddo
      enddo
@@ -74,8 +74,8 @@ contains
 
    REAL(RKIND),DIMENSION(ims:ime,kms:kme,jms:jme),INTENT(IN)   :: qcloud,qrain,qice,qsnow,qgrpl
    REAL(RKIND),DIMENSION(ims:ime,kms:kme,jms:jme),INTENT(IN)   :: blcldi,blcldw
-   REAL(RKIND),DIMENSION(ims:ime,kms:kme,jms:jme),INTENT(IN)   :: rho_phy,wind,rh,qv,t
-   REAL(RKIND),DIMENSION(ims:ime,jms:jme),INTENT(IN)     :: wind10m,rh2m,t2m,coszen,extcoef55
+   REAL(RKIND),DIMENSION(ims:ime,kms:kme,jms:jme),INTENT(IN)   :: rho_phy,wind,rh,qv,t,extcoef55
+   REAL(RKIND),DIMENSION(ims:ime,jms:jme),INTENT(IN)     :: wind10m,rh2m,t2m,coszen
    REAL(RKIND),DIMENSION(ims:ime,jms:jme), INTENT(OUT)   :: vis
                                                                                
   ! local

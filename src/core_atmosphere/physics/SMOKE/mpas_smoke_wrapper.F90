@@ -368,7 +368,9 @@ contains
         its,ite, jts,jte, kts,kte)
      
    if (ktau == 1) then
+      call mpas_log_write( ' Initializing dry deposition parameterss ')
       call aero_dry_dep_init()
+      call mpas_log_write( ' Initializing radiation feedback parameterss ')
       call aero_rad_init()
    endif
         
@@ -706,11 +708,12 @@ contains
     endif
 
     !>-- output of MPAS-Smoke
+    call mpas_log_write( ' Calculating AOD ')
     call mpas_aod_diag(           chem,aod3d,rho_phy,dz8w,num_chem,        &
                                   ids,ide, jds,jde, kds,kde,        &
                                   ims,ime, jms,jme, kms,kme,        &
                                   its,ite, jts,jte, kts,kte         )
-
+    call mpas_log_write( ' Calculating VIS ')
     call mpas_visibility_diag(    qc_vis,qr_vis,qi_vis,qs_vis,qg_vis,    &
                                   blcldw_vis,blcldi_vis,                 &
                                   rho_phy,wind10m,wind_phy,              &

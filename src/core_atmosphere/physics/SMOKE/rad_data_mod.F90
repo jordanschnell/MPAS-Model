@@ -58,6 +58,8 @@ module rad_data_mod
       if (p_pols_grass>0)    ab_eff(p_pols_grass)        = 0.0_RKIND
       if (p_pols_weed>0)     ab_eff(p_pols_weed)         = 0.0_RKIND
 
+      write(*,*) 'JLS, radiation parameters initialized',sc_eff,ab_eff
+
    end subroutine aero_rad_init
 
 end module rad_data_mod
