@@ -7557,6 +7557,7 @@ call mpas_log_write('Done with soil consistency check')
       type (dm_info), pointer :: dminfo
 
       real (kind=RKIND), parameter :: t0b = 250.0
+      real (kind=RKIND), parameter :: conv_aer = 1.e9
 
       type (met_data) :: field
       type (proj_info) :: proj
@@ -8549,39 +8550,39 @@ call mpas_log_write('Done with soil consistency check')
                                         sorted_arrQ8(:,1:nfglevels_actual-1), order=1, extrap=0)
 ! JLS
             if ( associated(index_MASSDEN )) then 
-               if (  index_MASSDEN > 0    ) scalars(index_MASSDEN,k,iCell) = vertical_interp(target_z, nfglevels_actual-1, &
+               if (  index_MASSDEN > 0    ) scalars(index_MASSDEN,k,iCell) = conv_aer * vertical_interp(target_z, nfglevels_actual-1, &
                                         sorted_arrQ11(:,1:nfglevels_actual-1), order=1, extrap=0)
             endif
             if ( associated(index_smoke_fine )) then 
-                if ( index_smoke_fine > 0  ) scalars(index_smoke_fine,k,iCell) = vertical_interp(target_z, nfglevels_actual-1, &
+                if ( index_smoke_fine > 0  ) scalars(index_smoke_fine,k,iCell) = conv_aer * vertical_interp(target_z, nfglevels_actual-1, &
                                         sorted_arrQ12(:,1:nfglevels_actual-1), order=1, extrap=0)
             endif
             if ( associated(index_smoke_coarse)) then 
-                if ( index_smoke_coarse > 0 ) scalars(index_smoke_coarse,k,iCell) = vertical_interp(target_z, nfglevels_actual-1, &
+                if ( index_smoke_coarse > 0 ) scalars(index_smoke_coarse,k,iCell) = conv_aer * vertical_interp(target_z, nfglevels_actual-1, &
                                         sorted_arrQ13(:,1:nfglevels_actual-1), order=1, extrap=0)
             endif
             if ( associated(index_dust_fine )) then 
-               if ( index_dust_fine > 0) scalars(index_dust_fine,k,iCell) = vertical_interp(target_z, nfglevels_actual-1, &
+               if ( index_dust_fine > 0) scalars(index_dust_fine,k,iCell) = conv_aer * vertical_interp(target_z, nfglevels_actual-1, &
                                         sorted_arrQ14(:,1:nfglevels_actual-1), order=1, extrap=0)
             endif
             if ( associated(index_dust_coarse )) then  
-               if ( index_dust_coarse > 0) scalars(index_dust_coarse,k,iCell) = vertical_interp(target_z, nfglevels_actual-1, &
+               if ( index_dust_coarse > 0) scalars(index_dust_coarse,k,iCell) = conv_aer * vertical_interp(target_z, nfglevels_actual-1, &
                                         sorted_arrQ15(:,1:nfglevels_actual-1), order=1, extrap=0)
             endif
             if ( associated(index_unspc_fine )) then  
-               if ( index_unspc_fine > 0) scalars(index_unspc_fine,k,iCell) = vertical_interp(target_z, nfglevels_actual-1, &
+               if ( index_unspc_fine > 0) scalars(index_unspc_fine,k,iCell) = conv_aer * vertical_interp(target_z, nfglevels_actual-1, &
                                         sorted_arrQ16(:,1:nfglevels_actual-1), order=1, extrap=0)
             endif
             if ( associated(index_unspc_coarse )) then  
-                if ( index_unspc_coarse > 0 ) scalars(index_unspc_coarse,k,iCell) = vertical_interp(target_z, nfglevels_actual-1, &
+                if ( index_unspc_coarse > 0 ) scalars(index_unspc_coarse,k,iCell) = conv_aer * vertical_interp(target_z, nfglevels_actual-1, &
                                         sorted_arrQ17(:,1:nfglevels_actual-1), order=1, extrap=0)
             endif
             if ( associated(index_ssalt_fine )) then  
-               if ( index_ssalt_fine > 0 ) scalars(index_ssalt_fine,k,iCell) = vertical_interp(target_z, nfglevels_actual-1, &
+               if ( index_ssalt_fine > 0 ) scalars(index_ssalt_fine,k,iCell) = conv_aer * vertical_interp(target_z, nfglevels_actual-1, &
                                         sorted_arrQ18(:,1:nfglevels_actual-1), order=1, extrap=0)
             endif
             if ( associated(index_ssalt_coarse )) then 
-               if ( index_ssalt_coarse > 0 ) scalars(index_ssalt_coarse,k,iCell) = vertical_interp(target_z, nfglevels_actual-1, &
+               if ( index_ssalt_coarse > 0 ) scalars(index_ssalt_coarse,k,iCell) = conv_aer * vertical_interp(target_z, nfglevels_actual-1, &
                                         sorted_arrQ19(:,1:nfglevels_actual-1), order=1, extrap=0)
             endif
 
