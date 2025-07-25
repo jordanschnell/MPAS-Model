@@ -22,8 +22,8 @@ contains
   subroutine pollen_driver       (                               &
        num_chem, chem,                                           &
        dt, u10, v10, rho, dz8w, t, z_at_w, ktop2d,               &
-       xland, rainc, rainnc, relhum, swdown, total_flashrate,    &
-       cldfrac,                                                  &
+       xland, rainc, rainnc, relhum,                             &
+       swdown, total_flashrate, cldfrac,                         &
        num_pols_per_polp, pollen_emis_scale_factor,              &
        e_bio_in, e_bio_out, kbio,                                &
        num_e_bio_in, num_e_bio_out,                              &
@@ -104,7 +104,7 @@ contains
     REAL(RKIND) :: diam_polp_tree, diam_polp_grass, diam_polp_weed
     REAL(RKIND) :: rho_polp_tree, rho_polp_grass, rho_polp_weed
 
-! Define some constants (TODO, move to namelist)
+! Define some constants (TODO, move to data mod or namelist?)
     REAL(RKIND), PARAMETER :: pr_low    = 0._RKIND     ! [mm/day] lowest rainfall
     REAL(RKIND), PARAMETER :: pr_high   = 0.5_RKIND    ! [mm/day] highest rainfall                                                     
     REAL(RKIND), PARAMETER :: rh_low    = 50._RKIND    ! [%] lowest relative humidity
@@ -119,7 +119,6 @@ contains
     REAL(RKIND), PARAMETER :: diam_pols = 0.15_RKIND   ! Diameter(coarse) pollen (um)
     REAL(RKIND), PARAMETER :: pols_to_polp_frac_rh = 0.7_RKIND  ! Fraction of polp to pols for humidity rupture
     REAL(RKIND), PARAMETER :: pols_to_polp_frac_lt = 0.1_RKIND  ! Fraction of polp to pols for lightning rupture
-    REAL(RKIND), PARAMETER :: pols_to_polp_num     = 1.e4_RKIND ! Number of pols from polp
 ! Lightning Parameters
     REAL(RKIND), PARAMETER :: dH_min = 5.5_RKIND
     REAL(RKIND), PARAMETER :: dH_max = 14._RKIND
@@ -132,8 +131,6 @@ contains
 
     LOGICAL, PARAMETER :: do_pollen_lightning_rupture = .false.
     LOGICAL, PARAMETER :: do_pollen_rh_rupture = .true.
-
-  !TODO -- ADJUST THESE? 
 
   ! Set the densities / diameters based on what is available
   if ( p_polp_tree > 0 ) then

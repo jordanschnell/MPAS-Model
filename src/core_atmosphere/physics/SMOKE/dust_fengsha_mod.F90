@@ -21,7 +21,7 @@ module dust_fengsha_mod
 
 contains
 
-  subroutine gocart_dust_fengsha_driver(dt,              &
+  subroutine gocart_dust_fengsha_driver(dt,ktau,              &
        chem,rho_phy,smois,stemp,p8w,                     &
        isltyp,snowh,xland,area,g,                        &
        ust,znt,clay,sand,uthr,uthr_sg,                   &
@@ -42,7 +42,7 @@ contains
          ims,ime, jms,jme, kms,kme,                      &
          its,ite, jts,jte, kts,kte,                      &
          num_emis_dust,num_chem,num_soil_layers,         &
-         num_e_dust_out, index_e_dust_out_dust_fine, index_e_dust_out_dust_coarse
+         num_e_dust_out, index_e_dust_out_dust_fine, index_e_dust_out_dust_coarse,ktau
 
     ! 2d input variables
     REAL(RKIND), DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: sep     ! Sediment supply map
@@ -86,7 +86,7 @@ contains
     real(RKIND), DIMENSION (num_emis_dust) :: distribution
     real(RKIND), dimension (3) :: massfrac
     real(RKIND) :: erodtot
-    real(RKIND) :: moist_volumetric, source_out_diag
+    real(RKIND) :: moist_volumetric, reason_nodust
 
     ! conversion values
     conver=1.e-9
@@ -149,18 +149,21 @@ contains
 
              IF (znt(i,j) .gt. 0.2_RKIND) then
                 ilwi=0
+                reason_nodust = znt(i,j)
              endif
 
              ! limit where there is lots of vegetation
 
              ! limit where there is snow on the ground
-             if (snowh(i,j) .gt. 1.e-12_RKIND) then
+             if (snowh(i,j) .gt. 1.e-6_RKIND) then
                 ilwi = 0
+                reason_nodust = 1._RKIND
              endif
 
              ! Don't emit over frozen soil
              if (stemp(i,1,j) < 268._RKIND) then ! -5C
                 ilwi = 0
+                reason_nodust = stemp(i,1,j)
              endif
 
              ! Do not allow areas with bedrock, lava, or land-ice to loft
@@ -168,14 +171,22 @@ contains
              IF (isltyp(i,j) .eq. 15 .or. isltyp(i,j) .eq. 16. .or. &
                   isltyp(i,j) .eq. 18) then
                 ilwi=0
+                reason_nodust = 3._RKIND
              ENDIF
              IF (isltyp(i,j) .eq. 0)then
                 ilwi=0
+                reason_nodust = 4._RKIND
              endif
              if ( (ilwi == 0 ) .and. .not. ((isltyp(i,j) .eq. 15 .or. isltyp(i,j) .eq. 16. .or. &
                   isltyp(i,j) .eq. 18))) then
+                reason_nodust = 5._RKIND
              endif
-             if(ilwi == 0 ) cycle
+             if(ilwi == 0 ) then
+                if (ktau == 1 ) then
+                   e_dust_out(i,kts,j,index_e_dust_out_dust_fine  ) = reason_nodust
+                endif
+                cycle
+             endif
 
              ! get drag partition
              ! FENGSHA uses the drag partition correction of MacKinnon et al 2004
@@ -189,6 +200,7 @@ contains
                 if (feff(i,j) > 1.E-10_RKIND) then
                   R = real(feff(i,j), kind=RKIND)
                 else
+                  reason_nodust = 6._RKIND
                   cycle
                 endif
              endif
@@ -200,14 +212,14 @@ contains
              bems(:) = 0._RKIND
              call source_dust(imx,jmx, lmx, nmx, dt, tc, ustar, massfrac, & 
                   erodtot, dxy, moist_volumetric, airden, airmas, bems, g, dust_alpha, dust_gamma, &
-                  R, uthr(i,j),source_out_diag,dust_drylimit_factor)
+                  R, uthr(i,j),reason_nodust,dust_drylimit_factor)
 
              ! convert back to concentration
              
              chem(i,kts,j,p_dust_fine)  = chem(i,kts,j,p_dust_fine) + tc(1)*converi
              chem(i,kts,j,p_dust_coarse)= chem(i,kts,j,p_dust_coarse) + tc(5)*converi
 
-             e_dust_out(i,kts,j,index_e_dust_out_dust_fine  ) = source_out_diag !bems(1)
+             e_dust_out(i,kts,j,index_e_dust_out_dust_fine  ) = reason_nodust !bems(1)
              e_dust_out(i,kts,j,index_e_dust_out_dust_coarse) = bems(5)
              !chem(i,kts,j,p_dust_2)=tc(2)*converi
              !chem(i,kts,j,p_dust_3)=tc(3)*converi
@@ -352,6 +364,7 @@ contains
                                 g0, RHOSOIL',smois,massfrac(1),massfrac(3), massfrac(2), &
                                 erod, R, airden, ustar, uthres, alpha, gamma, kvhmax, &
                                 g0, RHOSOIL
+       reason = -5._RKIND
     endif
     if ( emit == 0 ) then
        write(*,*),'emit was 0, inputs: smois,massfrac(1),massfrac(3), massfrac(2), &
@@ -544,7 +557,7 @@ contains
    q = max(0._RKIND, rustar - u_thresh) * u_sum * u_sum
    
    ! Distribute emissions to bins and convert to mass flux (kg s-1)
-   reason = rustar - u_thresh
+   if (rustar - u_thresh < 0.) reason = -2._RKIND
    ! --------------------------------------------------------------
    emissions = emissions * q
 

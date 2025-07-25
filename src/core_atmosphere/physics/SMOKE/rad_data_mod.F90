@@ -20,6 +20,7 @@ module rad_data_mod
       sc_eff(:) = 0._RKIND
       ab_eff(:) = 0._RKIND
 ! Mass scattering efficencies from Hand and Malm, (2007)
+! Maybe use IMPROVE instead?
       if (p_smoke_fine>0)     sc_eff(p_smoke_fine)       = 3.9_RKIND
       if (p_smoke_coarse>0)   sc_eff(p_smoke_coarse)     = 2.6_RKIND
       if (p_dust_fine>0)      sc_eff(p_dust_fine)        = 3.3_RKIND
@@ -58,7 +59,7 @@ module rad_data_mod
       if (p_pols_grass>0)    ab_eff(p_pols_grass)        = 0.0_RKIND
       if (p_pols_weed>0)     ab_eff(p_pols_weed)         = 0.0_RKIND
 
-      write(*,*) 'JLS, radiation parameters initialized',sc_eff,ab_eff
+      !write(*,*) 'JLS, radiation parameters initialized',sc_eff,ab_eff
 
    end subroutine aero_rad_init
 

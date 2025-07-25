@@ -315,6 +315,8 @@ contains
 
     errmsg = ''
     errflg = 0
+    
+   call mpas_log_write( ' Beginning Aerosol Driver')
  
   ! If not simulating smoke or pollen, get outta here...
     if ( (.not. do_mpas_smoke) .and. (.not. do_mpas_pollen) .and. &
@@ -596,7 +598,7 @@ contains
     call mpas_log_write( ' Calling dust driver')
 !    if ( dust_opt .eq. 5 ) then
     !-- compute dust (FENGSHA)
-       call gocart_dust_fengsha_driver(dt,chem,rho_phy,               &
+       call gocart_dust_fengsha_driver(dt,ktau,chem,rho_phy,               &
             smois,tslb,p8w,                                           &
             isltyp,snowh,xland,area,g,                                &
             ust,znt,                                                  &
@@ -674,7 +676,7 @@ contains
         ims,ime, jms,jme, kms,kme,                                    &
         its,ite, jts,jte, kts,kte                                     )
     else
-        ddvel=0._RKIND
+        call mpas_log_write( 'Not performing dry deposition')
     endif
 
  !>- large-scale wet deposition
@@ -751,6 +753,8 @@ contains
     enddo
     enddo
     enddo
+   
+    call mpas_log_write( ' Ending Aerosol Driver')
     
  end subroutine mpas_smoke_driver
 

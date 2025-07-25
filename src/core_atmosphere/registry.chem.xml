@@ -207,6 +207,10 @@
             units="-"
             description="Flag that controls the direct aerosol effect"
             possbile_values=".true. or .false."/>
+       <nml_option name="config_mynn_enh_mix" type="logical" default_value="false" in_defaults="false"
+            units="-"
+            description="Flag that controls artificially enhancning the PBL exhange coefs"
+            possbile_values=".true. or .false."/>
    </nml_record>
 
 <!-- **************************************************************************************** -->

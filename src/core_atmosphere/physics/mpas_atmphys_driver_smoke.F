@@ -160,6 +160,7 @@
        if(.not.allocated(max_bb_plume_p))        allocate(max_bb_plume_p(ims:ime,jms:jme))
     endif
  endif
+
  if ( online_rwc_emis .gt. 0 ) then
       if(.not.allocated(RWC_denominator_p))               allocate(RWC_denominator_p(ims:ime,jms:jme))
       if(.not.allocated(RWC_annual_sum_p))                allocate(RWC_annual_sum_p(ims:ime,jms:jme))
@@ -168,6 +169,7 @@
       if(.not.allocated(RWC_annual_sum_unspc_fine_p))     allocate(RWC_annual_sum_unspc_fine_p(ims:ime,jms:jme))
       if(.not.allocated(RWC_annual_sum_unspc_coarse_p))   allocate(RWC_annual_sum_unspc_coarse_p(ims:ime,jms:jme))
  endif
+
  if ( config_dust_scheme .ne. 'off' ) then
     if(.not.allocated(clayfrac_in_p))        allocate(clayfrac_in_p(ims:ime,jms:jme))
     if(.not.allocated(sandfrac_in_p))        allocate(sandfrac_in_p(ims:ime,jms:jme))
@@ -178,13 +180,12 @@
     if(.not.allocated(feff_p))               allocate(feff_p(ims:ime,jms:jme))
  endif
 
- if(.not.allocated(ddvel_p))              allocate(ddvel_p(ims:ime,jms:jme,1:num_chem))
-
- if ( wetdep_ls_opt .gt. 0 ) then
+ if ( wetdep_ls_opt .ne. 0 ) then
     if(.not.allocated(wetdep_resolved_p))    allocate(wetdep_resolved_p(ims:ime,jms:jme,1:num_chem))
  endif
- if ( drydep_opt .eq. 1 ) then
+ if ( drydep_opt .ne. 0 ) then
     if(.not.allocated(tend_chem_settle_p))   allocate(tend_chem_settle_p(ims:ime,kms:kme,jms:jme,1:num_chem))
+    if(.not.allocated(ddvel_p))              allocate(ddvel_p(ims:ime,jms:jme,1:num_chem))
  endif
 
  if(.not.allocated(chem_p))               allocate(chem_p(ims:ime,kms:kme,jms:jme,1:num_chem))
@@ -479,11 +480,13 @@
       call mpas_pool_get_array(diag_physics,'mavail',mavail)
       call mpas_pool_get_array(diag_physics,'cldfrac',cldfrac)
      
-      call mpas_pool_get_array(diag_physics,'ddvel',ddvel)
-      if ( wetdep_ls_opt .eq. 1 ) then 
+      if ( wetdep_ls_opt .ne. 0 ) then 
          call mpas_pool_get_array(diag_physics,'wetdep_resolved',wetdep_resolved)
       endif
-      call mpas_pool_get_array(tend_physics,'tend_chem_settle',tend_chem_settle)
+      if ( drydep_opt .ne. 0 ) then
+         call mpas_pool_get_array(tend_physics,'tend_chem_settle',tend_chem_settle)
+         call mpas_pool_get_array(diag_physics,'ddvel',ddvel)
+      endif
 
       if ( config_sna_scheme .ne. 'off' ) then
          call mpas_pool_get_array(diag_physics,'hno3_bkgd',hno3_bkgd)
@@ -595,7 +598,9 @@
          endif
          do n = 1, num_chem
             chem_p(i,k,j,n) = max(1.e-12_RKIND,chem(n,k,i))
-            tend_chem_settle_p(i,k,j,n) = 0._RKIND
+            if ( drydep_opt .ne. 0 ) then
+               tend_chem_settle_p(i,k,j,n) = 0._RKIND
+            endif
          enddo
       enddo
       enddo
@@ -799,8 +804,12 @@
      endif
      ! Chem diags
          do n= 1,num_chem
-            ddvel_p(i,j,n) = 0._RKIND
-            wetdep_resolved_p(i,j,n) = 0._RKIND
+            if ( drydep_opt .ne. 0 ) then
+               ddvel_p(i,j,n) = 0._RKIND
+            endif
+            if ( wetdep_ls_opt .ne. 0 ) then
+               wetdep_resolved_p(i,j,n) = 0._RKIND
+            endif
          enddo
      ! Land cat
          do n= 1,num_landcat
@@ -1002,7 +1011,9 @@
       chem(n,k,i) = chem_p(i,k,j,n)
       !TODO floating point exception
       !chem(n,k,i) = min(max(1.e-12_RKIND,chem_p(i,k,j,n)),5000._RKIND)
-      tend_chem_settle(n,k,i) = tend_chem_settle_p(i,k,j,n)
+      if ( drydep_opt .ne. 0 ) then
+          tend_chem_settle(n,k,i) = tend_chem_settle_p(i,k,j,n)
+      endif
    enddo
 !
    if (num_e_ant_out .gt. 0 ) then
@@ -1070,7 +1081,9 @@
        endif
     endif
     do n = 1,num_chem
-      ddvel(n,i) = ddvel_p(i,j,n)
+      if (drydep_opt .ne. 0 ) then
+         ddvel(n,i) = ddvel_p(i,j,n)
+      endif
       if (wetdep_ls_opt .gt. 0) then
          wetdep_resolved(n,i) = wetdep_resolved_p(i,j,n)
       endif
@@ -1483,9 +1496,9 @@
            p8w     = pres2_hyd_p , dz8w     = dz_p       , z_at_w   = zgrid_p    ,       &
            p_phy   = pres_hyd_p  , t_phy    = t_p        , u_phy    = u_p        ,       &
            v_phy   = v_p         , qv       = qv_p       , vvel     = w_p        ,       &
-           qc_vis  = qc_p, & !(:,1:3,:), &
-           qr_vis  = qr_p, & !(:,1:3,:), &
-           qi_vis  = qi_p, & !(:,1:3,:), &
+           qc_vis  = qc_p, & !(:,1:3,:), &   !!! TO DO !!!
+           qr_vis  = qr_p, & !(:,1:3,:), &   ! VIS calculation only needs first 
+           qi_vis  = qi_p, & !(:,1:3,:), &   ! 3 layers but slicing doesn't work
            qs_vis  = qs_p, & !(:,1:3,:), & 
            qg_vis  = qg_p, & !(:,1:3,:), &
            blcldw_vis = qcbl_p, & !(:,1:3,:), &

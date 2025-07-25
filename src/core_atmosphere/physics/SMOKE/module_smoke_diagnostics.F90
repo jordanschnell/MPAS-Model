@@ -39,20 +39,13 @@ contains
   do j = jts, jte
   do k = kts, kte
   do i = its, ite
-  aod3d(i,k,j) = 0._RKIND
-  enddo
-  enddo
-  enddo
-
-  do nv = 1, num_chem
-   ext = sc_eff(nv) + ab_eff(nv)
-     do j = jts, jte
-     do k = kts, kte
-     do i = its, ite
+     aod3d(i,k,j) = 0._RKIND
+     do nv = 1, num_chem
+        ext = sc_eff(nv) + ab_eff(nv)
         aod3d(i,k,j)= aod3d(i,k,j) +  1.e-6_RKIND * ext * chem(i,k,j,nv)*rho_phy(i,k,j)*dz8w(i,k,j)
      enddo
-     enddo
-     enddo
+  enddo
+  enddo
   enddo
 
   end subroutine mpas_aod_diag

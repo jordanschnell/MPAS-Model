@@ -265,7 +265,8 @@
     efs_flam_p,        &!JR
     efs_rsmold_p,      &
     fire_ef_out_p,     &
-    fmc_avg_p        
+    fmc_avg_p,         &
+    emis_ant_no_p        
  integer,dimension(:,:),allocatable:: &
     eco_id_p !JR
 ! RWC fields
