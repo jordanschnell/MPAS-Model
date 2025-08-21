@@ -793,7 +793,7 @@
      !
      ! Dust
      !
-     if ( config_dust_scheme .ne. 'off' ) then    
+     if ( config_dust_scheme .ne. 'off' ) then  
          sandfrac_in_p(i,j)    = sandfrac_in(i)
          clayfrac_in_p(i,j)    = clayfrac_in(i)
          uthres_in_p(i,j)      = uthres_in(i)

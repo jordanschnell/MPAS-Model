@@ -12,6 +12,7 @@ module dust_fengsha_mod
   use mpas_kind_types
   use dust_data_mod
   use mpas_smoke_init, only: p_dust_fine, p_dust_coarse
+  use mpas_timer, only : mpas_timer_start, mpas_timer_stop
 
   implicit none
 
@@ -88,6 +89,8 @@ contains
     real(RKIND) :: erodtot
     real(RKIND) :: moist_volumetric, reason_nodust
 
+    logical, parameter ::  do_timing = .true.
+
     ! conversion values
     conver=1.e-9
     converi=1.e9
@@ -117,11 +120,7 @@ contains
              tc(2)=0._RKIND
              tc(3)=0._RKIND
              tc(4)=0._RKIND
-             !tc(2)=chem(i,kts,j,p_dust_2)*conver
-             !tc(3)=chem(i,kts,j,p_dust_3)*conver
-             !tc(4)=chem(i,kts,j,p_dust_4)*conver
              tc(5)=0._RKIND !chem(i,kts,j,p_dust_coarse)*conver
-             !    endif
 
              ! Air mass and density at lowest model level.
 
@@ -147,12 +146,12 @@ contains
              ! factor in the literature, which reduces lofting for rough areas.
              ! Forthcoming...
 
+             ! limit where there is lots of vegetation
              IF (znt(i,j) .gt. 0.2_RKIND) then
                 ilwi=0
-                reason_nodust = znt(i,j)
+                reason_nodust = 0._RKIND
              endif
 
-             ! limit where there is lots of vegetation
 
              ! limit where there is snow on the ground
              if (snowh(i,j) .gt. 1.e-6_RKIND) then
@@ -163,11 +162,10 @@ contains
              ! Don't emit over frozen soil
              if (stemp(i,1,j) < 268._RKIND) then ! -5C
                 ilwi = 0
-                reason_nodust = stemp(i,1,j)
+                reason_nodust = 2._RKIND
              endif
 
              ! Do not allow areas with bedrock, lava, or land-ice to loft
-
              IF (isltyp(i,j) .eq. 15 .or. isltyp(i,j) .eq. 16. .or. &
                   isltyp(i,j) .eq. 18) then
                 ilwi=0
@@ -180,12 +178,6 @@ contains
              if ( (ilwi == 0 ) .and. .not. ((isltyp(i,j) .eq. 15 .or. isltyp(i,j) .eq. 16. .or. &
                   isltyp(i,j) .eq. 18))) then
                 reason_nodust = 5._RKIND
-             endif
-             if(ilwi == 0 ) then
-                if (ktau == 1 ) then
-                   e_dust_out(i,kts,j,index_e_dust_out_dust_fine  ) = reason_nodust
-                endif
-                cycle
              endif
 
              ! get drag partition
@@ -208,11 +200,13 @@ contains
              ! soil moisture correction factor 
              moist_volumetric = dust_moist_correction * smois(i,2,j) 
 
+             if  (do_timing) call mpas_timer_start('source_dust')
              ! Call dust emission routine.
              bems(:) = 0._RKIND
              call source_dust(imx,jmx, lmx, nmx, dt, tc, ustar, massfrac, & 
                   erodtot, dxy, moist_volumetric, airden, airmas, bems, g, dust_alpha, dust_gamma, &
                   R, uthr(i,j),reason_nodust,dust_drylimit_factor)
+             if  (do_timing) call mpas_timer_stop('source_dust')
 
              ! convert back to concentration
              
@@ -221,16 +215,6 @@ contains
 
              e_dust_out(i,kts,j,index_e_dust_out_dust_fine  ) = reason_nodust !bems(1)
              e_dust_out(i,kts,j,index_e_dust_out_dust_coarse) = bems(5)
-             !chem(i,kts,j,p_dust_2)=tc(2)*converi
-             !chem(i,kts,j,p_dust_3)=tc(3)*converi
-             !chem(i,kts,j,p_dust_4)=tc(4)*converi
-
-             ! For output diagnostics
-!             emis_dust(i,1,j,p_edust1)=bems(1)
-!             emis_dust(i,1,j,p_edust2)=bems(2)
-!             emis_dust(i,1,j,p_edust3)=bems(3)
-!             emis_dust(i,1,j,p_edust4)=bems(4)
-!             emis_dust(i,1,j,p_edust5)=bems(5)
           endif
        enddo
     enddo
@@ -349,30 +333,17 @@ contains
     REAL(RKIND), PARAMETER :: cv=12.62E-6_RKIND      ! normalization constant
     REAL(RKIND), PARAMETER :: RHOSOIL=2650._RKIND
 
+    logical, parameter :: do_timing = .true.
 
     ! calculate the total vertical dust flux 
 
     emit = 0._RKIND
 
+    if  (do_timing) call mpas_timer_start('dust_emissio_fengsha')
     call DustEmissionFENGSHA(smois,massfrac(1),massfrac(3), massfrac(2), &
                                 erod, R, airden, ustar, uthres, alpha, gamma, kvhmax, &
                                 g0, RHOSOIL, emit,reason,dust_drylimit_factor)
-
-    if ( isnan(emit) ) then
-       write(*,*),'emit was NaN, inputs: smois,massfrac(1),massfrac(3), massfrac(2), &
-                                erod, R, airden, ustar, uthres, alpha, gamma, kvhmax, &
-                                g0, RHOSOIL',smois,massfrac(1),massfrac(3), massfrac(2), &
-                                erod, R, airden, ustar, uthres, alpha, gamma, kvhmax, &
-                                g0, RHOSOIL
-       reason = -5._RKIND
-    endif
-    if ( emit == 0 ) then
-       write(*,*),'emit was 0, inputs: smois,massfrac(1),massfrac(3), massfrac(2), &
-                                erod, R, airden, ustar, uthres, alpha, gamma, kvhmax, &
-                                g0, RHOSOIL',smois,massfrac(1),massfrac(3), massfrac(2), &
-                                erod, R, airden, ustar, uthres, alpha, gamma, kvhmax, &
-                                g0, RHOSOIL
-    endif
+    if  (do_timing) call mpas_timer_stop('dust_emissio_fengsha')
 
     ! Now that we have the total dust emission, distribute into dust bins using
     ! lognormal distribution (Dr. Jasper Kok, in press), and
@@ -422,12 +393,6 @@ contains
     tc(2) = 0._RKIND
     tc(3) = 0._RKIND
     tc(4) = 0._RKIND
-    if ( isnan(tc(1)) ) then
-       tc(1) = 0.0_RKIND
-    endif
-    if ( isnan(tc(5)) ) then
-       tc(5) = 0.0_RKIND
-    endif
 
     bems(1) = bems(1)+0.286_RKIND*bems(2)
     bems(5) = 0.714_RKIND*bems(2) + bems(3) + bems(4)

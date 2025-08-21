@@ -97,6 +97,7 @@ mpas_smoke_wrapper.o:      \
 	module_wetdep_ls.o \
         dep_dry_simple_mod.o \
         dep_dry_mod_emerson.o \
+	dust_fengsha_mod.o \
         pollen_mod.o \
         module_anthro_emissions.o \
         ssalt_mod.o \

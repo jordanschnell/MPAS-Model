@@ -8,7 +8,7 @@ module module_add_emiss_burn
   use mpas_smoke_init
 CONTAINS
   subroutine add_emis_burn(dtstep,dz8w,rho_phy,pi,ebb_min,          &
-                           smoke,smoke_coarse,ch4,julday,gmt,xlat,xlong,     &
+                           chem,num_chem,julday,gmt,xlat,xlong,     &
                            fire_end_hr, peak_hr,time_int,           &
                            coef_bb_dc, fire_hist, hwp, hwp_prevd,   &
                            swdown,ebb_dcycle, ebu,ebu_coarse,ebu_ch4, &
@@ -21,13 +21,13 @@ CONTAINS
 
    IMPLICIT NONE
 
-   INTEGER,      INTENT(IN   ) :: julday,                           &
+   INTEGER,      INTENT(IN   ) :: julday, num_chem,                 &
                                   ids,ide, jds,jde, kds,kde,        &
                                   ims,ime, jms,jme, kms,kme,        &
                                   its,ite, jts,jte, kts,kte
 
-   real(RKIND), DIMENSION( ims:ime, kms:kme, jms:jme ),                 &
-         INTENT(INOUT ) ::                                   smoke, smoke_coarse, ch4 
+   real(RKIND), DIMENSION( ims:ime, kms:kme, jms:jme, 1:num_chem ),                 &
+         INTENT(INOUT ) ::                                   chem
 
    real(RKIND), DIMENSION( ims:ime, kms:kme, jms:jme ),                 &
          INTENT(INOUT ) ::                                   ebu, ebu_coarse, ebu_ch4, q_vap ! SRB: added q_vap
@@ -72,20 +72,23 @@ CONTAINS
             conv= coef_bb_dc(i,j)*dtstep/(rho_phy(i,k,j)* dz8w(i,k,j))
            endif
             
-           dm_smoke= conv*ebu(i,k,j)
- 
-           smoke(i,k,j) = smoke(i,k,j) + dm_smoke
-           smoke(i,k,j) = MIN(MAX(smoke(i,k,j),epsilc),5.e+3_RKIND)        
-           aod3d(i,k,j)= 1.e-6* ext2* smoke(i,k,j)*rho_phy(i,k,j)*dz8w(i,k,j)
+            
+           if ( p_smoke_fine > 0 ) then
+              dm_smoke= conv*ebu(i,k,j)
+              chem(i,k,j,p_smoke_fine) = chem(i,k,j,p_smoke_fine) + dm_smoke
+              chem(i,k,j,p_smoke_fine) = MIN(MAX(chem(i,k,j,p_smoke_fine),epsilc),5.e+3_RKIND)        
+              aod3d(i,k,j)= 1.e-6* ext2* chem(i,k,j,p_smoke_fine)*rho_phy(i,k,j)*dz8w(i,k,j)
+           endif
 
            if ( p_smoke_coarse > 0 ) then 
               dm_smoke_coarse= conv*ebu_coarse(i,k,j)
-              smoke_coarse(i,k,j) = smoke_coarse(i,k,j) + dm_smoke_coarse
-              smoke_coarse(i,k,j) = MIN(MAX(smoke_coarse(i,k,j),epsilc),5.e+3_RKIND)        
+              chem(i,k,j,p_smoke_coarse) = chem(i,k,j,p_smoke_coarse) + dm_smoke_coarse
+              chem(i,k,j,p_smoke_coarse) = MIN(MAX(chem(i,k,j,p_smoke_coarse),epsilc),5.e+3_RKIND)        
            endif
            if ( p_ch4 > 0 ) then 
               dm_ch4= conv_gas*ebu_ch4(i,k,j)
-              ch4(i,k,j) = ch4(i,k,j) + dm_ch4
+              chem(i,k,j,p_ch4) = chem(i,k,j,p_ch4) + dm_ch4
+              chem(i,k,j,p_ch4) = MIN(MAX(chem(i,k,j,p_ch4),epsilc),5.e+3_RKIND)        
            endif
 
            ! SRB: Modifying Water Vapor content based on Emissions

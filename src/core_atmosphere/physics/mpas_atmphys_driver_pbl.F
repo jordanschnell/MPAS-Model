@@ -242,6 +242,7 @@
           if(.not.allocated(tend_chem_settle_p)) allocate(tend_chem_settle_p(ims:ime,kms:kme,jms:jme,1:num_chem))
           if(.not.allocated(chem_p)) allocate(chem_p(ims:ime,kms:kme,jms:jme,1:num_chem))
           if(.not.allocated(emis_ant_no_p)) allocate(emis_ant_no_p(ims:ime,jms:jme))
+          if(.not.allocated(frp_out_p)) allocate(frp_out_p(ims:ime,jms:jme))
        endif
 
     case("bl_myj")
@@ -427,6 +428,7 @@
           if(allocated(chem_p)            ) deallocate(chem_p            )
           if(allocated(tend_chem_settle_p)) deallocate(tend_chem_settle_p)
           if(allocated(emis_ant_no_p)     ) deallocate(emis_ant_no_p     )
+          if(allocated(frp_out_p)         ) deallocate(frp_out_p)
        endif
 
    case("bl_myj")
@@ -500,6 +502,7 @@
  real(kind=RKIND),dimension(:,:),pointer   :: ddvel
  real(kind=RKIND),dimension(:,:,:),pointer :: chem
  real(kind=RKIND),dimension(:,:,:),pointer :: e_ant_in
+ real(kind=RKIND),dimension(:),pointer     :: frp_out
  integer,pointer:: index_e_ant_in_unspc_fine
  integer,pointer:: drydep_opt
  logical,pointer:: enh_mix
@@ -707,6 +710,7 @@
        call mpas_pool_get_array(diag_physics,'det_qv'    ,det_qv    )
        if ( num_chem .gt. 0 ) then
           call mpas_pool_get_array(state,'scalars',scalars,1)
+          call mpas_pool_get_config(configs,'drydep_opt',drydep_opt)
           if ( drydep_opt .ne. 0 ) then
              call mpas_pool_get_array(tend_physics,'tend_chem_settle',tend_chem_settle)
              call mpas_pool_get_array(diag_physics,'ddvel',ddvel)
@@ -715,10 +719,10 @@
           call mpas_pool_get_dimension(state, 'chemistry_end', chemistry_end)
           chem => scalars(chemistry_start:chemistry_end,:,:)
           call mpas_pool_get_config(configs,'config_mynn_enh_mix',enh_mix)
-          call mpas_pool_get_config(configs,'dryde_opt',drydep_opt)
           if (enh_mix) then
              call mpas_pool_get_array(emis_input, 'e_ant_in', e_ant_in)
              call mpas_pool_get_dimension(emis_input,'index_e_ant_in_unspc_fine',index_e_ant_in_unspc_fine)
+             call mpas_pool_get_array(diag_physics,'frp_out',frp_out)
           end if
        
        endif
@@ -731,6 +735,7 @@
           tsk_p(i,j)  = skintemp(i)
           if ( enh_mix ) then
              emis_ant_no_p(i,j) = e_ant_in(index_e_ant_in_unspc_fine,kts,i)
+             frp_out_p(i,j)     = frp_out(i)
           endif
           if ( num_chem .gt. 0 ) then
              if ( drydep_opt .ne. 0 ) then
@@ -1601,8 +1606,8 @@
                   vd3d = ddvel_p,      &
                   settle3d = tend_chem_settle_p, &
                   enh_mix  = enh_mix, &
-                  frp_mean = xland_p,  &
-                  emis_ant_no = xland_p, &
+                  frp_mean = frp_out_p,  &
+                  emis_ant_no = emis_ant_no_p, &
                   ids = ids , ide = ide , jds = jds , jde = jde , kds = kds , kde = kde ,                 &
                   ims = ims , ime = ime , jms = jms , jme = jme , kms = kms , kme = kme ,                 &
                   its = its , ite = ite , jts = jts , jte = jte , kts = kts , kte = kte ,                 &

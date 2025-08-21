@@ -7,6 +7,7 @@ module mpas_smoke_wrapper
    use mpas_kind_types
    use mpas_pool_routines
    use mpas_constants,        only: cp
+   use mpas_timer, only : mpas_timer_start, mpas_timer_stop
    use mpas_smoke_config
    use mpas_smoke_init 
    use module_plumerise,      only : ebu_driver
@@ -292,7 +293,7 @@ contains
     real(RKIND), parameter                            :: conv_frei   = 1.e-06_RKIND  ! FRE conversion factor, MW-s to W-s
 !>- Dry deposition - temporary - move to output 
     real(RKIND), dimension(ims:ime, jms:jme, 1:num_chem)          :: drydep_flux_local
-    real(RKIND), dimension(ims:ime, kms:kme, jms:jme, 1:num_chem) :: vgrav     ! gravitational settling velocit
+!    real(RKIND), dimension(ims:ime, kms:kme, jms:jme, 1:num_chem) :: vgrav     ! gravitational settling velocit
     real(RKIND), dimension(ims:ime, kms:kme, jms:jme)             :: thetav
 !> -- other
     real(RKIND)    :: theta
@@ -312,6 +313,8 @@ contains
     real(RKIND), parameter :: frp_wthreshold = 1.e+9     ! Minimum FRP (Watts) to have plume rise in windy conditions
     real(RKIND), parameter :: fre_wthreshold = 1.e+9     ! Minimum FRE (Watt-seconds) to have plume rise in windy conditions
     real(RKIND), parameter :: ebb_min        = 1.e-3     ! Minimum smoke emissions (ug/m2/s)
+
+    logical, parameter :: do_timing = .true.
 
     errmsg = ''
     errflg = 0
@@ -352,6 +355,7 @@ contains
     julday = int(julian)
 
     call mpas_log_write( ' Calling smoke prep')
+    if  (do_timing) call mpas_timer_start('smoke_prep')
     !>- get ready for chemistry run
     call mpas_smoke_prep(                                                   &
         do_mpas_smoke,                                                      &
@@ -367,8 +371,9 @@ contains
         lu_nofire, lu_qfire, lu_sfire, fire_type,                           &
         ids,ide, jds,jde, kds,kde,                                          &
         ims,ime, jms,jme, kms,kme,                                          &
-        its,ite, jts,jte, kts,kte)
-     
+        its,ite, jts,jte, kts,kte)  
+   if  (do_timing) call mpas_timer_stop('smoke_prep')
+
    if (ktau == 1) then
       call mpas_log_write( ' Initializing dry deposition parameterss ')
       call aero_dry_dep_init()
@@ -509,6 +514,7 @@ contains
     if (call_plume) call_plume = (mod(int(curr_secs), max(1, 60*plumerisefire_frq)) == 0) .or. (ktau == 2)
 
     ! compute wild-fire plumes
+    if  (do_timing) call mpas_timer_start('ebu_driver')
     if (call_plume) then
       call mpas_log_write( ' Calling ebu_driver')
       call ebu_driver (                                               &
@@ -534,15 +540,18 @@ contains
                  its,ite, jts,jte, kts,kte, errmsg, errflg            )
       if(errflg/=0) return
     end if
+    if  (do_timing) call mpas_timer_stop('ebu_driver')
 
     ! -- add biomass burning emissions at every timestep
     if (addsmoke_flag == 1) then
+    if  (do_timing) call mpas_timer_start('add_emiss_burn')
      call mpas_log_write( ' Calling add_emis_burn')
      call add_emis_burn(dt,dz8w,rho_phy,pi,ebb_min,                   &
+                        chem,num_chem,                                &
 ! Pass whole chem array
-                        chem(:,:,:,p_smoke_fine),                     &
-                        chem(:,:,:,p_smoke_coarse),                   &
-                        chem(:,:,:,p_ch4),                            &
+!                        chem(:,:,:,p_smoke_fine),                     &
+!                        chem(:,:,:,p_smoke_coarse),                   &
+!                        chem(:,:,:,p_ch4),                            &
                         julday,gmt,xlat,xlong,                        &
                         fire_end_hr, peak_hr,curr_secs,               &
                         coef_bb_dc,fire_hist,hwp,hwp_day_avg,         &
@@ -554,10 +563,12 @@ contains
                         ims,ime, jms,jme, kms,kme,                    &
                         its,ite, jts,jte, kts,kte                     )
     endif
+    if  (do_timing) call mpas_timer_stop('add_emiss_burn')
   endif ! if do_mpas_smoke
 
     ! -- add pollen emissions at every timestep
     if ( do_mpas_pollen ) then
+    if  (do_timing) call mpas_timer_start('pollen_driver')
     call mpas_log_write( ' Calling pollen driver')
     call  pollen_driver       (                                       &
        num_chem, chem,                                                &
@@ -576,10 +587,12 @@ contains
        ids,ide, jds,jde, kds,kde,                                     &
        ims,ime, jms,jme, kms,kme,                                     &
        its,ite, jts,jte, kts,kte                                      )
+    if  (do_timing) call mpas_timer_stop('pollen_driver')
     endif
 
     ! -- add sea salt emissions
     if (do_mpas_ssalt) then
+    if  (do_timing) call mpas_timer_start('seasalt_driver')
      call mpas_log_write( ' Calling seasalt driver')
      call gocart_seasalt_driver (                                     &
              dt,rri,t_phy,u_phy,v_phy,                                &
@@ -592,9 +605,11 @@ contains
              ids,ide, jds,jde, kds,kde,                               &
              ims,ime, jms,jme, kms,kme,                               &
              its,ite, jts,jte, kts,kte                                )
+    if  (do_timing) call mpas_timer_stop('seasalt_driver')
     endif
 
     if ( do_mpas_dust ) then
+    if  (do_timing) call mpas_timer_start('dust_driver')
     call mpas_log_write( ' Calling dust driver')
 !    if ( dust_opt .eq. 5 ) then
     !-- compute dust (FENGSHA)
@@ -615,9 +630,11 @@ contains
             ims,ime, jms,jme, kms,kme,                                &
             its,ite, jts,jte, kts,kte                                 )
 !    end if
+    if  (do_timing) call mpas_timer_stop('dust_driver')
     end if
 
     if ( do_mpas_anthro ) then
+    if  (do_timing) call mpas_timer_start('anthro_driver')
        call mpas_log_write( ' Calling anthro emis driver')
        call mpas_smoke_anthro_emis_driver(dt,gmt,julday,kemit,        &
             xlat,xlong, chem,num_chem,dz8w,t_phy,rho_phy,             &
@@ -638,6 +655,7 @@ contains
             ids,ide, jds,jde, kds,kde,                                &
             ims,ime, jms,jme, kms,kme,                                &
             its,ite, jts,jte, kts,kte                                 )
+    if  (do_timing) call mpas_timer_stop('anthro_driver')
     endif
 
     if ( online_rwc_emis .gt. 0 ) then 
@@ -660,15 +678,17 @@ contains
 
     !>-- compute dry deposition, based on Emerson et al., (2020)
     if (drydep_opt == 1) then
+    if  (do_timing) call mpas_timer_start('drydep_driver')
      ! Set up the arrays if this is the first time through
      call mpas_log_write( ' Calling dry_dep_driver_emerson')
      call dry_dep_driver_emerson(rmol,ust,znt,num_chem,ddvel,         &
-        vgrav,chem,dz8w,snowh,t_phy,p_phy,rho_phy,ivgtyp,g,dt,        &
+        chem,dz8w,snowh,t_phy,p_phy,rho_phy,ivgtyp,g,dt,        &
         drydep_flux_local,tend_chem_settle,dbg_opt,                   &
         pm_settling,                                                  &
         ids,ide, jds,jde, kds,kde,                                    &
         ims,ime, jms,jme, kms,kme,                                    &
         its,ite, jts,jte, kts,kte, curr_secs, xlat, xlong             )
+    if  (do_timing) call mpas_timer_stop('drydep_driver')
     !>-- compute dry deposition based on simple parameterization (HRRR-Smoke)
     elseif (drydep_opt == 2) then
      call dry_dep_driver_simple(rmol,ust,ndvel,ddvel,                 &
@@ -681,6 +701,7 @@ contains
 
  !>- large-scale wet deposition
     if (wetdep_ls_opt == 1) then
+    if  (do_timing) call mpas_timer_start('wetdep_ls')
        call mpas_log_write( ' Calling wetdep_ls')
        call  wetdep_ls(dt,chem,rainncv,qv,                            &
                      rho_phy,num_chem,dz8w,vvel,p_phy,                &
@@ -689,6 +710,7 @@ contains
                      ids,ide, jds,jde, kds,kde,                       &
                      ims,ime, jms,jme, kms,kme,                       &
                      its,ite, jts,jte, kts,kte                        )
+    if  (do_timing) call mpas_timer_stop('wetdep_ls')
     endif
     
     if ( do_mpas_sna ) then
@@ -711,6 +733,7 @@ contains
 
     !>-- output of MPAS-Smoke
     call mpas_log_write( ' Calculating AOD ')
+    !if  (do_timing) call mpas_timer_start('smoke_diags')
     call mpas_aod_diag(           chem,aod3d,rho_phy,dz8w,num_chem,        &
                                   ids,ide, jds,jde, kds,kde,        &
                                   ims,ime, jms,jme, kms,kme,        &
@@ -725,6 +748,7 @@ contains
                                   ids,ide, jds,jde, kds,kde,        &
                                   ims,ime, jms,jme, kms,kme,        &
                                   its,ite, jts,jte, kts,kte         )
+    !if  (do_timing) call mpas_timer_stop('smoke_diags')
 
 
 
