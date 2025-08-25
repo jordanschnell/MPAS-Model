@@ -103,6 +103,7 @@ contains
     INTEGER     :: ierr
     REAL(RKIND) :: diam_polp_tree, diam_polp_grass, diam_polp_weed
     REAL(RKIND) :: rho_polp_tree, rho_polp_grass, rho_polp_weed
+    REAL(RKIND) :: day_to_sec, piover6
 
 ! Define some constants (TODO, move to data mod or namelist?)
     REAL(RKIND), PARAMETER :: pr_low    = 0._RKIND     ! [mm/day] lowest rainfall
@@ -131,6 +132,9 @@ contains
 
     LOGICAL, PARAMETER :: do_pollen_lightning_rupture = .false.
     LOGICAL, PARAMETER :: do_pollen_rh_rupture = .true.
+
+    day_to_sec = 1._RKIND / hpd / sph
+    piover6    = pi / 6._RKIND
 
   ! Set the densities / diameters based on what is available
   if ( p_polp_tree > 0 ) then
@@ -167,9 +171,9 @@ contains
      ! Compute the rainfall at the current time step (and convert to mm)
        rain  = (rainc(i,j) + rainnc(i,j)) * 1.e3_RKIND
      ! Determine the rainfall factor
-       if ( rain < 0.5 ) then
+       if ( rain < 0.5_RKIND ) then
           fr = 1._RKIND
-       else if ( rain > 1.0) then
+       else if ( rain > 1.0_RKIND) then
           fr = 0._RKIND
        else
           fr = ( 1._RKIND - rain ) / ( 1._RKIND - 0.5_RKIND )
@@ -177,7 +181,7 @@ contains
 
      ! Compute the wind and wind factor
        wind = ( sqrt( u10(i,j)**2._RKIND + v10(i,j)**2._RKIND ) )
-       fw = 1.5_RKIND * ( 1._RKIND -  exp( -1._RKIND * wind/ 5._RKIND ))
+       fw = 1.5_RKIND * ( 1._RKIND -  exp( -1._RKIND * wind * 0.2_RKIND ))
 
      ! Compute the relative humidity factor
        if ( (relhum(i,kts,j) * 100._RKIND) < rh_low ) then
@@ -190,7 +194,7 @@ contains
  
      ! Combine the factors
      ! Emissions are described / day, convert to /sec 
-       fa = fh * fw * fr / sph / hpd
+       fa = fh * fw * fr * day_to_sec
   
      ! Compute the number emissions
        ppemfact_numb_tree  = e_bio_in(i,1,j,index_e_bio_in_polp_tree)  * fa !, 0._RKIND)
@@ -200,11 +204,11 @@ contains
      ! Convert number emissions to mass emissions 
      ! = # * pi/6 * dens * diam^3 * 1.e-9
        ppemfact_mass_tree  = ppemfact_numb_tree  * &
-                             pi/6._RKIND * rho_polp_tree  * diam_polp_tree**3._RKIND * converi
+                             piover6 * rho_polp_tree  * diam_polp_tree**3._RKIND * converi
        ppemfact_mass_grass = ppemfact_numb_grass * &
-                             pi/6._RKIND * rho_polp_grass * diam_polp_grass**3._RKIND * converi
+                             piover6 * rho_polp_grass * diam_polp_grass**3._RKIND * converi
        ppemfact_mass_weed  = ppemfact_numb_weed  * & 
-                             pi/6._RKIND * rho_polp_weed  * diam_polp_weed**3._RKIND * converi
+                             piover6 * rho_polp_weed  * diam_polp_weed**3._RKIND * converi
        ! Calculate the conversion factor
        factaa = dt / ( dz8w(i,kts,j) * rho(i,kts,j) )
 

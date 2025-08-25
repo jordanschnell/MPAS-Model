@@ -4,6 +4,9 @@
  module module_plumerise
 
   use mpas_kind_types
+  use mpas_smoke_config
+  use module_smoke_plumerise
+  use module_zero_plumegen_coms
 !  real(RKIND),parameter :: p1000mb = 100000.  ! p at 1000mb (pascals)
 !- Implementing the fire radiative power (FRP) methodology for biomass burning
 !- emissions and convective energy estimation.
@@ -33,9 +36,6 @@ subroutine ebu_driver (      flam_frac,kfire,ebu_in,ebu,             &
                              its,ite, jts,jte, kts,kte,              & 
                              errmsg, errflg                          ) 
 
-  use mpas_smoke_config
-  use module_zero_plumegen_coms
-  use module_smoke_plumerise
   IMPLICIT NONE
 
    REAL(RKIND), intent(in) :: frp_min, frp_wthreshold, zpbl_lim, uspd_lim

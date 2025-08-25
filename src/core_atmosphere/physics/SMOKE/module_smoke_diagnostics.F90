@@ -36,14 +36,14 @@ contains
   real(RKIND) :: ext
   integer:: i,k,j,nv
 
+  do nv = 1, num_chem
+  if ( nv .eq. p_ch4 ) cycle
+  ext = sc_eff(nv) + ab_eff(nv)
   do j = jts, jte
   do k = kts, kte
   do i = its, ite
-     aod3d(i,k,j) = 0._RKIND
-     do nv = 1, num_chem
-        ext = sc_eff(nv) + ab_eff(nv)
-        aod3d(i,k,j)= aod3d(i,k,j) +  1.e-6_RKIND * ext * chem(i,k,j,nv)*rho_phy(i,k,j)*dz8w(i,k,j)
-     enddo
+     aod3d(i,k,j)= aod3d(i,k,j) +  1.e-6_RKIND * ext * chem(i,k,j,nv)*rho_phy(i,k,j)*dz8w(i,k,j)
+  enddo
   enddo
   enddo
   enddo
@@ -74,12 +74,14 @@ contains
   ! local
    INTEGER :: i,j,k,d
    REAL(RKIND), PARAMETER :: visfactor = 3.912_RKIND
-   REAL :: bc, br, bi, bs, hydro_extcoeff, extcoeff, vis_haze
-   REAL :: tvd, qrh, prob_ext_coeff_gt_p29, haze_ext_coeff
-   REAL :: vis_hydlith, alpha_haze,rhmax
-   REAL :: bg,qcloud2,blcldw2,qrain2,qice2,blcldi2,qsnow2,qgrpl2,extcoeff552,vis_night,zen_fac
-
+   REAL(RKIND) :: bc, br, bi, bs, hydro_extcoeff, extcoeff, vis_haze
+   REAL(RKIND) :: tvd, qrh, prob_ext_coeff_gt_p29, haze_ext_coeff
+   REAL(RKIND) :: vis_hydlith, alpha_haze,rhmax
+   REAL(RKIND) :: bg,qcloud2,blcldw2,qrain2,qice2,blcldi2,qsnow2,qgrpl2,extcoeff552,vis_night,zen_fac
+   REAL(RKIND) :: tiny_number
    REAL(RKIND), DIMENSION(its:ite,jts:jte) :: vis_alpha
+
+   tiny_number = 1.e-12_RKIND
 
    do j = jts,jte
    do i = its,ite
@@ -94,7 +96,8 @@ contains
       extcoeff552 = 0._RKIND
       ! Follwowing UPP: CALVIS_GSD.f, take max of hydrometeors in lowest 3 levels   
       ! - in UPP, only bottom rho_phy is used, shouldn't we use rho_phy from that level (as below)?
-      do k = 1,3
+      k = kts
+!      do k = 1,3
          qcloud2    = qcloud(i,k,j)*rho_phy(i,k,j)*1000._RKIND !max(qcloud2,qcloud(i,k,j)*rho_phy(i,k,j)*1000._RKIND)
          blcldw2    = blcldw(i,k,j)*rho_phy(i,k,j)*1000._RKIND !max(blcldw2,blcldw(i,k,j)*rho_phy(i,k,j)*1000._RKIND)
          qrain2     = qrain(i,k,j)*rho_phy(i,k,j)*1000._RKIND !max(qrain2,qrain(i,k,j)*rho_phy(i,k,j)*1000._RKIND)
@@ -102,27 +105,27 @@ contains
          blcldi2    = blcldi(i,k,j)*rho_phy(i,k,j)*1000._RKIND !max(blcldi2,blcldi(i,k,j)*rho_phy(i,k,j)*1000._RKIND)
          qsnow2     = qsnow(i,k,j)*rho_phy(i,k,j)*1000._RKIND !max(qsnow2,qsnow(i,k,j)*rho_phy(i,k,j)*1000._RKIND)
          qgrpl2     = qgrpl(i,k,j)*rho_phy(i,k,j)*1000._RKIND !max(qgrpl2,qgrpl(i,k,j)*rho_phy(i,k,j)*1000._RKIND)
-         extcoeff552= extcoef55(i,k,j) !max(extcoeff552,extcoeff55(i,k,j))
-      enddo
+         extcoeff552= extcoef55(i,k,j)*1.e-3_RKIND !max(extcoeff552,extcoeff55(i,k,j)) ! JLS - EXT55 is in units = 1/km, covert to 1/m
+!      enddo
 
-      bc = 144.7_RKIND * (qcloud2+blcldw2)  ** 0.88
-      br = 2.24_RKIND  * qrain2  ** 0.75
-      bi = 327.8_RKIND * (qice2+blcldi2)  ** 1.00
-      bs = 10.36_RKIND * qsnow2  ** 0.7776
-      bg = 8.0_RKIND   * qgrpl2  ** 0.7500
+      bc = 144.7_RKIND * (qcloud2+blcldw2)  ** 0.88_RKIND
+      br = 2.24_RKIND  * qrain2  ** 0.75_RKIND
+      bi = 327.8_RKIND * (qice2+blcldi2)  ** 1.00_RKIND
+      bs = 10.36_RKIND * qsnow2  ** 0.7776_RKIND
+      bg = 8.0_RKIND   * qgrpl2  ** 0.7500_RKIND
 
-      hydro_extcoeff=(bc+br+bi+bs+bg)/1000._RKIND ! m^-1
+      hydro_extcoeff=(bc+br+bi+bs+bg)*1.e-3_RKIND ! m^-1
 
 ! TODO, JLS, bring in QV 2M
-      vis_haze=999999.
-      IF (qv(i,1,j) .gt. 0.) THEN
-        vis_haze=1500.*(105.-rh2m(i,j))*(5./min(1000.*qv(i,1,j),5.))
+      vis_haze=999999._RKIND
+      IF (qv(i,1,j) .gt. 0._RKIND) THEN
+        vis_haze=1500._RKIND*(105._RKIND-rh2m(i,j))*(5._RKIND/min(1000._RKIND*qv(i,1,j),5._RKIND))
       ENDIF
 
       ! Follow UPP/CALVIS_GSD, First compute max RH of lowest 2 layers
       rhmax = max( rh(i,1,j), rh(i,2,j) )
-      qrh = max(0.0,min(0.8,(rhmax/100.-0.15)))
-      vis_haze = 90000. * exp(-2.5*qrh) 
+      qrh = max(0._RKIND,min(0.8_RKIND,(rhmax*0.01_RKIND-0.15_RKIND)))
+      vis_haze = 90000._RKIND * exp(-2.5_RKIND*qrh) 
 
       ! Calculate a Weibull function "alpha" term.  This can be
       ! used later with visibility (which acts as the "beta" term
@@ -147,17 +150,17 @@ contains
       ! Calculate visibility from hydro/lithometeors
       ! Maximum visibility -> 999999 meters
       ! --------------------------------------------
-      extcoeff=hydro_extcoeff+extcoeff552/1000. ! JLS - EXT55 is in units = 1/km, covert to 1/m
-      IF (extcoeff .gt. 0.) THEN
-        vis_hydlith=min(visfactor/extcoeff, 999999.)
+      extcoeff=hydro_extcoeff+extcoeff552
+      IF (extcoeff .gt. tiny_number ) THEN
+        vis_hydlith=min(visfactor/extcoeff, 999999._RKIND)
       ELSE
-        vis_hydlith=999999.
+        vis_hydlith=999999._RKIND
       ENDIF
 
       ! -- Dec 2003 - Roy Rasmussen (NCAR) expression for night vs. day vis
       !   1.609 factor is number of km in mile.
       vis_night = 1.69 * ((vis_hydlith/1.609)**0.86) * 1.609
-      zen_fac = min(0.1,max(coszen(i,j),0.))/ 0.1
+      zen_fac = min(0.1,max(coszen(i,j),0.)) * 10._RKIND
       vis_hydlith = zen_fac * vis_hydlith + (1.-zen_fac)*vis_night
 
       ! Calculate total visibility

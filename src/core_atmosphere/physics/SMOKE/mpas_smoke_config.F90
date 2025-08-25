@@ -12,7 +12,7 @@ module mpas_smoke_config
 
   !-- constant paramters
   real(RKIND), parameter :: epsilc     = 1.e-12
-  real(RKIND), parameter :: pi         = 3.1415926
+  real(RKIND), parameter :: pi         = 3.1415926_RKIND
   !-- aerosol module configurations
   integer :: seas_opt = 1  ! GOCART scheme by default (2 = NGAC) 
   integer :: addsmoke_flag = 1
