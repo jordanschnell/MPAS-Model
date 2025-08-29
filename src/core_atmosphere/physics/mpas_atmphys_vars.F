@@ -159,7 +159,7 @@
  integer,public:: num_months          !number of months                                         [-]
 
  integer,public:: num_chem             !Temporary workaround for defining dimensions holding chem data
- integer,public:: kemit,kbio,kfire,kvol!Number of vertical levels in input emission data
+ integer,public:: kemit,kbio,kfire,kvol,krwc!Number of vertical levels in input emission data
 
  integer,public:: num_e_ant_in,num_e_bb_in,num_e_bio_in,num_e_vol_in
  integer,public:: num_e_ant_out,num_e_bb_out,num_e_bio_out,num_e_dust_out,num_e_ss_out,num_e_vol_out
@@ -237,7 +237,7 @@
     tend_chem_settle_p
 ! Dry dep velocitieces, resolved wetdep flux (nchem x ncells)
  real(kind=RKIND),dimension(:,:,:),allocatable:: &
-    ddvel_p, wetdep_resolved_p
+    ddvel_p, wetdep_resolved_p, drydep_flux_p
 ! PM Diags
  real(kind=RKIND),dimension(:,:),allocatable:: &
     vis_p
@@ -271,7 +271,8 @@
     eco_id_p !JR
 ! RWC fields
  real(kind=RKIND),dimension(:,:),allocatable:: &
-    RWC_denominator_p,&
+    RWC_denominator_p
+ real(kind=RKIND),dimension(:,:,:),allocatable:: &
     RWC_annual_sum_p,&
     RWC_annual_sum_smoke_fine_p,&
     RWC_annual_sum_smoke_coarse_p,&

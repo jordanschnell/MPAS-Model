@@ -468,7 +468,7 @@
  type(mpas_pool_type),intent(in):: sfc_input
  type(mpas_pool_type),intent(in):: tend_physics
  type(mpas_pool_type),intent(in):: state
- type(mpas_pool_type),intent(in):: emis_input
+ type(mpas_pool_type),intent(in),optional:: emis_input
 
  integer,intent(in):: its,ite
 
@@ -506,6 +506,7 @@
  integer,pointer:: index_e_ant_in_unspc_fine
  integer,pointer:: drydep_opt
  logical,pointer:: enh_mix
+ character(len=StrKIND),pointer :: config_anthro_scheme
 
       
 !local pointers for MYJ scheme:
@@ -720,11 +721,13 @@
           chem => scalars(chemistry_start:chemistry_end,:,:)
           call mpas_pool_get_config(configs,'config_mynn_enh_mix',enh_mix)
           if (enh_mix) then
-             call mpas_pool_get_array(emis_input, 'e_ant_in', e_ant_in)
-             call mpas_pool_get_dimension(emis_input,'index_e_ant_in_unspc_fine',index_e_ant_in_unspc_fine)
+             call mpas_pool_get_config(configs,'config_anthro_scheme',config_anthro_scheme)
+             if ( config_anthro_scheme .ne. 'off' ) then
+               call mpas_pool_get_array(emis_input, 'e_ant_in', e_ant_in)
+               call mpas_pool_get_dimension(emis_input,'index_e_ant_in_unspc_fine',index_e_ant_in_unspc_fine)
+             endif
              call mpas_pool_get_array(diag_physics,'frp_out',frp_out)
           end if
-       
        endif
 
        do j = jts,jte
@@ -734,20 +737,43 @@
           qsfc_p(i,j) = qsfc(i)
           tsk_p(i,j)  = skintemp(i)
           if ( enh_mix ) then
-             emis_ant_no_p(i,j) = e_ant_in(index_e_ant_in_unspc_fine,kts,i)
+             if ( config_anthro_scheme .ne. 'off') then
+                emis_ant_no_p(i,j) = e_ant_in(index_e_ant_in_unspc_fine,kts,i)
+             else
+                emis_ant_no_p(i,j) = 0._RKIND
+             endif
              frp_out_p(i,j)     = frp_out(i)
           endif
-          if ( num_chem .gt. 0 ) then
-             if ( drydep_opt .ne. 0 ) then
-                do n = 1,num_chem
-                  ddvel_p(i,j,n) = ddvel(n,i)
-                enddo
-             else
-                  ddvel_p(i,j,:) = 0._RKIND
-             endif
+       enddo
+       enddo
+  ! Chemistry
+       if ( num_chem .gt. 0 ) then
+       do n = 1,num_chem
+       do j = jts,jte
+       do i = its,ite
+          if ( drydep_opt .ne. 0 ) then
+               ddvel_p(i,j,n) = ddvel(n,i)
+          else
+               ddvel_p(i,j,:) = 0._RKIND
           endif
        enddo
        enddo
+       enddo    
+       do n = 1,num_chem
+       do j = jts,jte
+       do k = kts,kte
+       do i = its,ite
+          chem_p(i,k,j,n) = chem(n,k,i)
+          if ( drydep_opt .ne. 0 ) then
+             tend_chem_settle_p(i,k,j,n) = tend_chem_settle(n,k,i)
+          else
+             tend_chem_settle_p(i,k,j,n) = 0._RKIND
+          endif
+       enddo
+       enddo
+       enddo
+       enddo
+       endif ! chem
 
        do j = jts,jte
        do k = kts,kte
@@ -786,18 +812,11 @@
           rnwfablten_p(i,k,j) = 0._RKIND
 
           pattern_spp_pbl(i,k,j) = 0._RKIND
-          if ( num_chem .gt. 0) then
-             do n = 1, num_chem
-                chem_p(i,k,j,n) = chem(n,k,i)
-                if ( drydep_opt .ne. 0 ) then
-                   tend_chem_settle_p(i,k,j,n) = tend_chem_settle(n,k,i)
-                else
-                   tend_chem_settle_p(i,k,j,n) = 0._RKIND
-                endif
-             enddo
-          endif
        enddo
        enddo
+       enddo
+
+       do j = jts,jte
        do i = its,ite
           maxwidthbl_p(i,j) = 0._RKIND
           maxmfbl_p(i,j)    = 0._RKIND
@@ -1118,6 +1137,15 @@
           call mpas_pool_get_dimension(state, 'chemistry_start', chemistry_start)
           call mpas_pool_get_dimension(state, 'chemistry_end', chemistry_end)
           chem => scalars(chemistry_start:chemistry_end,:,:)
+          do n = 1,num_chem
+          do j = jts,jte
+          do k = kts,kte
+          do i = its,ite
+               chem(n,k,i)    = chem_p(i,k,j,n)
+          enddo
+          enddo
+          enddo
+          enddo
        endif
 
        do j = jts,jte
@@ -1162,11 +1190,6 @@
 
           rqsblten(k,i)   = rqsblten_p(i,k,j)
 
-          if ( num_chem .gt. 0 ) then
-             do n = 1,num_chem
-                chem(n,k,i)    = chem_p(i,k,j,n)
-             enddo
-          endif
        enddo
        enddo
        enddo
@@ -1280,7 +1303,7 @@
  type(mpas_pool_type),intent(in):: configs
  type(mpas_pool_type),intent(in):: mesh
  type(mpas_pool_type),intent(inout):: state
- type(mpas_pool_type),intent(in)::emis_input
+ type(mpas_pool_type),intent(in),optional::emis_input
 
  integer,intent(in):: its,ite
  integer,intent(in):: itimestep

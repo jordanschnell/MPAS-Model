@@ -834,10 +834,19 @@
        call mpas_pool_get_array(tend_physics,'rvcuten'   ,rvcuten   )
 ! JLS
        if ( num_chem .gt. 0 ) then
-           call mpas_pool_get_array(state,'scalars',scalars,1)
-           call mpas_pool_get_dimension(state, 'chemistry_start', chemistry_start)
-           call mpas_pool_get_dimension(state, 'chemistry_end', chemistry_end)
-           chem => scalars(chemistry_start:chemistry_end,:,:)
+          call mpas_pool_get_array(state,'scalars',scalars,1)
+          call mpas_pool_get_dimension(state, 'chemistry_start', chemistry_start)
+          call mpas_pool_get_dimension(state, 'chemistry_end', chemistry_end)
+          chem => scalars(chemistry_start:chemistry_end,:,:)
+          do n = 1,num_chem
+          do j = jts,jte
+          do k = kts,kte
+          do i = its,ite
+                chem_p(i,k,j,n) = chem(n,k,i)
+          enddo
+          enddo
+          enddo
+          enddo
        endif
 
        do j = jts,jte
@@ -878,11 +887,6 @@
              cldfrac_cu_p(i,k,j)= cldfrac_cu(k,i)
              refl10cm_cu_p(i,k,j)= refl10cm_cu(k,i)
 
-             if ( num_chem .gt. 0 ) then
-                do n = 1,num_chem
-                   chem_p(i,k,j,n) = chem(n,k,i)
-                enddo
-             endif
           enddo
        enddo
        enddo
@@ -1087,10 +1091,19 @@
        call mpas_pool_get_array(mesh,'bdyMaskCell',bdyMaskCell)
 
        if ( num_chem .gt. 0 ) then
-           call mpas_pool_get_array(state,'scalars',scalars,1)
-           call mpas_pool_get_dimension(state, 'chemistry_start', chemistry_start)
-           call mpas_pool_get_dimension(state, 'chemistry_end', chemistry_end)
-           chem => scalars(chemistry_start:chemistry_end,:,:)
+          call mpas_pool_get_array(state,'scalars',scalars,1)
+          call mpas_pool_get_dimension(state, 'chemistry_start', chemistry_start)
+          call mpas_pool_get_dimension(state, 'chemistry_end', chemistry_end)
+          chem => scalars(chemistry_start:chemistry_end,:,:)
+          do n = 1,num_chem
+          do j = jts,jte
+          do k = kts,kte
+          do i = its,ite
+              chem(n,k,i) = chem_p(i,k,j,n)
+          enddo
+          enddo
+          enddo
+          enddo
        endif
 
        do j = jts,jte
@@ -1114,12 +1127,6 @@
 
              cldfrac_cu (k,i)  = cldfrac_cu_p(i,k,j)
              refl10cm_cu(k,i)  = refl10cm_cu_p(i,k,j)
-             ! JLS
-             if ( num_chem .gt. 0 ) then
-                do n = 1,num_chem
-                   chem(n,k,i) = chem_p(i,k,j,n)
-                enddo
-             endif
           enddo
        enddo
        enddo

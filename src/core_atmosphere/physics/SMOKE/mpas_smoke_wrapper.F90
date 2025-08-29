@@ -14,7 +14,7 @@ module mpas_smoke_wrapper
    use module_wildfire_smoke_emissions 
    use module_add_emiss_burn, only : add_emis_burn
    use dep_dry_simple_mod,    only : dry_dep_driver_simple
-   use dep_dry_mod_emerson,   only : dry_dep_driver_emerson
+   use dep_dry_mod_emerson,   only : dry_dep_driver_emerson, particle_settling_wrapper 
    use dep_data_mod,          only : aero_dry_dep_init
    use rad_data_mod,          only : aero_rad_init
    use module_wetdep_ls,      only : wetdep_ls
@@ -79,7 +79,7 @@ contains
            e_ant_out, e_bb_out, e_bio_out, e_dust_out, e_ss_out, e_vol_out,                  &
            num_e_ant_in, num_e_bb_in, num_e_bio_in, num_e_vol_in,                            &
            num_e_ant_out, num_e_bb_out, num_e_bio_out,                                       &
-           num_e_dust_out, num_e_ss_out, num_e_vol_out,                                      &
+           num_e_dust_out, num_e_ss_out, num_e_vol_out   , drydep_flux           ,           &
            ddvel                 , wetdep_resolved       , tend_chem_settle      ,           & 
            do_mpas_smoke         , do_mpas_dust          , do_mpas_pollen        ,           &
            do_mpas_anthro        , do_mpas_ssalt         , do_mpas_volc          ,           &
@@ -223,7 +223,8 @@ contains
     integer,intent(inout),dimension(ims:ime,jms:jme),optional      :: min_bb_plume, max_bb_plume
 ! 2D + chem output arrays
     real(RKIND),intent(inout), dimension(ims:ime, jms:jme, 1:num_chem),optional :: wetdep_resolved
-    real(RKIND),intent(inout), dimension(ims:ime, jms:jme, 1:num_chem),optional :: ddvel
+    real(RKIND),intent(inout), dimension(ims:ime, jms:jme, 1:num_chem),optional :: drydep_flux
+    real(RKIND),intent(out),   dimension(ims:ime, jms:jme, 1:num_chem),optional :: ddvel
 ! 2D output arrays
     real(RKIND),intent(inout), dimension(ims:ime, jms:jme),optional                   :: vis
 ! 3D output emissions
@@ -293,9 +294,8 @@ contains
     real(RKIND), parameter                            :: conv_frpi   = 1.e-06_RKIND  ! FRP conversion factor, MW to W
     real(RKIND), parameter                            :: conv_frei   = 1.e-06_RKIND  ! FRE conversion factor, MW-s to W-s
 !>- Dry deposition - temporary - move to output 
-    real(RKIND), dimension(ims:ime, jms:jme, 1:num_chem)          :: drydep_flux_local
-!    real(RKIND), dimension(ims:ime, kms:kme, jms:jme, 1:num_chem) :: vgrav     ! gravitational settling velocit
-    real(RKIND), dimension(ims:ime, kms:kme, jms:jme)             :: thetav
+    real(RKIND), dimension(ims:ime, kms:kme, jms:jme, 1:num_chem) :: vg     ! gravitational settling velocit
+    real(RKIND), dimension(ims:ime, kms:kme, jms:jme)             :: thetav, dz8w_flip
 !> -- other
     real(RKIND)    :: theta
     real(RKIND)    :: curr_secs
@@ -364,7 +364,8 @@ contains
         xland,xlat,xlong,ivgtyp,isltyp,landusef,                            & ! JLS TODO LANDUSEF /= VEGFRA?
         snowh,u10,v10,wind10m,t2m,dpt2m,mavail,hwp,hwp_day_avg,             &
         index_e_bb_in_smoke_fine,num_e_bb_in,kfire,e_bb_in,                 &
-        t_phy,u_phy,v_phy,p_phy,pi_phy,z_at_w,                              &     
+        t_phy,u_phy,v_phy,p_phy,pi_phy,z_at_w,                              &    
+        dz8w,dz8w_flip,                                                     & 
         rho_phy,qv,relhum,rh2m,rri,                                         &
         total_flashrate,                                                    &
         wind_phy,theta_phy,zmid,kpbl_thetav,                                &
@@ -524,8 +525,8 @@ contains
                  ebu,                                                 &
                  e_bb_in(:,:,:,index_e_bb_in_smoke_coarse),           &
                  ebu_coarse,                                          &
-                 e_bb_in(:,:,:,index_e_bb_in_ch4),                    &
-                 ebu_ch4,                                             &
+!                 e_bb_in(:,:,:,index_e_bb_in_ch4),                    &
+!                 ebu_ch4,                                             &
                  theta_phy,qv,                                        &
                  rho_phy,vvel,u_phy,v_phy,pi_phy,wind_phy,            &
                  z_at_w,zmid,g,cp,rd,                                 &
@@ -683,13 +684,19 @@ contains
      ! Set up the arrays if this is the first time through
      call mpas_log_write( ' Calling dry_dep_driver_emerson')
      call dry_dep_driver_emerson(rmol,ust,znt,num_chem,ddvel,         &
-        chem,dz8w,snowh,t_phy,p_phy,rho_phy,ivgtyp,g,dt,        &
-        drydep_flux_local,tend_chem_settle,dbg_opt,                   &
-        pm_settling,                                                  &
+        chem,dz8w,snowh,t_phy,p_phy,rho_phy,ivgtyp,g,dt,              &
+        drydep_flux,tend_chem_settle,dbg_opt,                         &
+        pm_settling,vg,                                               &
         ids,ide, jds,jde, kds,kde,                                    &
         ims,ime, jms,jme, kms,kme,                                    &
-        its,ite, jts,jte, kts,kte, curr_secs, xlat, xlong             )
+        its,ite, jts,jte, kts,kte, curr_secs                          )
     if  (do_timing) call mpas_timer_stop('drydep_driver')
+    if  (do_timing) call mpas_timer_start('settling')
+    if (pm_settling .gt. 0 ) then
+     call particle_settling_wrapper(tend_chem_settle,chem,rho_phy,dz8w_flip,vg,   &
+                 dt,kts,kte,its,ite,jts,jte,num_chem,ims,ime, jms,jme, kms,kme    )
+    endif
+    if  (do_timing) call mpas_timer_stop('settling')
     !>-- compute dry deposition based on simple parameterization (HRRR-Smoke)
     elseif (drydep_opt == 2) then
      call dry_dep_driver_simple(rmol,ust,ndvel,ddvel,                 &
@@ -790,6 +797,7 @@ contains
         snowh,u10,v10,wind10m,t2m,dpt2m,wetness,hwp,hwp_day_avg,            &
         index_e_bb_in_smoke_fine,num_e_bb_in,kfire,e_bb_in,                 &
         t_phy,u_phy,v_phy,p_phy,pi_phy,z_at_w,                              &
+        dz8w,dz8w_flip,                                                     &
         rho_phy,qv,relhum,rh2m,rri,                                         &
         total_flashrate,                                                    &
         wind_phy,theta_phy,zmid,kpbl_thetav,                                &
@@ -797,7 +805,7 @@ contains
         lu_nofire, lu_qfire, lu_sfire, fire_type,                           &
         ids,ide, jds,jde, kds,kde,                                          &
         ims,ime, jms,jme, kms,kme,                                          &
-        its,ite, jts,jte, kts,kte)
+        its,ite, jts,jte, kts,kte                                           )
 
     !intent arguments:
     integer,intent(in):: ids,ide,jds,jde,kds,kde,                           &
@@ -814,9 +822,9 @@ contains
     real(RKIND),intent(in),   dimension(ims:ime, jms:jme) :: xland, xlat, xlong,                   &
                                         snowh, u10, v10, t2m, dpt2m, wetness
     real(RKIND),intent(in),   dimension(ims:ime, kms:kme, jms:jme) :: qv, z_at_w,                  &
-                                        p_phy, t_phy, u_phy, v_phy, pi_phy, rho_phy
+                                        p_phy, t_phy, u_phy, v_phy, pi_phy, rho_phy, dz8w
     real(RKIND),intent(out),  dimension(ims:ime, kms:kme, jms:jme) :: zmid, wind_phy,theta_phy,   &
-                                       relhum, rri
+                                       relhum, rri, dz8w_flip
     integer    ,intent(out),  dimension(ims:ime, jms:jme) :: fire_type, kpbl_thetav
     real(RKIND),intent(out),  dimension(ims:ime, jms:jme) :: lu_nofire, lu_qfire, lu_sfire
     real(RKIND),intent(out),  dimension(ims:ime, jms:jme) :: fire_hist, peak_hr, hwp_day_avg
@@ -904,6 +912,7 @@ contains
     do i = its,ite
        theta = t_phy(i,k,j) * (1.E5_RKIND/p_phy(i,k,j))**0.286_RKIND
        thetav(i,k,j) = theta * (1._RKIND + 0.61_RKIND * qv(i,k,j))
+       dz8w_flip(i,k,j)   = dz8w(i,kte-k+kts,j)
     enddo
     enddo
     enddo

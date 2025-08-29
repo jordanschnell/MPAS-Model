@@ -34,8 +34,10 @@ contains
   REAL(RKIND), DIMENSION(ims:ime,kms:kme,jms:jme), INTENT(INOUT) :: aod3d
   
   real(RKIND) :: ext
-  integer:: i,k,j,nv
 
+  integer:: i,k,j,nv
+  
+  aod3d(:,:,:) = 0._RKIND
   do nv = 1, num_chem
   if ( nv .eq. p_ch4 ) cycle
   ext = sc_eff(nv) + ab_eff(nv)

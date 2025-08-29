@@ -415,7 +415,7 @@
  integer,pointer:: nMonths
  integer,pointer:: nAerosols,nAerLevels,nOznLevels
  integer,pointer:: nCellsSolve,nSoilLevels,nVertLevels,nlcat,nscat
- integer,pointer:: nChem,nkemit,nkfire,nkbio,nkvol
+ integer,pointer:: nChem,nkemit,nkfire,nkbio,nkvol,nkrwc
  integer,pointer:: n_e_ant_in,n_e_bb_in,n_e_bio_in,n_e_vol_in
  integer,pointer:: n_e_ant_out,n_e_bb_out,n_e_bio_out,n_e_dust_out,n_e_ss_out,n_e_vol_out
 
@@ -467,6 +467,7 @@
  call mpas_pool_get_dimension(mesh,'nkfire'    ,nkfire      )
  call mpas_pool_get_dimension(mesh,'nkbio'     ,nkbio       )
  call mpas_pool_get_dimension(mesh,'nkvol'     ,nkvol       )
+ call mpas_pool_get_dimension(mesh,'nkrwc'     ,nkrwc       )
 
  call mpas_pool_get_dimension(diag_physics, 'num_e_ant_out',n_e_ant_out  )
  call mpas_pool_get_dimension(diag_physics, 'num_e_bb_out',n_e_bb_out    )
@@ -712,6 +713,7 @@
  kfire       = nkfire
  kbio        = nkbio
  kvol        = nkvol
+ krwc        = nkrwc
 !
  num_e_ant_in= n_e_ant_in
  num_e_bb_in = n_e_bb_in

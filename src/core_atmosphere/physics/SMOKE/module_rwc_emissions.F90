@@ -72,11 +72,10 @@ contains
    do i = its, ite
      ! Is it cold enough to emit wood burning emissions?
       if ( t_phy(i,k,j) .lt. rwc_t_thresh ) then
-     !     Conversion factor for aerosol emissions (ug/m2/s) --> ug/kg
-           conv_aer = dt / (rho_phy(i,k,j) *  dz8w(i,k,j))
-     !     Conversion factor for gas phase emissions (mol/m2/s) --> ppm/ppm
-           conv_gas = 60._RKIND * 1.E6_RKIND * 4.828E-4_RKIND * dt / ( rho_phy(i,k,j) * dz8w(i,k,j) )
-     !
+        ! Conversion factor for aerosol emissions (ug/m2/s) --> ug/kg
+         conv_aer = dt / (rho_phy(i,k,j) *  dz8w(i,k,j))
+        ! Conversion factor for gas phase emissions (mol/m2/s) --> ppm/ppm
+         conv_gas = 60._RKIND * 1.E6_RKIND * 4.828E-4_RKIND * dt / ( rho_phy(i,k,j) * dz8w(i,k,j) )
         ! Convert temperature to Fahrenheit
          t_phy_f = 9._RKIND/5._RKIND * (t_phy(i,k,j)-273.15_RKIND) + 32._RKIND
         ! Calculate the fraction of total emisisons based on the linear equation: TODO, make coefficients namelist?

@@ -382,7 +382,7 @@
        call allocate_pbl(block%configs)
 !$OMP PARALLEL DO
        do thread=1,nThreads
-          call driver_pbl(itimestep,block%configs,state,mesh,sfc_input,diag_physics,tend_physics, emis_input, &
+          call driver_pbl(itimestep,block%configs,state,mesh,sfc_input,diag_physics,tend_physics,emis_input, &
                           cellSolveThreadStart(thread),cellSolveThreadEnd(thread))
        end do
 !$OMP END PARALLEL DO

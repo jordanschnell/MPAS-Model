@@ -10,7 +10,7 @@ module rad_data_mod
   public :: aero_rad_init
 
 ! Arrays to hold scattering and absorbing efficiencies of aerosols
-  real(RKIND), dimension(1000), save :: sc_eff, ab_eff
+  real(RKIND), dimension(1000), save :: sc_eff, ab_eff, improve_eff
 
   contains
 
@@ -19,8 +19,9 @@ module rad_data_mod
 
       sc_eff(:) = 0._RKIND
       ab_eff(:) = 0._RKIND
+      improve_eff(:) = 0._RKIND
+
 ! Mass scattering efficencies from Hand and Malm, (2007)
-! Maybe use IMPROVE instead?
       if (p_smoke_fine>0)     sc_eff(p_smoke_fine)       = 3.9_RKIND
       if (p_smoke_coarse>0)   sc_eff(p_smoke_coarse)     = 2.6_RKIND
       if (p_dust_fine>0)      sc_eff(p_dust_fine)        = 3.3_RKIND
@@ -39,7 +40,7 @@ module rad_data_mod
       if (p_pols_tree>0)      sc_eff(p_pols_tree)        = 3.9_RKIND
       if (p_pols_grass>0)     sc_eff(p_pols_grass)       = 3.9_RKIND
       if (p_pols_weed>0)      sc_eff(p_pols_weed)        = 3.9_RKIND
-! Mass Absorbing efficiencies from 
+! Mass Absorbing efficiencies from HRRR-Smoke 
       if (p_smoke_fine>0)    ab_eff(p_smoke_fine)        = 0.5_RKIND 
       if (p_smoke_coarse>0)  ab_eff(p_smoke_coarse)      = 0.0_RKIND
       if (p_dust_fine>0)     ab_eff(p_dust_fine)         = 0.0_RKIND
@@ -58,8 +59,27 @@ module rad_data_mod
       if (p_pols_tree>0)     ab_eff(p_pols_tree)         = 0.0_RKIND
       if (p_pols_grass>0)    ab_eff(p_pols_grass)        = 0.0_RKIND
       if (p_pols_weed>0)     ab_eff(p_pols_weed)         = 0.0_RKIND
+! Extinction from IMPROVE ALGORITHM
+      if (p_smoke_fine>0)     improve_eff(p_smoke_fine)       = 6.1_RKIND
+      if (p_smoke_coarse>0)   improve_eff(p_smoke_coarse)     = 0.6_RKIND
+      if (p_dust_fine>0)      improve_eff(p_dust_fine)        = 1.0_RKIND
+      if (p_unspc_fine>0)     improve_eff(p_unspc_fine)       = 1.0_RKIND
+      if (p_dust_coarse>0)    improve_eff(p_dust_coarse)      = 0.6_RKIND
+      if (p_unspc_coarse>0)   improve_eff(p_unspc_coarse)     = 0.6_RKIND
+      if (p_ssalt_fine>0)     improve_eff(p_ssalt_fine)       = 1.7_RKIND
+      if (p_ssalt_coarse>0)   improve_eff(p_ssalt_coarse)     = 1.7_RKIND
+!
+      if (p_polp_all>0)       improve_eff(p_polp_all)         = 0.6_RKIND
+      if (p_polp_tree>0)      improve_eff(p_polp_tree)        = 0.6_RKIND
+      if (p_polp_grass>0)     improve_eff(p_polp_grass)       = 0.6_RKIND
+      if (p_polp_weed>0)      improve_eff(p_polp_weed)        = 0.6_RKIND
+!
+      if (p_pols_all>0)       improve_eff(p_pols_all)         = 6.1_RKIND 
+      if (p_pols_tree>0)      improve_eff(p_pols_tree)        = 6.1_RKIND
+      if (p_pols_grass>0)     improve_eff(p_pols_grass)       = 6.1_RKIND
+      if (p_pols_weed>0)      improve_eff(p_pols_weed)        = 6.1_RKIND
 
-      !write(*,*) 'JLS, radiation parameters initialized',sc_eff,ab_eff
+      !write(*,*) 'JLS, radiation parameters initialized',improve_eff,ab_eff
 
    end subroutine aero_rad_init
 

@@ -119,7 +119,6 @@ contains
         emis = conv_gas*e_ant_in(i,k,j,index_e_ant_in_ch4)
         chem(i,k,j,p_ch4) = chem(i,k,j,p_ch4) + emis
         e_ant_out(i,k,j,index_e_ant_out_ch4) = e_ant_out(i,k,j,index_e_ant_out_ch4) + emis
-        !write(*,*) 'JLS, ch4 emissions, new val = ', emis, chem(i,k,j,p_ch4)
       endif
 
       if (p_no3_a_fine   .gt. 0) chem(i,k,j,p_no3_a_fine)   = chem(i,k,j,p_no3_a_fine)   + conv_aer*e_ant_in(i,k,j,index_e_ant_in_no3_a_fine)
@@ -133,23 +132,6 @@ contains
    enddo ! i
    enddo ! k
    enddo ! j
-
-!   if ( do_online_rwc_emis ) then
-!      do j = jts, jte
-!      do i = its, ite
-!         if ( t_phy(i,kts,j) .lt. rwc_t_thresh ) then
-!            frac = (42.12_RKIND - 0.79_RKIND*t_min_in(i,kts,j)) / summed_min_temperature_rwc(i,j)
-!            if (p_smoke_fine   .gt. 0 .and. index_e_ant_out_smoke_fine .gt. 0 ) then
-!               emis = conv_aer * frac * RWC_total_emissions_smoke_fine(i,j)
-!               e_ant_out(i,k,j,index_e_ant_out_smoke_fine) = emis
-!            endif
-!            if (p_smoke_coarse   .gt. 0 .and. index_e_ant_out_smoke_coarse .gt. 0 ) then
-!               emis = conv_aer * frac * RWC_total_emissions_smoke_coarse(i,j)
-!               e_ant_out(i,k,j,index_e_ant_out_smoke_coarse) = emis
-!            endif
-!      enddo
-!      enddo        
-!   endif
 
   end subroutine mpas_smoke_anthro_emis_driver
 

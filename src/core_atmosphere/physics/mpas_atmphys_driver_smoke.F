@@ -163,11 +163,11 @@
 
  if ( online_rwc_emis .gt. 0 ) then
       if(.not.allocated(RWC_denominator_p))               allocate(RWC_denominator_p(ims:ime,jms:jme))
-      if(.not.allocated(RWC_annual_sum_p))                allocate(RWC_annual_sum_p(ims:ime,jms:jme))
-      if(.not.allocated(RWC_annual_sum_smoke_fine_p))     allocate(RWC_annual_sum_smoke_fine_p(ims:ime,jms:jme))
-      if(.not.allocated(RWC_annual_sum_smoke_coarse_p))   allocate(RWC_annual_sum_smoke_coarse_p(ims:ime,jms:jme))
-      if(.not.allocated(RWC_annual_sum_unspc_fine_p))     allocate(RWC_annual_sum_unspc_fine_p(ims:ime,jms:jme))
-      if(.not.allocated(RWC_annual_sum_unspc_coarse_p))   allocate(RWC_annual_sum_unspc_coarse_p(ims:ime,jms:jme))
+      if(.not.allocated(RWC_annual_sum_p))                allocate(RWC_annual_sum_p(ims:ime,1:krwc,jms:jme))
+      if(.not.allocated(RWC_annual_sum_smoke_fine_p))     allocate(RWC_annual_sum_smoke_fine_p(ims:ime,1:krwc,jms:jme))
+      if(.not.allocated(RWC_annual_sum_smoke_coarse_p))   allocate(RWC_annual_sum_smoke_coarse_p(ims:ime,1:krwc,jms:jme))
+      if(.not.allocated(RWC_annual_sum_unspc_fine_p))     allocate(RWC_annual_sum_unspc_fine_p(ims:ime,1:krwc,jms:jme))
+      if(.not.allocated(RWC_annual_sum_unspc_coarse_p))   allocate(RWC_annual_sum_unspc_coarse_p(ims:ime,1:krwc,jms:jme))
  endif
 
  if ( config_dust_scheme .ne. 'off' ) then
@@ -186,6 +186,7 @@
  if ( drydep_opt .ne. 0 ) then
     if(.not.allocated(tend_chem_settle_p))   allocate(tend_chem_settle_p(ims:ime,kms:kme,jms:jme,1:num_chem))
     if(.not.allocated(ddvel_p))              allocate(ddvel_p(ims:ime,jms:jme,1:num_chem))
+    if(.not.allocated(drydep_flux_p))        allocate(drydep_flux_p(ims:ime,jms:jme,1:num_chem))
  endif
 
  if(.not.allocated(chem_p))               allocate(chem_p(ims:ime,kms:kme,jms:jme,1:num_chem))
@@ -309,6 +310,7 @@
 
  if(allocated(ddvel_p)       )        deallocate(ddvel_p)
  if(allocated(wetdep_resolved_p)   )  deallocate(wetdep_resolved_p)
+ if(allocated(drydep_flux_p)   )  deallocate(drydep_flux_p)
  if(allocated(tend_chem_settle_p))    deallocate(tend_chem_settle_p)
 
  if(allocated(chem_p)     )           deallocate(chem_p)
@@ -367,15 +369,14 @@
       real(kind=RKIND),dimension(:,:),pointer    :: landusef
       real(kind=RKIND),dimension(:,:),pointer    :: smois,tslb
       real(kind=RKIND),dimension(:,:),pointer    :: zgrid
-      real(kind=RKIND),dimension(:,:),pointer    :: ddvel
       real(kind=RKIND),dimension(:,:),pointer    :: qc_bl, qi_bl
-      real(kind=RKIND),dimension(:,:),pointer    :: wetdep_resolved
+      real(kind=RKIND),dimension(:,:),pointer    :: wetdep_resolved, drydep_flux
       real(kind=RKIND),dimension(:,:),pointer    :: nifa,nwfa  ! already made avaialbe in forallpysics/interface
       real(kind=RKIND),dimension(:,:),pointer    :: hno3_bkgd
-      real(kind=RKIND),dimension(:,:,:),pointer  :: tend_chem_settle
       real(kind=RKIND),dimension(:),pointer      :: frp_in, frp_out, fre_in, fre_out, &
                                                     hwp, coef_bb_dc, fire_end_hr, fire_ef_out
-      real(kind=RKIND),dimension(:),pointer      :: RWC_denominator, RWC_annual_sum, RWC_annual_sum_smoke_fine, &
+      real(kind=RKIND),dimension(:),pointer      :: RWC_denominator
+      real(kind=RKIND),dimension(:,:), pointer   :: RWC_annual_sum, RWC_annual_sum_smoke_fine, &
                                                     RWC_annual_sum_smoke_coarse,RWC_annual_sum_unspc_fine, RWC_annual_sum_unspc_coarse
       real(kind=RKIND),dimension(:,:),pointer    :: totprcp_prev24, hwp_prev24, frp_prev24, fre_prev24, fmc_prev24
       real(kind=RKIND),dimension(:),pointer      :: efs_smold,efs_flam, efs_rsmold !JR eco regiona nd EF map
@@ -483,9 +484,8 @@
       if ( wetdep_ls_opt .ne. 0 ) then 
          call mpas_pool_get_array(diag_physics,'wetdep_resolved',wetdep_resolved)
       endif
-      if ( drydep_opt .ne. 0 ) then
-         call mpas_pool_get_array(tend_physics,'tend_chem_settle',tend_chem_settle)
-         call mpas_pool_get_array(diag_physics,'ddvel',ddvel)
+      if (drydep_opt .ne. 0 ) then
+         call mpas_pool_get_array(diag_physics,'drydep_flux',drydep_flux)
       endif
 
       if ( config_sna_scheme .ne. 'off' ) then
@@ -525,7 +525,7 @@
          call mpas_pool_get_array(diag_physics,'RWC_denominator',RWC_denominator)
          call mpas_pool_get_array(diag_physics,'RWC_annual_sum',RWC_annual_sum)
          call mpas_pool_get_array(diag_physics,'RWC_annual_sum_smoke_fine',RWC_annual_sum_smoke_fine)
-         call mpas_pool_get_array(diag_physics,'RWC_annual_sum_smoke_coarsea',RWC_annual_sum_smoke_coarse)
+         call mpas_pool_get_array(diag_physics,'RWC_annual_sum_smoke_coarse',RWC_annual_sum_smoke_coarse)
          call mpas_pool_get_array(diag_physics,'RWC_annual_sum_unspc_fine',RWC_annual_sum_unspc_fine)
          call mpas_pool_get_array(diag_physics,'RWC_annual_sum_unspc_coarse',RWC_annual_sum_unspc_coarse)
       endif
@@ -583,7 +583,20 @@
       endif
      
       chem => scalars(chemistry_start:chemistry_end,:,:)
-     
+    
+      do n = 1, num_chem
+      do j = jts, jte
+      do k = kts, kte
+      do i = its, ite
+            chem_p(i,k,j,n) = max(1.e-12_RKIND,chem(n,k,i))
+            if ( drydep_opt .ne. 0 ) then
+               tend_chem_settle_p(i,k,j,n) = 0._RKIND
+            endif
+      enddo
+      enddo
+      enddo
+      enddo
+ 
       do j = jts, jte
       do k = kts, kte
       do i = its, ite
@@ -591,69 +604,71 @@
          cldfrac_p(i,k,j)    = cldfrac(k,i)
          qcbl_p(i,k,j)     = qc_bl(k,i)
          qibl_p(i,k,j)     = qi_bl(k,i)
-         if ( config_sna_scheme .ne. 'off' ) then ! .or. config_indfdb
-             nifa_p(i,k,j)   = nifa(k,i)
-             nwfa_p(i,k,j)   = nwfa(k,i)
-             hno3_bkgd_p(i,k,j) = hno3_bkgd(k,i)
-         endif
-         do n = 1, num_chem
-            chem_p(i,k,j,n) = max(1.e-12_RKIND,chem(n,k,i))
-            if ( drydep_opt .ne. 0 ) then
-               tend_chem_settle_p(i,k,j,n) = 0._RKIND
-            endif
-         enddo
+         aod3d_p(i,k,j)    = 0._RKIND
       enddo
       enddo
       enddo
-     
-     if ( num_e_ant_in .gt. 0 ) then
-      do j = jts, jte
-      do k = 1, kemit
-      do i = its, ite
-      do n = 1, num_e_ant_in
-         e_ant_in_p(i,k,j,n) = e_ant_in(n,k,i)
-      enddo
-      enddo
-      enddo
-      enddo
-     endif
+! Thompson/Nwifa 
+      if ( config_sna_scheme .ne. 'off' ) then ! .or. config_indfdb
+       do j = jts, jte
+       do k = kts, kte
+       do i = its, ite
+              nifa_p(i,k,j)   = nifa(k,i)
+              nwfa_p(i,k,j)   = nwfa(k,i)
+              hno3_bkgd_p(i,k,j) = hno3_bkgd(k,i)
+       enddo
+       enddo
+       enddo
+      endif
+      
+      if ( num_e_ant_in .gt. 0 ) then
+       do n = 1, num_e_ant_in
+       do j = jts, jte
+       do k = 1, kemit
+       do i = its, ite
+          e_ant_in_p(i,k,j,n) = e_ant_in(n,k,i)
+       enddo
+       enddo
+       enddo
+       enddo
+      endif
 !
-     if ( num_e_bb_in .gt. 0 ) then 
-      do j = jts, jte
-      do k = 1, kfire
-      do i = its, ite
-      do n = 1, num_e_bb_in
-         e_bb_in_p(i,k,j,n) = e_bb_in(n,k,i)
-      enddo
-      enddo
-      enddo
-      enddo
-     endif
+      if ( num_e_bb_in .gt. 0 ) then 
+       do n = 1, num_e_bb_in
+       do j = jts, jte
+       do k = 1, kfire
+       do i = its, ite
+          e_bb_in_p(i,k,j,n) = e_bb_in(n,k,i)
+       enddo
+       enddo
+       enddo
+       enddo
+      endif
 !
-    if ( num_e_bio_in .gt. 0 ) then     
-      do j = jts, jte
-      do k = 1, kbio
-      do i = its, ite
-      do n = 1, num_e_bio_in
-         e_bio_in_p(i,k,j,n) = e_bio_in(n,k,i)
-      enddo
-      enddo
-      enddo
-      enddo
-     endif
+      if ( num_e_bio_in .gt. 0 ) then     
+       do n = 1, num_e_bio_in
+       do j = jts, jte
+       do k = 1, kbio
+       do i = its, ite
+          e_bio_in_p(i,k,j,n) = e_bio_in(n,k,i)
+       enddo
+       enddo
+       enddo
+       enddo
+      endif
      
-     if ( num_e_vol_in .gt. 0 ) then
-      do j = jts, jte
-      do k = 1, kvol
-      do i = its, ite
-      do n = 1, num_e_vol_in
-         e_vol_in_p(i,k,j,n) = e_vol_in(n,k,i)
-      enddo
-      enddo
-      enddo
-      enddo
-    endif
-     
+      if ( num_e_vol_in .gt. 0 ) then
+        do n = 1, num_e_vol_in
+        do j = jts, jte
+        do k = 1, kvol
+        do i = its, ite
+           e_vol_in_p(i,k,j,n) = e_vol_in(n,k,i)
+        enddo
+        enddo
+        enddo
+        enddo
+      endif
+       
       do j = jts,jte
       do n = 1,num_soils
       do i = its,ite
@@ -663,9 +678,9 @@
       enddo
       enddo
 
-     !
-     ! BB
-     !
+       !
+       ! BB
+       !
       if ( config_smoke_scheme .ne. 'off' ) then
       do i = its, ite
       do j = jts, jte
@@ -695,16 +710,27 @@
           if ( add_fire_moist_flux ) then
              qfx_bb_p(i,j)       = 0._RKIND
           endif
-          if ( online_rwc_emis .gt. 0 ) then
-             RWC_denominator_p(i,j) = RWC_denominator(i)
-             RWC_annual_sum_p(i,j)  = RWC_annual_sum(i)
-             RWC_annual_sum_smoke_fine_p(i,j)    = RWC_annual_sum_smoke_fine(i)
-             RWC_annual_sum_smoke_coarse_p(i,j)  = RWC_annual_sum_smoke_coarse(i)
-             RWC_annual_sum_unspc_fine_p(i,j)    = RWC_annual_sum_unspc_fine(i)
-             RWC_annual_sum_unspc_coarse_p(i,j)  = RWC_annual_sum_unspc_coarse(i)
-          endif
       enddo
       enddo
+      endif
+     
+      if ( online_rwc_emis .gt. 0 ) then
+        do j = jts, jte
+        do k = 1,krwc
+        do i = its, ite
+            RWC_annual_sum_p(i,k,j)  = RWC_annual_sum(k,i)
+            RWC_annual_sum_smoke_fine_p(i,k,j)    = RWC_annual_sum_smoke_fine(k,i)
+            RWC_annual_sum_smoke_coarse_p(i,k,j)  = RWC_annual_sum_smoke_coarse(k,i)
+            RWC_annual_sum_unspc_fine_p(i,k,j)    = RWC_annual_sum_unspc_fine(k,i)
+            RWC_annual_sum_unspc_coarse_p(i,k,j)  = RWC_annual_sum_unspc_coarse(k,i)
+        enddo
+        enddo
+        enddo
+        do j = jts, jte
+        do i = its, ite
+            RWC_denominator_p(i,j) = RWC_denominator(i)
+        enddo
+        enddo
       endif
       !
       if ( config_smoke_scheme .ne. 'off' .and. ebb_dcycle .eq. 2 ) then
@@ -752,8 +778,7 @@
         end do
       end do
       end if
-
-     
+       
       do j = jts,jte
       do i = its,ite
      ! mesh/grid/surf
@@ -769,6 +794,7 @@
          coszr_p(i,j)   = coszr(i)
      ! Met
          kpbl_p(i,j)    = kpbl(i)
+         vis_p(i,j)     = 0._RKIND
          if ( config_convection_scheme .eq. 'cu_grell_freitas' ) then
             ktop_deep_p(i,j)=ktop_deep(i)
          else
@@ -790,35 +816,50 @@
          rainncv_p(i,j) = rainncv(i)
          dpt2m_p(i,j)   = 280. !dewpoint_surface(i)
          mavail_p(i,j)  = mavail(i)
-     !
-     ! Dust
-     !
-     if ( config_dust_scheme .ne. 'off' ) then  
-         sandfrac_in_p(i,j)    = sandfrac_in(i)
-         clayfrac_in_p(i,j)    = clayfrac_in(i)
-         uthres_in_p(i,j)      = uthres_in(i)
-         uthres_sg_in_p(i,j)   = uthres_sg_in(i)
-         albedo_drag_p(i,j)    = albedo_drag(i)
-         feff_p(i,j)           = feff(i)
-         sep_in_p(i,j)         = sep_in(i)
-     endif
-     ! Chem diags
-         do n= 1,num_chem
-            if ( drydep_opt .ne. 0 ) then
-               ddvel_p(i,j,n) = 0._RKIND
-            endif
-            if ( wetdep_ls_opt .ne. 0 ) then
-               wetdep_resolved_p(i,j,n) = 0._RKIND
-            endif
-         enddo
-     ! Land cat
-         do n= 1,num_landcat
+      enddo
+      enddo
+      !
+      ! Dust
+      !
+      if ( config_dust_scheme .ne. 'off' ) then  
+         do j = jts,jte
+         do i = its,ite
+            sandfrac_in_p(i,j)    = sandfrac_in(i)
+            clayfrac_in_p(i,j)    = clayfrac_in(i)
+            uthres_in_p(i,j)      = uthres_in(i)
+            uthres_sg_in_p(i,j)   = uthres_sg_in(i)
+            albedo_drag_p(i,j)    = albedo_drag(i)
+            feff_p(i,j)           = feff(i)
+            sep_in_p(i,j)         = sep_in(i)
+        enddo
+        enddo
+      endif
+  
+      ! Chem diags
+      do n= 1,num_chem
+      do j= jts, jte
+      do i= its, ite
+             if ( drydep_opt .ne. 0 ) then
+                ddvel_p(i,j,n) = 0._RKIND
+                drydep_flux_p(i,j,n) = drydep_flux(n,i)
+             endif
+             if ( wetdep_ls_opt .ne. 0 ) then
+                wetdep_resolved_p(i,j,n) = wetdep_resolved(n,i)
+             endif
+      enddo
+      enddo
+      enddo
+  
+       ! Land cat
+      do j= jts,jte
+      do n= 1,num_landcat
+      do i= its, ite
             landusef_p(i,n,j)= landusef(n,i)
-         enddo
       enddo
       enddo
-     
-     ! Accumulated emissions or?
+      enddo
+       
+       ! Accumulated emissions or?
       do j = jts, jte
       do k = kts, kte
       do i = its, ite
@@ -879,7 +920,7 @@
  real(kind=RKIND),dimension(:,:,:),pointer:: scalars,chem
  real(kind=RKIND),dimension(:,:),pointer:: nifa,nwfa
  real(kind=RKIND),dimension(:,:),pointer:: hno3_bkgd
- real(kind=RKIND),dimension(:,:),  pointer:: ddvel, wetdep_resolved
+ real(kind=RKIND),dimension(:,:),  pointer:: ddvel, wetdep_resolved, drydep_flux
  real(kind=RKIND),dimension(:,:,:),pointer:: tend_chem_settle
  real(kind=RKIND),dimension(:)    ,pointer:: vis
  real(kind=RKIND),dimension(:),    pointer:: frp_out, fre_out, hwp, coef_bb_dc, fire_ef_out
@@ -918,6 +959,7 @@
 
  call mpas_pool_get_array(diag_physics,'ddvel',ddvel)
  call mpas_pool_get_array(diag_physics,'wetdep_resolved',wetdep_resolved)
+ call mpas_pool_get_array(diag_physics,'drydep_flux',drydep_flux)
  
  call mpas_pool_get_array(diag_physics,'vis',vis)
 
@@ -989,107 +1031,155 @@
 
  chem => scalars(chemistry_start:chemistry_end,:,:)
 
+      do j = jts,jte
+      do k = kts,kte
+      do i = its,ite
+      !
+         PM2_5(k,i)     = PM2_5_p(i,k,j)
+         PM10(k,i)      = PM10_p(i,k,j)
+      
+         aod3d(k,i) = aod3d_p(i,k,j)
+      !
+         if ( config_smoke_scheme .ne. 'off' ) then 
+            aod3d_smoke(k,i) = aod3d_smoke_p(i,k,j)
+         endif
+         if ( config_sna_scheme .ne. 'off' ) then
+            hno3_bkgd(k,i) = hno3_bkgd_p(i,k,j)
+            nifa(k,i)      = nifa_p(i,k,j)
+            nwfa(k,i)      = nwfa_p(i,k,j)
+         endif
+      enddo
+      enddo
+      enddo
+      !
+      do n = 1, num_chem
+      do j = jts,jte
+      do k = kts,kte
+      do i = its,ite
+        chem(n,k,i) = chem_p(i,k,j,n)
+        !TODO floating point exception
+        !chem(n,k,i) = min(max(1.e-12_RKIND,chem_p(i,k,j,n)),5000._RKIND)
+        if ( drydep_opt .ne. 0 ) then
+            tend_chem_settle(n,k,i) = tend_chem_settle_p(i,k,j,n)
+        endif
+      enddo
+      enddo
+      enddo
+      enddo
+    
+      do n = 1,num_chem
+      do j = jts,jte
+      do i = its, kte
+        if (drydep_opt .ne. 0 ) then
+           ddvel(n,i) = ddvel_p(i,j,n)
+           drydep_flux(n,i) = drydep_flux_p(i,j,n)
+        endif
+        if (wetdep_ls_opt .gt. 0) then
+           wetdep_resolved(n,i) = wetdep_resolved_p(i,j,n)
+        endif
+      enddo
+      enddo
+      enddo
  
- do j = jts,jte
- do k = kts,kte
- do i = its,ite
-!
-   PM2_5(k,i)     = PM2_5_p(i,k,j)
-   PM10(k,i)      = PM10_p(i,k,j)
-
-   aod3d(k,i) = aod3d_p(i,k,j)
-!
-   if ( config_smoke_scheme .ne. 'off' ) then 
-      aod3d_smoke(k,i) = aod3d_smoke_p(i,k,j)
-   endif
-   if ( config_sna_scheme .ne. 'off' ) then
-      hno3_bkgd(k,i) = hno3_bkgd_p(i,k,j)
-      nifa(k,i)      = nifa_p(i,k,j)
-      nwfa(k,i)      = nwfa_p(i,k,j)
-   endif
-   do n = 1, num_chem
-      chem(n,k,i) = chem_p(i,k,j,n)
-      !TODO floating point exception
-      !chem(n,k,i) = min(max(1.e-12_RKIND,chem_p(i,k,j,n)),5000._RKIND)
-      if ( drydep_opt .ne. 0 ) then
-          tend_chem_settle(n,k,i) = tend_chem_settle_p(i,k,j,n)
+      if (num_e_ant_out .gt. 0 ) then
+      do n = 1, num_e_ant_out
+      do j = jts,jte
+      do k = kts,kte
+      do i = its,ite
+            e_ant_out(n,k,i) = e_ant_out_p(i,k,j,n)
+      enddo
+      enddo
+      enddo
+      enddo
       endif
-   enddo
-!
-   if (num_e_ant_out .gt. 0 ) then
-   do n = 1, num_e_ant_out
-      e_ant_out(n,k,i) = e_ant_out_p(i,k,j,n)
-   enddo
-   endif
-!
-   if (num_e_bb_out .gt. 0 ) then
-   do n = 1, num_e_bb_out
-      e_bb_out(n,k,i) = e_bb_out_p(i,k,j,n)
-   enddo
-   endif
-!
-   if (num_e_bio_out .gt. 0 ) then
-   do n = 1, num_e_bio_out
-      e_bio_out(n,k,i) = e_bio_out_p(i,k,j,n)
-   enddo
-   endif
-!
-   if (num_e_dust_out .gt. 0 ) then
-   do n = 1, num_e_dust_out
-      e_dust_out(n,k,i) = e_dust_out_p(i,k,j,n)
-   enddo
-   endif
-!
-   if (num_e_ss_out .gt. 0 ) then
-   do n = 1, num_e_ss_out
-      e_ss_out(n,k,i) = e_ss_out_p(i,k,j,n)
-   enddo
-   endif
-!
-   if (num_e_vol_out .gt. 0 ) then
-   do n = 1, num_e_vol_out
-      e_vol_out(n,k,i) = e_vol_out_p(i,k,j,n)
-   enddo
-   endif
-!
- enddo
- enddo
- enddo
- 
- do j = jts,jte
- do i = its,ite
-    vis(i)       = vis_p(i,j)
-  aod550(i)      = aod550_p(i,j)
-    if (config_smoke_scheme .ne. 'off') then
-       frp_out(i)          = frp_out_p(i,j)
-       fre_out(i)          = fre_out_p(i,j)
-       hwp(i)              = hwp_p(i,j)
-       coef_bb_dc(i)       = coef_bb_dc_p(i,j)
-       if ( ebb_dcycle .eq. 2 ) then
-          fire_ef_out(i)   = fire_ef_out_p(i,j)
-       endif
-       if ( plumerise_opt .gt. 0 ) then
-          min_bb_plume(i)     = min_bb_plume_p(i,j)
-          max_bb_plume(i)     = max_bb_plume_p(i,j)
-       endif
-       if ( add_fire_heat_flux ) then
-          hfx_bb(i)           = hfx_bb_p(i,j)
-          frac_grid_burned(i) = frac_grid_burned_p(i,j)
-       endif
-       if ( add_fire_moist_flux ) then
-          qfx_bb(i)           = qfx_bb_p(i,j)
-       endif
-    endif
-    do n = 1,num_chem
-      if (drydep_opt .ne. 0 ) then
-         ddvel(n,i) = ddvel_p(i,j,n)
+     !
+      if (num_e_bb_out .gt. 0 ) then
+      do n = 1, num_e_bb_out
+      do j = jts,jte
+      do k = kts,kte
+      do i = its,ite
+            e_bb_out(n,k,i) = e_bb_out_p(i,k,j,n)
+      enddo
+      enddo
+      enddo
+      enddo
       endif
-      if (wetdep_ls_opt .gt. 0) then
-         wetdep_resolved(n,i) = wetdep_resolved_p(i,j,n)
+     !
+      if (num_e_bio_out .gt. 0 ) then
+      do n = 1, num_e_bio_out
+      do j = jts,jte
+      do k = kts,kte
+      do i = its,ite
+            e_bio_out(n,k,i) = e_bio_out_p(i,k,j,n)
+      enddo
+      enddo
+      enddo
+      enddo
       endif
-    enddo
- enddo
- enddo
+     !
+      if (num_e_dust_out .gt. 0 ) then
+      do n = 1, num_e_dust_out
+      do j = jts,jte
+      do k = kts,kte
+      do i = its,ite
+            e_dust_out(n,k,i) = e_dust_out_p(i,k,j,n)
+      enddo
+      enddo
+      enddo
+      enddo
+      endif
+     !
+      if (num_e_ss_out .gt. 0 ) then
+      do n = 1, num_e_ss_out
+      do j = jts,jte
+      do k = kts,kte
+      do i = its,ite
+            e_ss_out(n,k,i) = e_ss_out_p(i,k,j,n)
+      enddo
+      enddo
+      enddo
+      enddo
+      endif
+     !
+      if (num_e_vol_out .gt. 0 ) then
+      do n = 1, num_e_vol_out
+      do j = jts,jte
+      do k = kts,kte
+      do i = its,ite
+            e_vol_out(n,k,i) = e_vol_out_p(i,k,j,n)
+      enddo
+      enddo
+      enddo
+      enddo
+      endif
+     !
+      
+      do j = jts,jte
+      do i = its,ite
+         vis(i)       = vis_p(i,j)
+       aod550(i)      = aod550_p(i,j)
+         if (config_smoke_scheme .ne. 'off') then
+            frp_out(i)          = frp_out_p(i,j)
+            fre_out(i)          = fre_out_p(i,j)
+            hwp(i)              = hwp_p(i,j)
+            coef_bb_dc(i)       = coef_bb_dc_p(i,j)
+            if ( ebb_dcycle .eq. 2 ) then
+               fire_ef_out(i)   = fire_ef_out_p(i,j)
+            endif
+            if ( plumerise_opt .gt. 0 ) then
+               min_bb_plume(i)     = min_bb_plume_p(i,j)
+               max_bb_plume(i)     = max_bb_plume_p(i,j)
+            endif
+            if ( add_fire_heat_flux ) then
+               hfx_bb(i)           = hfx_bb_p(i,j)
+               frac_grid_burned(i) = frac_grid_burned_p(i,j)
+            endif
+            if ( add_fire_moist_flux ) then
+               qfx_bb(i)           = qfx_bb_p(i,j)
+            endif
+         endif
+     enddo
+     enddo
 
  end subroutine smoke_to_MPAS
 
@@ -1377,7 +1467,7 @@
  call mpas_timer_start('mpas_smoke')
  call mpas_smoke_driver(                                                                 &
            chem  = chem_p, num_chem = num_chem, chemistry_start = chemistry_start,       &
-           kemit = kemit,  kfire = kfire, kbio = kbio, kvol = kvol,                      &
+           kemit = kemit,  kfire = kfire, kbio = kbio, kvol = kvol, krwc = krwc,         &
            index_smoke_fine = index_smoke_fine, index_smoke_coarse = index_smoke_coarse, &  
            index_dust_fine  = index_dust_fine,  index_dust_coarse  = index_dust_coarse,  &
            index_ssalt_fine = index_ssalt_fine, index_ssalt_coarse = index_ssalt_coarse, &
@@ -1459,6 +1549,7 @@
            num_e_ant_out  = num_e_ant_out, num_e_bb_out   = num_e_bb_out,                &
            num_e_bio_out  = num_e_bio_out, num_e_dust_out = num_e_dust_out,              &
            num_e_ss_out   = num_e_ss_out,  num_e_vol_out  = num_e_vol_out,               &
+           drydep_flux = drydep_flux_p,                                                  &  
            ddvel = ddvel_p, wetdep_resolved = wetdep_resolved_p,                         &
            tend_chem_settle = tend_chem_settle_p,                                        &
            do_mpas_smoke = do_mpas_smoke,  do_mpas_dust   = do_mpas_dust,                &
