@@ -56,7 +56,7 @@ contains
                                   blcldw,blcldi,                    &
                                   rho_phy,wind10m,wind,             &
                                   rh2m,rh,qv,t2m,t,                 &
-                                  coszen,vis,extcoef55,             &
+                                  coszen,extcoef55,vis,             &
                                   ids,ide, jds,jde, kds,kde,        &
                                   ims,ime, jms,jme, kms,kme,        &
                                   its,ite, jts,jte, kts,kte         )

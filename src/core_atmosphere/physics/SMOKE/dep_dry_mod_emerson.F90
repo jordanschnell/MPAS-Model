@@ -372,7 +372,8 @@ subroutine particle_settling_wrapper(tend_chem_settle,chem,rho_phy,delz_flip,vg,
      ntdt = INT(dt)
 
      do nv = 1,num_chem
-     if (nv .eq. p_ch4) cycle  ! At some point we'll do something different for gasses
+     if (nv .eq. p_ch4 .or. &
+         nv .eq. p_smoke_fine .or. nv .eq. p_dust_fine .or. nv .eq. p_unspc_fine ) cycle  ! At some point we'll do something different for gasses/fine species
      ! -- NOTE, diameters and densities are NOT converted to cm and g/cm3 like in Emerson
      vsettl = four_ninths * gravity * aero_dens(nv) * ( growth_fac * ( 0.5_RKIND * aero_diam(nv) ))**2.0_RKIND * one_over_dyn_visc
 
